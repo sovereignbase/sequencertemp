@@ -1,17 +1,17 @@
-import type { Strip } from '../types/type.js'
+import type { Strip, Delta } from '../types/type.js'
 export class ContainmentTable<T> {
   private readonly strips: Map<number, Map<number, Strip<T>>> = new Map()
 
-  has(incomingStrip: NonNullable<Strip<T>>): boolean {
-    const actor = this.strips.get(incomingStrip.actorY)
-    if (actor) return actor.has(incomingStrip.timeY)
+  has(incomingDelta: Delta<T>): boolean {
+    const actor = this.strips.get(incomingDelta[6])
+    if (actor) return actor.has(incomingDelta[7])
     return false
   }
 
-  get(incomingStrip: NonNullable<Strip<T>>): Strip<T> {
-    const actor = this.strips.get(incomingStrip.actorX)
+  get(incomingDelta: Delta<T>): Strip<T> {
+    const actor = this.strips.get(incomingDelta[4])
     if (!actor) return undefined
-    const containingStrip = actor.get(incomingStrip.timeX)
+    const containingStrip = actor.get(incomingDelta[5])
     return containingStrip
   }
 

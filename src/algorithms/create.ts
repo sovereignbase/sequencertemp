@@ -1,42 +1,50 @@
-import { Sequencer } from '../class.js'
+import { Sequence } from '../class.js'
 import { isDelta } from '../helpers/index.js'
-import { Delta, Strip } from '../types/type.js'
+import { Delta, Snapshot, Strip } from '../types/type.js'
 
 export function create<T>(
-  this: Sequencer<T>,
+  this: Sequence<T>,
   actorID: number,
   trustedSnapshot?: unknown
 ) {
   let time: number = 0
 
-  let prev: Strip<T>
-  if (Array.isArray(trustedSnapshot))
-    for (const chunk of trustedSnapshot) {
-      const [header, body] = chunk as Delta<T>
-      const [
-        type,
-        depencyPrefix,
-        initialLength,
-        offsetLength,
-        actorX,
-        timeX,
-        actorY,
-        timeY,
-      ] = header
+  const [frontiers, projection] = trustedSnapshot as Snapshot<T>
 
-      const actorXTable: Map<number, Strip<T>> = this.containmentTable.get(
-        actorX
-      ) ?? new Map()
-      if (actorXTable.size === 0)
-        void this.containmentTable.set(actorX, actorXTable)
+  if (Array.isArray(frontiers))
+    for (const acknowledgement of frontiers)
+      void this.frontierTable.observeAcknowledgement(acknowledgement)
 
-      const actorYTable: Map<number, Strip<T>> = this.containmentTable.get(
-        actorY
-      ) ?? new Map()
-      if (actorYTable.size === 0)
-        void this.containmentTable.set(actorX, actorYTable)
+  const collectableIDs = new Set(this.frontierTable.getCompactableSessions())
 
-      const containingStrip: Strip<T> | undefined = actorXTable.get(timeX)
+  let started: boolean = false
+  if (Array.isArray(projection))
+    for (const delta of projection) {
+      if (!started) {
+        const [
+          type,
+          depencyPrefix,
+          initialLength,
+          offsetLength,
+          actorX,
+          timeX,
+          actorY,
+          timeY,
+          footage,
+        ] = delta
+        started = true
+        void this.containmentTable.set({
+          type,
+          depencyPrefix,
+          initialLength,
+          offsetLength,
+          actorX,
+          timeX,
+          actorY,
+          timeY,
+          footage,
+        })
+      }
     }
 
   this.insertClock[0] = actorID

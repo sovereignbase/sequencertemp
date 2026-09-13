@@ -9,7 +9,7 @@ export type Strip<T> =
       actorY: number
       timeY: number
 
-      footageFrameIndex?: number
+      footage?: Array<T | undefined>
 
       rightFragment?: Strip<T>
       fragmentLength?: number
@@ -28,7 +28,7 @@ export type Strip<T> =
     }
   | undefined
 
-export type Delta = [
+export type Delta<T> = [
   type: number,
   depencyPrefix: number,
   initialLength: number,
@@ -37,13 +37,13 @@ export type Delta = [
   timeX: number,
   actorY: number,
   timeY: number,
+  footage?: Array<T | undefined>,
 ]
 /** [0] = ActorID ...SessionID, Count */
 export type Acknowledgement = Uint32List
 
 export type Snapshot<T> = [
   frontiers: Array<Acknowledgement>,
-  projection: Array<Delta>,
-  footage?: Array<T | undefined>,
+  projection: Array<Delta<T>>,
 ]
 export type ActorIdMap = Record<string, number>
