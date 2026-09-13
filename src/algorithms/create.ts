@@ -1,4 +1,4 @@
-import { Sequencer } from '../index.js'
+import { Sequencer } from '../class.js'
 import { isDelta } from '../helpers/index.js'
 import { Delta, Strip } from '../types/type.js'
 
@@ -7,11 +7,7 @@ export function create<T>(
   actorID: number,
   trustedSnapshot?: unknown
 ) {
-  this.insertClock[0] = actorID
-  let buf: Uint32Array<ArrayBuffer> | null = new Uint32Array(1)
-  void crypto.getRandomValues(buf)
-  this.maskClock[0] = buf[0]
-  buf = null
+  let time: number = 0
 
   let prev: Strip<T>
   if (Array.isArray(trustedSnapshot))
@@ -42,4 +38,8 @@ export function create<T>(
 
       const containingStrip: Strip<T> | undefined = actorXTable.get(timeX)
     }
+
+  this.insertClock[0] = actorID
+  this.insertClock[1] = time
+  this.maskClock[0] = this.frontierTable.getSafeSessionID()
 }

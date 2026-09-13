@@ -1,6 +1,7 @@
 import { Bytes } from '@sovereignbase/bytecodec'
 import { create } from './algorithms/create.js'
 import { Delta, Strip } from './types/type.js'
+import { FrontierTable } from './FrontierTable/class.js'
 
 export class Sequencer<T> {
   public head: Strip<T> | undefined
@@ -9,8 +10,7 @@ export class Sequencer<T> {
 
   public readonly containmentTable: Map<number, Map<number, Strip<T>>> =
     new Map()
-  public readonly actors: Set<number> = new Set()
-  public readonly frontiers: Map<number, Map<number, number>> = new Map()
+  public readonly frontierTable: FrontierTable = new FrontierTable()
 
   //
   public readonly maskClock: [session: number, time: number] = [0, 0]
