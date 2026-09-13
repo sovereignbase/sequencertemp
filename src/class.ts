@@ -3,6 +3,7 @@ import { create } from './algorithms/create.js'
 import { Delta, Snapshot, Strip } from './types/type.js'
 import { FrontierTable } from './FrontierTable/class.js'
 import { ContainmentTable } from './ContainmentTable/class.js'
+import { patch } from './algorithms/patch.js'
 
 export class Sequence<T> {
   public head: Strip<T> | undefined
@@ -23,5 +24,9 @@ export class Sequence<T> {
   //
   constructor(actorID: number, trustedSnapshot?: unknown) {
     create.call(this, actorID, trustedSnapshot)
+  }
+  //
+  patch(delta: Delta<T>) {
+    patch.call(this, delta)
   }
 }

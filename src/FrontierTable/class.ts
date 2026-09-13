@@ -28,6 +28,10 @@ export class FrontierTable {
     return frontiers
   }
 
+  freeCompactedSessions(sessions: Uint32List): void {
+    for (const sessionID of sessions) void this.sessions.delete(sessionID)
+  }
+
   getCompactableSessions(): Uint32List {
     const ids: Uint32List = []
     for (const [sessionID, frontiers] of this.sessions.entries()) {

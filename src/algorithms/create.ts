@@ -15,11 +15,13 @@ export function create<T>(
     for (const acknowledgement of frontiers)
       void this.frontierTable.observeAcknowledgement(acknowledgement)
 
-  const collectableIDs = new Set(this.frontierTable.getCompactableSessions())
+  const compactableIDs = new Set(this.frontierTable.getCompactableSessions())
 
   let started: boolean = false
   if (Array.isArray(projection))
     for (const delta of projection) {
+      // compact snapshot by not minting compactable masks
+      if (compactableIDs.has(delta[6])) continue
       if (!started) {
         const [
           type,
@@ -44,10 +46,11 @@ export function create<T>(
           timeY,
           footage,
         })
-      }
+      } else this.patch(delta)
     }
 
   this.insertClock[0] = actorID
   this.insertClock[1] = time
   this.maskClock[0] = this.frontierTable.getSafeSessionID()
+  void this.frontierTable.freeCompactedSessions(Array.from(compactableIDs))
 }
