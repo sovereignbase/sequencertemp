@@ -1,4 +1,4 @@
-import type { Acknowledgement } from '../types/type.js'
+import type { Acknowledgement } from '../../types/type.js'
 
 export class FrontierTable {
   private readonly actors: Set<number> = new Set()
@@ -28,7 +28,7 @@ export class FrontierTable {
     const frontiers: Array<Acknowledgement> = []
 
     for (const actorID of this.actors) {
-      const acknowledgement: Acknowledgement = [actorID]
+      const acknowledgement: Array<number> = [actorID]
 
       for (const [sessionID, session] of this.sessions) {
         const count = session.get(actorID)
@@ -43,12 +43,12 @@ export class FrontierTable {
     return frontiers
   }
 
-  freeCompactedSessions(sessions: Uint32List): void {
+  freeCompactedSessions(sessions: Array<number>): void {
     for (const sessionID of sessions) void this.sessions.delete(sessionID)
   }
 
-  getCompactableSessions(): Uint32List {
-    const ids: Uint32List = []
+  getCompactableSessions(): Array<number> {
+    const ids: Array<number> = []
 
     for (const [sessionID, frontiers] of this.sessions) {
       if (frontiers.size !== this.actors.size) continue

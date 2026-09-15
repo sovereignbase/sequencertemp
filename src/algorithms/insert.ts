@@ -1,9 +1,16 @@
 import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js'
+import { insertAfter } from '../auxiliary/insertAfter.js'
+import { insertBefore } from '../auxiliary/insertBefore.js'
+import { insertFirst } from '../auxiliary/insertFirst.js'
 import { splitStrip } from '../auxiliary/splitStrip.js'
 import type { Sequence } from '../class.js'
-import type { Strip } from '../types/type.js'
+import type { Delta, Strip } from '../types/type.js'
 
-export function insert<T>(this: Sequence<T>, values: Array<T>, at: number) {
+export function insert<T>(
+  this: Sequence<T>,
+  values: Array<T>,
+  at: number
+): Delta<T> {
   const depencyPrefix = this.insertClock[1]
   this.insertClock[1] += values.length + 1
   const offset = findFrameByVisibleIndex.call(this, at)
@@ -19,5 +26,9 @@ export function insert<T>(this: Sequence<T>, values: Array<T>, at: number) {
     timeY: this.insertClock[1],
   }
 
-  const suffix: Strip<T> = splitStrip.call(this, this.gate!, offset) as Strip<T>
+  if (this.structuralStripCount === 0) insertFirst.call(this, strip)
+  else if (offset === 1)
+    // the visible index that should move right from under aka the index after end of a strip uses boundary marker
+    insertBefore.call(this, strip, this.gate)
+  else insertAfter.call(this, strip, this.gate, offset)
 }

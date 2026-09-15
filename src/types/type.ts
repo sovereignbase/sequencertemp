@@ -111,18 +111,13 @@ export type Insertion<T> = Readonly<
 export type Acknowledgement = ReadonlyArray<number>
 
 /**
- * Replication unit containing the causal frontier observed when an insertion
- * was issued and the insertion itself.
+ * Replication unit containing either an insertion or an acknowledgement.
+ *
+ * An insertion is emitted as a result of a local update.
+ *
+ * An acknowledgement is emitted in response to merging a decreasing insertion.
  */
-export type Delta<T> = Readonly<
-  [
-    /** Causal frontier observed by the issuing replica. */
-    frontier: Acknowledgement,
-
-    /** Insertion replicated by this Delta. */
-    projection: Insertion<T>,
-  ]
->
+export type Delta<T> = Acknowledgement | Insertion<T>
 
 /**
  * Serializable state required to reconstruct a Sequence.
