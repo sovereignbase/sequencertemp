@@ -5,7 +5,7 @@ import { subtreeEnd } from './subtreeEnd.js'
 
 /**
  * Covers insertion of all Strips anchored to a boundary marker,
- * A.K.A. a `zero-reservation`, such as head inserts and insertions
+ * A.K.A. using a `zero-reservation`, such as head inserts and insertions
  * after the end of an existing Strip.
  *
  * @param this Sequence receiving the Strip.

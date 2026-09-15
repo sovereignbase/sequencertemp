@@ -1,6 +1,13 @@
 import type { Sequence } from '../class.js'
 import type { Strip } from '../types/type.js'
 
+/**
+ * Covers insertion of all Strips into an empty Sequence,
+ * A.K.A. a Sequence with a structural Strip count of 0.
+ *
+ * @param this Sequence receiving the Strip.
+ * @param strip Strip to insert.
+ */
 export function insertFirst<T>(
   this: Sequence<T>,
   strip: Exclude<Strip<T>, undefined>
