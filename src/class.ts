@@ -32,6 +32,8 @@ export class Sequence<T> {
     return find.call(this, index) as T | undefined
   }
   //
+  ingest(data: unknown) {}
+  //
   insert(values: Array<T>, at: number) {
     return insert.call(this, values, at)
   }
