@@ -2,14 +2,14 @@ import type { Sequence } from '../class.js'
 import type { Strip } from '../types/type.js'
 
 /**
- * Splits one Strip at a Frame position without changing its Projection effect.
+ * Splits one Strip into two fragments at a Frame position.
  *
- * The existing Strip becomes the left fragment and a new Strip becomes the
- * right fragment.
+ * The existing Strip becomes the left fragment while the newly created Strip
+ * becomes its right fragment. The total Projection effect remains unchanged.
  *
  * @param this Sequence containing the Strip.
  * @param strip Strip to split.
- * @param framePosition Number of Frames retained in the left fragment.
+ * @param framePosition Number of Frames retained by the left fragment.
  * @returns Newly created right fragment.
  */
 export function splitStrip<T>(
@@ -17,40 +17,42 @@ export function splitStrip<T>(
   strip: NonNullable<Strip<T>>,
   framePosition: number
 ): NonNullable<Strip<T>> {
-  const stripLength = strip.fragmentLength ?? strip.initialLength
+  const stripDiff = strip.fragmentDiff ?? strip.insertionDiff
+  const direction = stripDiff < 0 ? -1 : 1
+
+  const leftDiff = direction * framePosition
+  const rightDiff = stripDiff - leftDiff
+
   const rightStep = strip.rightStep
 
   const rightFragment: NonNullable<Strip<T>> = {
-    type: strip.type,
-    depencyPrefix: strip.depencyPrefix + framePosition,
-    initialLength: 0,
-    offsetLength: strip.offsetLength + framePosition,
-    actorX: strip.actorX,
-    timeX: strip.timeX,
-    actorY: strip.actorY,
-    timeY: strip.timeY,
+    anchorSequencer: strip.anchorSequencer,
+    anchorTime: strip.anchorTime,
+    anchorFrame: strip.anchorFrame,
 
-    // Fragments share the original Footage.
+    insertionSequencer: strip.insertionSequencer,
+    insertionTime: strip.insertionTime,
+    insertionDiff: strip.insertionDiff,
+
     footage: strip.footage,
-
-    rightFragment: strip.rightFragment,
-    fragmentLength: stripLength - framePosition,
 
     rightCompetitor: undefined,
 
-    leftStep: strip,
-    rightStep,
+    rightFragment: strip.rightFragment,
+    fragmentDiff: rightDiff,
 
+    leftStep: strip,
     leftJump: undefined,
     leftJumpFrameCount: 0,
     leftJumpStripCount: 0,
 
+    rightStep,
     rightJump: undefined,
     rightJumpFrameCount: 0,
     rightJumpStripCount: 0,
   }
 
-  strip.fragmentLength = framePosition
+  strip.fragmentDiff = leftDiff
   strip.rightFragment = rightFragment
   strip.rightStep = rightFragment
 

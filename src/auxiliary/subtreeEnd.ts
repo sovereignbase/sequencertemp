@@ -1,61 +1,59 @@
 import type { Strip } from '../types/type.js'
 
 /**
- * Finds the last Strip belonging to one causal subtree.
+ * Finds the final Strip belonging to one causal subtree.
  *
- * Direct right fragments remain part of the same subtree, and descendants
- * remain inside the subtree while their dependency falls within an active
- * ancestor fragment.
+ * Descendants remain inside the subtree when their stable anchor falls within
+ * an active fragment. Right fragments remain part of their original insertion
+ * regardless of descendants separating them in Structural Order.
  *
  * @param rootStrip Root Strip of the subtree.
- * @returns Last Strip belonging to the subtree.
+ * @returns Final Strip belonging to the subtree.
  */
 export function subtreeEnd<T>(
   rootStrip: NonNullable<Strip<T>>
 ): NonNullable<Strip<T>> {
-  const ancestorStrips: Array<NonNullable<Strip<T>>> = []
-  const ancestorPrefixes: number[] = []
+  const ancestors: Array<
+    [strip: NonNullable<Strip<T>>, fragmentFrame: number]
+  > = []
 
   let lastStrip = rootStrip
-  let lastOriginPrefix = rootStrip.depencyPrefix
+  let lastFragmentFrame = 0
   let nextStrip = lastStrip.rightStep
 
   while (nextStrip) {
     let ancestorStrip = lastStrip
-    let ancestorOriginPrefix = lastOriginPrefix
+    let ancestorFragmentFrame = lastFragmentFrame
 
     while (
       ancestorStrip.rightFragment !== nextStrip &&
-      (ancestorStrip.actorY !== nextStrip.actorX ||
-        ancestorStrip.timeY !== nextStrip.timeX ||
-        nextStrip.offsetLength <
-          ancestorStrip.depencyPrefix - ancestorOriginPrefix ||
-        nextStrip.offsetLength >
-          ancestorStrip.depencyPrefix -
-            ancestorOriginPrefix +
-            (ancestorStrip.fragmentLength ?? ancestorStrip.initialLength))
+      (ancestorStrip.insertionSequencer !== nextStrip.anchorSequencer ||
+        ancestorStrip.insertionTime !== nextStrip.anchorTime ||
+        nextStrip.anchorFrame < ancestorFragmentFrame ||
+        nextStrip.anchorFrame >
+          ancestorFragmentFrame +
+            Math.abs(ancestorStrip.fragmentDiff ?? ancestorStrip.insertionDiff))
     ) {
-      const lastAncestorIndex = ancestorStrips.length - 1
+      const ancestor = ancestors.pop()
 
-      if (lastAncestorIndex < 0) return lastStrip
+      if (!ancestor) return lastStrip
 
-      ancestorStrip = ancestorStrips[lastAncestorIndex]
-      ancestorOriginPrefix = ancestorPrefixes[lastAncestorIndex]
-
-      ancestorStrips.pop()
-      ancestorPrefixes.pop()
+      ancestorStrip = ancestor[0]
+      ancestorFragmentFrame = ancestor[1]
     }
 
-    ancestorStrips.push(ancestorStrip)
-    ancestorPrefixes.push(ancestorOriginPrefix)
+    ancestors.push([ancestorStrip, ancestorFragmentFrame])
 
-    lastOriginPrefix =
-      ancestorStrip.rightFragment === nextStrip
-        ? ancestorOriginPrefix
-        : nextStrip.depencyPrefix
+    if (ancestorStrip.rightFragment === nextStrip) {
+      lastFragmentFrame =
+        ancestorFragmentFrame +
+        Math.abs(ancestorStrip.fragmentDiff ?? ancestorStrip.insertionDiff)
+    } else {
+      lastFragmentFrame = 0
+    }
 
     lastStrip = nextStrip
-    nextStrip = lastStrip.rightStep
+    nextStrip = nextStrip.rightStep
   }
 
   return lastStrip

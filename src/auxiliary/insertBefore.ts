@@ -19,40 +19,40 @@ export function insertBefore<T>(
   containingStrip: NonNullable<Strip<T>>,
   targetFramePosition: number
 ): void {
-  const containingStripLength =
-    containingStrip.fragmentLength ?? containingStrip.initialLength
+  const containingStripLength = Math.abs(
+    containingStrip.fragmentDiff ?? containingStrip.insertionDiff
+  )
 
-  let leftStep: NonNullable<Strip<T>> = containingStrip
+  let leftStep = containingStrip
   let rightStep: Strip<T>
 
-  if (targetFramePosition < containingStripLength) {
+  if (targetFramePosition < containingStripLength)
     rightStep = splitStrip.call(
       this,
       containingStrip,
       targetFramePosition
-    ) as NonNullable<Strip<T>>
-  } else {
-    rightStep = containingStrip.rightStep
-  }
+    ) as Strip<T>
+  else rightStep = containingStrip.rightStep
 
   incomingStrip.rightCompetitor = undefined
 
   if (
     rightStep &&
     containingStrip.rightFragment !== rightStep &&
-    rightStep.initialLength !== 0 &&
-    rightStep.actorX === incomingStrip.actorX &&
-    rightStep.timeX === incomingStrip.timeX &&
-    rightStep.offsetLength === incomingStrip.offsetLength
+    rightStep.anchorSequencer === incomingStrip.anchorSequencer &&
+    rightStep.anchorTime === incomingStrip.anchorTime &&
+    rightStep.anchorFrame === incomingStrip.anchorFrame
   ) {
     let largerCompetitor: NonNullable<Strip<T>> | undefined
     let smallerCompetitor: Strip<T> = rightStep
 
     while (
       smallerCompetitor &&
-      (incomingStrip.actorY < smallerCompetitor.actorY ||
-        (incomingStrip.actorY === smallerCompetitor.actorY &&
-          incomingStrip.timeY < smallerCompetitor.timeY))
+      (incomingStrip.insertionSequencer <
+        smallerCompetitor.insertionSequencer ||
+        (incomingStrip.insertionSequencer ===
+          smallerCompetitor.insertionSequencer &&
+          incomingStrip.insertionTime < smallerCompetitor.insertionTime))
     ) {
       largerCompetitor = smallerCompetitor
       smallerCompetitor = smallerCompetitor.rightCompetitor
@@ -66,9 +66,7 @@ export function insertBefore<T>(
       rightStep = smallerCompetitor
       leftStep = smallerCompetitor.leftStep!
     } else if (largerCompetitor) {
-      leftStep = subtreeEnd.call(this, largerCompetitor) as NonNullable<
-        Strip<T>
-      >
+      leftStep = subtreeEnd(largerCompetitor)
       rightStep = leftStep.rightStep
     }
   }
@@ -91,7 +89,6 @@ export function insertBefore<T>(
 
   ++this.structuralStripCount
 
-  const frameCount = incomingStrip.fragmentLength ?? incomingStrip.initialLength
-
-  this.visibleFrameCount += incomingStrip.type === 1 ? frameCount : -frameCount
+  this.visibleFrameCount +=
+    incomingStrip.fragmentDiff ?? incomingStrip.insertionDiff
 }

@@ -20,7 +20,7 @@ export function insertFirst<T>(
   this.tail = strip
 
   this.structuralStripCount = 1
-  this.visibleFrameCount = strip.fragmentLength ?? strip.initialLength
+  this.visibleFrameCount += strip.fragmentDiff ?? strip.insertionDiff
   this.visibleIndex = 0
 
   this.leftJumpToPatch = undefined
