@@ -117,7 +117,7 @@ export type Acknowledgement = ReadonlyArray<number>
  *
  * An acknowledgement is emitted in response to merging a decreasing insertion.
  */
-export type Delta<T> = Acknowledgement | Insertion<T>
+export type Delta<T> = ReadonlyArray<Acknowledgement | Insertion<T>>
 
 /**
  * Serializable state required to reconstruct a Sequence.

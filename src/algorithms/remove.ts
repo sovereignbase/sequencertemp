@@ -1,8 +1,65 @@
+import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js'
+import { insertAfter } from '../auxiliary/insertAfter.js'
+import { insertBefore } from '../auxiliary/insertBefore.js'
 import type { Sequence } from '../class.js'
-import type { Strip } from '../types/type.js'
+import type { Delta, Strip } from '../types/type.js'
 
 export function remove<T>(
   this: Sequence<T>,
-  startAt?: number,
-  endAt?: number
-) {}
+  startAt: number = 0,
+  endAt: number = this.visibleFrameCount
+): Delta<T> {
+  const insertions = []
+
+  let remaining = endAt - startAt
+
+  while (remaining > 0) {
+    const targetFramePosition = findFrameByVisibleIndex.call(this, startAt)
+    const containingStrip = this.gate!
+
+    const containingStripLength = Math.abs(
+      containingStrip.fragmentDiff ?? containingStrip.insertionDiff
+    )
+
+    const decreasingLength = Math.min(
+      remaining,
+      containingStripLength - targetFramePosition + 1
+    )
+
+    this.decreaseClock[1] += decreasingLength + 1
+
+    const decreasingStrip: NonNullable<Strip<T>> = {
+      anchorSequencer: containingStrip.insertionSequencer,
+      anchorTime: containingStrip.insertionTime,
+      anchorFrame: targetFramePosition,
+      insertionSequencer: this.decreaseClock[0],
+      insertionTime: this.decreaseClock[1],
+      insertionDiff: -decreasingLength,
+    }
+
+    // the deletion starts at a visible index that uses a boundary marker
+    // as its anchor when it is immediately after the end of a Strip
+    if (targetFramePosition === 1)
+      insertBefore.call(this, decreasingStrip, containingStrip)
+    else
+      insertAfter.call(
+        this,
+        decreasingStrip,
+        containingStrip,
+        targetFramePosition
+      )
+
+    insertions.push([
+      decreasingStrip.anchorSequencer,
+      decreasingStrip.anchorTime,
+      decreasingStrip.anchorFrame,
+      decreasingStrip.insertionSequencer,
+      decreasingStrip.insertionTime,
+      decreasingStrip.insertionDiff,
+    ])
+
+    remaining -= decreasingLength
+  }
+
+  return insertions
+}

@@ -26,13 +26,15 @@ export function insert<T>(
     insertFirst.call(this, increasingStrip)
 
     return [
-      increasingStrip.anchorSequencer,
-      increasingStrip.anchorTime,
-      increasingStrip.anchorFrame,
-      increasingStrip.insertionSequencer,
-      increasingStrip.insertionTime,
-      increasingStrip.insertionDiff,
-      increasingStrip.footage,
+      [
+        increasingStrip.anchorSequencer,
+        increasingStrip.anchorTime,
+        increasingStrip.anchorFrame,
+        increasingStrip.insertionSequencer,
+        increasingStrip.insertionTime,
+        increasingStrip.insertionDiff,
+        increasingStrip.footage,
+      ],
     ]
   }
 
@@ -61,12 +63,14 @@ export function insert<T>(
     )
 
   return [
-    increasingStrip.anchorSequencer,
-    increasingStrip.anchorTime,
-    increasingStrip.anchorFrame,
-    increasingStrip.insertionSequencer,
-    increasingStrip.insertionTime,
-    increasingStrip.insertionDiff,
-    increasingStrip.footage,
+    [
+      increasingStrip.anchorSequencer,
+      increasingStrip.anchorTime,
+      increasingStrip.anchorFrame,
+      increasingStrip.insertionSequencer,
+      increasingStrip.insertionTime,
+      increasingStrip.insertionDiff,
+      increasingStrip.footage,
+    ],
   ]
 }
