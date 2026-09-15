@@ -11,13 +11,11 @@ import { subtreeEnd } from './subtreeEnd.js'
  * @param this Sequence receiving the Strip.
  * @param incomingStrip Strip to insert.
  * @param containingStrip Strip containing the target Frame position.
- * @param targetFramePosition Target Frame position within the containing Strip.
  */
 export function insertBefore<T>(
   this: Sequence<T>,
   incomingStrip: NonNullable<Strip<T>>,
-  containingStrip: NonNullable<Strip<T>>,
-  targetFramePosition: number
+  containingStrip: NonNullable<Strip<T>>
 ): void {
   const containingStripLength = Math.abs(
     containingStrip.fragmentDiff ?? containingStrip.insertionDiff
@@ -26,12 +24,8 @@ export function insertBefore<T>(
   let leftStep = containingStrip
   let rightStep: Strip<T>
 
-  if (targetFramePosition < containingStripLength)
-    rightStep = splitStrip.call(
-      this,
-      containingStrip,
-      targetFramePosition
-    ) as Strip<T>
+  if (containingStripLength !== 0)
+    rightStep = splitStrip.call(this, containingStrip, 0) as Strip<T>
   else rightStep = containingStrip.rightStep
 
   incomingStrip.rightCompetitor = undefined
