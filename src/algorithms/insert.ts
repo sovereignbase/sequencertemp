@@ -13,7 +13,7 @@ export function insert<T>(
   this.increaseClock[1] += values.length + 1
 
   if (this.structuralStripCount === 0) {
-    const strip: NonNullable<Strip<T>> = {
+    const increasingStrip: NonNullable<Strip<T>> = {
       anchorSequencer: 0,
       anchorTime: 0,
       anchorFrame: 0,
@@ -23,23 +23,23 @@ export function insert<T>(
       footage: values,
     }
 
-    insertFirst.call(this, strip)
+    insertFirst.call(this, increasingStrip)
 
     return [
-      strip.anchorSequencer,
-      strip.anchorTime,
-      strip.anchorFrame,
-      strip.insertionSequencer,
-      strip.insertionTime,
-      strip.insertionDiff,
-      strip.footage,
+      increasingStrip.anchorSequencer,
+      increasingStrip.anchorTime,
+      increasingStrip.anchorFrame,
+      increasingStrip.insertionSequencer,
+      increasingStrip.insertionTime,
+      increasingStrip.insertionDiff,
+      increasingStrip.footage,
     ]
   }
 
   const targetFramePosition = findFrameByVisibleIndex.call(this, at)
   const containingStrip = this.gate!
 
-  const strip: NonNullable<Strip<T>> = {
+  const increasingStrip: NonNullable<Strip<T>> = {
     anchorSequencer: containingStrip.insertionSequencer,
     anchorTime: containingStrip.insertionTime,
     anchorFrame: targetFramePosition,
@@ -50,16 +50,23 @@ export function insert<T>(
   }
   // the visible index that should move right from under the insertion
   // uses a boundary marker when it is immediately after the end of a Strip
-  if (targetFramePosition === 1) insertBefore.call(this, strip, containingStrip)
-  else insertAfter.call(this, strip, containingStrip, targetFramePosition)
+  if (targetFramePosition === 1)
+    insertBefore.call(this, increasingStrip, containingStrip)
+  else
+    insertAfter.call(
+      this,
+      increasingStrip,
+      containingStrip,
+      targetFramePosition
+    )
 
   return [
-    strip.anchorSequencer,
-    strip.anchorTime,
-    strip.anchorFrame,
-    strip.insertionSequencer,
-    strip.insertionTime,
-    strip.insertionDiff,
-    strip.footage,
+    increasingStrip.anchorSequencer,
+    increasingStrip.anchorTime,
+    increasingStrip.anchorFrame,
+    increasingStrip.insertionSequencer,
+    increasingStrip.insertionTime,
+    increasingStrip.insertionDiff,
+    increasingStrip.footage,
   ]
 }
