@@ -24,7 +24,7 @@ export function isDelta<T>(data: unknown): data is Delta<T> {
   return (
     Array.isArray(header) &&
     header.length % 8 === 0 &&
-    header.every(isPositiveNumber) &&
+    header.every(Number.isSafeInteger) &&
     (body === undefined || Array.isArray(body))
   )
 }
