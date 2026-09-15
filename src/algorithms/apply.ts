@@ -7,7 +7,7 @@ import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Sequence } from '../class.js'
 import type { Acknowledgement, Delta, Strip } from '../types/type.js'
 
-export function ingest<T>(this: Sequence<T>, data: unknown): Delta<T> | void {
+export function apply<T>(this: Sequence<T>, data: unknown): Delta<T> | void {
   if (isInsertion<T>(data)) {
     if (this.containmentTable.has(data)) return
 
