@@ -8,7 +8,7 @@
 export type Strip<T> =
   | {
       /** Actor or session identifier of the insertion containing the anchor. */
-      readonly anchorActor: number
+      readonly anchorSequencer: number
 
       /** Logical time identifying the insertion containing the anchor. */
       readonly anchorTime: number
@@ -17,7 +17,7 @@ export type Strip<T> =
       readonly anchorFrame: number
 
       /** Actor or session identifier that issued this insertion. */
-      readonly insertionActor: number
+      readonly insertionSequencer: number
 
       /** Logical time identifying this insertion. */
       readonly insertionTime: number
@@ -75,7 +75,7 @@ export type Strip<T> =
 export type Insertion<T> = Readonly<
   [
     /** Actor or session identifier of the insertion containing the anchor. */
-    anchorActor: number,
+    anchorSequencer: number,
 
     /** Logical time identifying the insertion containing the anchor. */
     anchorTime: number,
@@ -84,7 +84,7 @@ export type Insertion<T> = Readonly<
     anchorFrame: number,
 
     /** Actor or session identifier that issued this insertion. */
-    insertionActor: number,
+    insertionSequencer: number,
 
     /** Logical time identifying this insertion. */
     insertionTime: number,
@@ -103,6 +103,10 @@ export type Insertion<T> = Readonly<
  * The first word identifies the acknowledging Actor, followed by repeating
  * `(sessionID, sessionTime)` pairs:
  * `[actorID, sessionID, sessionTime, sessionID, sessionTime, ...]`.
+ *
+ * Each `sessionID` uniquely identifies the removals issued during one
+ * Sequence session, while `sessionTime` records the greatest logical time
+ * observed for that session by the acknowledging Actor.
  */
 export type Acknowledgement = ReadonlyArray<number>
 
