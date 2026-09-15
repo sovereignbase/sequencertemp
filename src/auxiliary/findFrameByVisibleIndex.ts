@@ -1,4 +1,4 @@
-import { Sequence } from '../class.js'
+import type { Sequence } from '../class.js'
 import type { Strip } from '../types/type.js'
 
 export function findFrameByVisibleIndex<T>(
@@ -11,9 +11,8 @@ export function findFrameByVisibleIndex<T>(
   let leftJumpToPatch = this.leftJumpToPatch
   let rightJumpToPatch = this.rightJumpToPatch
 
-  const tailIndex =
-    this.visibleFrameCount -
-    (this.tail!.fragmentLength ?? this.tail!.initialLength)
+  const tailDiff = this.tail!.fragmentDiff ?? this.tail!.insertionDiff
+  const tailIndex = this.visibleFrameCount - (tailDiff > 0 ? tailDiff : 0)
 
   const distanceToTravel = Math.abs(this.visibleIndex - index)
   const tailDistance = Math.abs(tailIndex - index)
@@ -35,7 +34,8 @@ export function findFrameByVisibleIndex<T>(
   const optimalJumpSpacing = Math.round(Math.sqrt(this.structuralStripCount))
 
   while (true) {
-    const stripLength = cursorStrip.fragmentLength ?? cursorStrip.initialLength
+    const cursorDiff = cursorStrip.fragmentDiff ?? cursorStrip.insertionDiff
+    const stripLength = cursorDiff > 0 ? cursorDiff : 0
 
     if (cursorIndex <= index && index < cursorIndex + stripLength) {
       this.gate = cursorStrip
@@ -114,8 +114,9 @@ export function findFrameByVisibleIndex<T>(
     } else {
       // Traverse left
       const walkStrip = cursorStrip.leftStep!
-      const walkIndex =
-        cursorIndex - (walkStrip.fragmentLength ?? walkStrip.initialLength)
+      const walkDiff = walkStrip.fragmentDiff ?? walkStrip.insertionDiff
+      const walkLength = walkDiff > 0 ? walkDiff : 0
+      const walkIndex = cursorIndex - walkLength
       const walkDistance = Math.abs(walkIndex - index)
 
       let leftJump = cursorStrip.leftJump

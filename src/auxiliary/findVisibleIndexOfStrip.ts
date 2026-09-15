@@ -1,4 +1,4 @@
-import { Sequence } from '../class.js'
+import type { Sequence } from '../class.js'
 import type { Strip } from '../types/type.js'
 
 export function findVisibleIndexOfStrip<T>(
@@ -35,7 +35,8 @@ export function findVisibleIndexOfStrip<T>(
     if (!leftJumpFound) {
       leftCursor = leftCursor.leftStep!
 
-      leftDistance += leftCursor.fragmentLength ?? leftCursor.initialLength
+      const leftDiff = leftCursor.fragmentDiff ?? leftCursor.insertionDiff
+      leftDistance += leftDiff > 0 ? leftDiff : 0
 
       ++leftStripDistance
 
@@ -55,7 +56,8 @@ export function findVisibleIndexOfStrip<T>(
     }
 
     if (!rightJumpFound) {
-      rightDistance += rightCursor.fragmentLength ?? rightCursor.initialLength
+      const rightDiff = rightCursor.fragmentDiff ?? rightCursor.insertionDiff
+      rightDistance += rightDiff > 0 ? rightDiff : 0
 
       rightCursor = rightCursor.rightStep!
       ++rightStripDistance
@@ -153,10 +155,10 @@ export function findVisibleIndexOfStrip<T>(
 
     // CHECK IF RIGHT IS AT TAIL
     if (rightCursor === this.tail) {
+      const rightDiff = rightCursor.fragmentDiff ?? rightCursor.insertionDiff
+
       return (
-        this.visibleFrameCount -
-        (rightCursor.fragmentLength ?? rightCursor.initialLength) -
-        rightDistance
+        this.visibleFrameCount - (rightDiff > 0 ? rightDiff : 0) - rightDistance
       )
     }
 
@@ -204,7 +206,8 @@ export function findVisibleIndexOfStrip<T>(
     } else {
       leftCursor = leftCursor.leftStep!
 
-      leftDistance += leftCursor.fragmentLength ?? leftCursor.initialLength
+      const leftDiff = leftCursor.fragmentDiff ?? leftCursor.insertionDiff
+      leftDistance += leftDiff > 0 ? leftDiff : 0
     }
 
     // USE RIGHT JUMP IF AVAILABLE
@@ -249,7 +252,8 @@ export function findVisibleIndexOfStrip<T>(
 
       rightDistance += rightJumpFrameCount
     } else {
-      rightDistance += rightCursor.fragmentLength ?? rightCursor.initialLength
+      const rightDiff = rightCursor.fragmentDiff ?? rightCursor.insertionDiff
+      rightDistance += rightDiff > 0 ? rightDiff : 0
 
       rightCursor = rightCursor.rightStep!
     }
