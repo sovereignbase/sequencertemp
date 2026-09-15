@@ -2,6 +2,7 @@ import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js
 import { insertAfter } from '../auxiliary/insertAfter.js'
 import { insertBefore } from '../auxiliary/insertBefore.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
+import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Sequence } from '../class.js'
 import type { Delta, Strip } from '../types/type.js'
 
@@ -50,6 +51,9 @@ export function insert<T>(
     insertionDiff: values.length,
     footage: values,
   }
+
+  const previousStructuralStripCount = this.structuralStripCount
+
   // the visible index that should move right from under the insertion
   // uses a boundary marker when it is immediately after the end of a Strip
   if (targetFramePosition === 1)
@@ -61,6 +65,12 @@ export function insert<T>(
       containingStrip,
       targetFramePosition
     )
+
+  patchJumps.call(
+    this,
+    increasingStrip.insertionDiff,
+    this.structuralStripCount - previousStructuralStripCount
+  )
 
   return [
     [
