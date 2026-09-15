@@ -1,30 +1,19 @@
-export function merge(data: unknown) {
-  if (Array.isArray(snapshot))
-    for (const chunk of snapshot) {
-      const [header, body] = chunk
-      const [
-        type,
-        depencyPrefix,
-        initialLength,
-        offsetLength,
-        actorX,
-        timeX,
-        actorY,
-        timeY,
-      ] = header
+import { apply } from './apply.js'
+import { isSnapshot } from '../auxiliary/isSnapshot.js'
+import type { Sequence } from '../class.js'
+import type { Delta } from '../types/type.js'
 
-      const actorXTable: Map<number, Strip<T>> = this.containmentTable.get(
-        actorX
-      ) ?? new Map()
-      if (actorXTable.size === 0)
-        void this.containmentTable.set(actorX, actorXTable)
+export function merge<T>(
+  this: Sequence<T>,
+  data: unknown
+): Delta<T> | undefined {
+  if (!isSnapshot<T>(data)) return
 
-      const actorYTable: Map<number, Strip<T>> = this.containmentTable.get(
-        actorY
-      ) ?? new Map()
-      if (actorYTable.size === 0)
-        void this.containmentTable.set(actorX, actorYTable)
+  const [frontiers, projection] = data
 
-      const containingStrip: Strip<T> | undefined = actorXTable.get(timeX)
-    }
+  const delta = apply.call(this, projection) as Delta<T> | undefined
+
+  void apply.call(this, frontiers)
+
+  return delta
 }

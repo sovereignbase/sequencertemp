@@ -1,0 +1,19 @@
+import { isAcknowledgement, isInsertion } from './isDelta.js'
+import type { Snapshot } from '../types/type.js'
+
+export function isSnapshot<T>(data: unknown): data is Snapshot<T> {
+  if (!Array.isArray(data) || data.length !== 2) return false
+
+  const frontiers = data[0]
+  const projection = data[1]
+
+  if (!Array.isArray(frontiers) || !Array.isArray(projection)) return false
+
+  for (let i = 0; i < frontiers.length; ++i)
+    if (!isAcknowledgement(frontiers[i])) return false
+
+  for (let i = 0; i < projection.length; ++i)
+    if (!isInsertion<T>(projection[i])) return false
+
+  return true
+}
