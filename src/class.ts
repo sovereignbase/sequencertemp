@@ -5,6 +5,7 @@ import { FrontierTable } from './FrontierTable/class.js'
 import { ContainmentTable } from './ContainmentTable/class.js'
 import { patch } from './algorithms/patch.js'
 import { read } from './algorithms/read.js'
+import { insert } from './algorithms/insert.js'
 
 export class Sequence<T> {
   public head: Strip<T> | undefined
@@ -28,6 +29,9 @@ export class Sequence<T> {
   //
   constructor(actorID: number, trustedSnapshot?: unknown) {
     create.call(this, actorID, trustedSnapshot)
+  }
+  insert(values: Array<T>, at: number) {
+    return insert.call(this, values, at)
   }
   //
   patch(delta: Delta<T>) {
