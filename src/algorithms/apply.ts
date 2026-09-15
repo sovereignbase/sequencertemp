@@ -8,17 +8,27 @@ import type { Sequence } from '../class.js'
 import type { Acknowledgement, Delta, Strip } from '../types/type.js'
 
 export function apply<T>(this: Sequence<T>, data: unknown): Delta<T> | void {
-  if (isInsertion<T>(data)) {
-    if (this.containmentTable.has(data)) return
+  if (!Array.isArray(data)) return
+
+  const acknowledgements: Array<Acknowledgement> = []
+
+  for (const entry of data) {
+    if (isAcknowledgement(entry)) {
+      this.frontierTable.observeAcknowledgement(entry)
+      continue
+    }
+
+    if (!isInsertion<T>(entry)) return
+    if (this.containmentTable.has(entry)) continue
 
     const incomingStrip: NonNullable<Strip<T>> = {
-      anchorSequencer: data[0],
-      anchorTime: data[1],
-      anchorFrame: data[2],
-      insertionSequencer: data[3],
-      insertionTime: data[4],
-      insertionDiff: data[5],
-      footage: data[6],
+      anchorSequencer: entry[0],
+      anchorTime: entry[1],
+      anchorFrame: entry[2],
+      insertionSequencer: entry[3],
+      insertionTime: entry[4],
+      insertionDiff: entry[5],
+      footage: entry[6],
     }
 
     const birth =
@@ -36,7 +46,7 @@ export function apply<T>(this: Sequence<T>, data: unknown): Delta<T> | void {
         containingStrip = this.head!
         targetFramePosition = 0
       } else {
-        const origin = this.containmentTable.get(data)
+        const origin = this.containmentTable.get(entry)
         if (!origin) return
 
         containingStrip = origin
@@ -89,7 +99,7 @@ export function apply<T>(this: Sequence<T>, data: unknown): Delta<T> | void {
           incomingStrip.insertionTime
         )
 
-      return
+      continue
     }
 
     if (incomingStrip.insertionSequencer === this.decreaseClock[0])
@@ -105,10 +115,8 @@ export function apply<T>(this: Sequence<T>, data: unknown): Delta<T> | void {
     ]
 
     this.frontierTable.observeAcknowledgement(acknowledgement)
-
-    return [acknowledgement]
+    acknowledgements.push(acknowledgement)
   }
 
-  if (isAcknowledgement(data))
-    return void this.frontierTable.observeAcknowledgement(data)
+  return acknowledgements.length === 0 ? undefined : acknowledgements
 }
