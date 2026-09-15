@@ -4,11 +4,15 @@ import { Delta, Snapshot, Strip } from './types/type.js'
 import { FrontierTable } from './FrontierTable/class.js'
 import { ContainmentTable } from './ContainmentTable/class.js'
 import { patch } from './algorithms/patch.js'
+import { read } from './algorithms/read.js'
 
 export class Sequence<T> {
   public head: Strip<T> | undefined
   public gate: Strip<T> | undefined
   public tail: Strip<T> | undefined
+  //
+  rightJumpToPatch?: Strip<T>
+  leftJumpToPatch?: Strip<T>
   //
   public structuralStripCount: number = 0
   public visibleFrameCount: number = 0
@@ -28,5 +32,8 @@ export class Sequence<T> {
   //
   patch(delta: Delta<T>) {
     patch.call(this, delta)
+  }
+  read(index: number): T | undefined {
+    return read.call(this, index) as T | undefined
   }
 }
