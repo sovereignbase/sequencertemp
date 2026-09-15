@@ -21,8 +21,8 @@ export class Sequence<T> {
   public readonly containmentTable: ContainmentTable<T> = new ContainmentTable()
   public readonly frontierTable: FrontierTable = new FrontierTable()
   //
-  public readonly actorClock: [id: number, time: number] = [0, 0]
-  public readonly sessionClock: [id: number, time: number] = [0, 0]
+  public readonly increaseClock: [id: number, time: number] = [0, 0]
+  public readonly decreaseClock: [id: number, time: number] = [0, 0]
   //
   constructor(actorID: number, trustedSnapshot?: unknown) {
     create.call(this, actorID, trustedSnapshot)
