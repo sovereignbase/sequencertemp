@@ -28,7 +28,7 @@ export type Strip<T> =
     }
   | undefined
 
-export type Delta<T> = [
+export type Projection<T> = [
   type: number,
   depencyPrefix: number,
   initialLength: number,
@@ -42,8 +42,9 @@ export type Delta<T> = [
 /** [0] = ActorID ...SessionID, Count */
 export type Acknowledgement = Uint32List
 
+export type Delta<T> = [frontier: Acknowledgement, projection: Projection<T>]
+
 export type Snapshot<T> = [
   frontiers: Array<Acknowledgement>,
-  projection: Array<Delta<T>>,
+  projection: Array<Projection<T>>,
 ]
-export type ActorIdMap = Record<string, number>
