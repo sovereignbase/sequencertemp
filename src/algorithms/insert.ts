@@ -1,4 +1,5 @@
 import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js'
+import { splitStrip } from '../auxiliary/splitStrip.js'
 import type { Sequence } from '../class.js'
 import type { Strip } from '../types/type.js'
 
@@ -17,4 +18,6 @@ export function insert<T>(this: Sequence<T>, values: Array<T>, at: number) {
     actorY: this.insertClock[0],
     timeY: this.insertClock[1],
   }
+
+  const suffix: Strip<T> = splitStrip.call(this, this.gate!, offset) as Strip<T>
 }
