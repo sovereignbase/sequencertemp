@@ -1,27 +1,3 @@
-export const i32Max = 2_147_483_647
-export const i32Min = -2_147_483_648
-
-/**
- * Signed WebAssembly lane validation.
- *
- * @module
- */
-
-/**
- * Determines whether `value` is a signed 32-bit integer.
- *
- * @param value Value to test.
- * @returns Whether `value` is a safe integer in the inclusive range
- * `-2^31` through `2^31 - 1`.
- */
-export function isI32(value: unknown): value is number {
-  return (
-    Number.isSafeInteger(value) &&
-    (value as number) >= i32Min &&
-    (value as number) <= i32Max
-  )
-}
-
 /**
  * Runtime validation of transferable Delta entries.
  *
@@ -48,9 +24,10 @@ export function isDelta<T>(data: unknown): data is Delta<T> {
   return (
     Array.isArray(header) &&
     header.length % 8 === 0 &&
-    header.every(isI32) &&
+    header.every(isPositiveNumber) &&
     (body === undefined || Array.isArray(body))
   )
 }
 
 import type { Delta } from '../types/type.js'
+import { isPositiveNumber } from './isPositiveNumber.js'
