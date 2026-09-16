@@ -24,11 +24,13 @@ export function insertBefore<T>(
   let leftStep = containingStrip
   let rightStep: Strip<T>
   const rightFragment = this.containmentTable.isRightFragment(containingStrip)
+  let boundaryStrip: Strip<T>
 
   if (containingStripLength !== 0) {
     if (rightFragment) {
       leftStep = containingStrip.leftStep!
       rightStep = containingStrip
+      boundaryStrip = containingStrip
 
       if (containingStrip.leftJump) {
         this.leftJumpToPatch = containingStrip.leftJump
@@ -39,9 +41,11 @@ export function insertBefore<T>(
       }
     } else {
       rightStep = splitStrip.call(this, containingStrip, 0) as Strip<T>
+      boundaryStrip = rightStep
     }
   } else {
     rightStep = containingStrip.rightStep
+    boundaryStrip = containingStrip.rightFragment
   }
 
   incomingStrip.rightCompetitor = undefined
@@ -54,11 +58,8 @@ export function insertBefore<T>(
   if (birth && !containingStrip.rightCompetitor)
     containingStrip.rightCompetitor = containingStrip.rightFragment
 
-  const firstCompetitor = birth
-    ? containingStrip.rightCompetitor
-    : rightFragment
-      ? containingStrip.leftJump?.rightStep
-      : rightStep
+  const competitorAnchor = birth ? containingStrip : boundaryStrip!
+  const firstCompetitor = competitorAnchor.rightCompetitor
 
   const directLeftStep = leftStep
   const directRightStep = rightStep
@@ -75,27 +76,33 @@ export function insertBefore<T>(
 
     while (
       smallerCompetitor &&
-      ((incomingStrip.insertionDiff < 0 &&
-        smallerCompetitor.insertionDiff > 0) ||
-        (incomingStrip.insertionDiff < 0 ===
-          smallerCompetitor.insertionDiff < 0 &&
-          (incomingStrip.insertionSession <
-            smallerCompetitor.insertionSession ||
-            (incomingStrip.insertionSession ===
-              smallerCompetitor.insertionSession &&
-              incomingStrip.insertionTime >=
-                smallerCompetitor.insertionTime +
-                  Math.abs(smallerCompetitor.insertionDiff) +
-                  1))))
+      smallerCompetitor.anchorSession === incomingStrip.anchorSession &&
+      smallerCompetitor.anchorTime === incomingStrip.anchorTime &&
+      smallerCompetitor.anchorFrame === incomingStrip.anchorFrame &&
+      (incomingStrip.insertionSession < smallerCompetitor.insertionSession ||
+        (incomingStrip.insertionSession ===
+          smallerCompetitor.insertionSession &&
+          incomingStrip.insertionTime >=
+            smallerCompetitor.insertionTime +
+              Math.abs(smallerCompetitor.insertionDiff) +
+              1))
     ) {
       largerCompetitor = smallerCompetitor
       smallerCompetitor = smallerCompetitor.rightCompetitor
     }
 
+    if (
+      smallerCompetitor &&
+      (smallerCompetitor.anchorSession !== incomingStrip.anchorSession ||
+        smallerCompetitor.anchorTime !== incomingStrip.anchorTime ||
+        smallerCompetitor.anchorFrame !== incomingStrip.anchorFrame)
+    )
+      smallerCompetitor = undefined
+
     incomingStrip.rightCompetitor = smallerCompetitor
 
     if (largerCompetitor) largerCompetitor.rightCompetitor = incomingStrip
-    else if (birth) containingStrip.rightCompetitor = incomingStrip
+    else competitorAnchor!.rightCompetitor = incomingStrip
 
     if (smallerCompetitor) {
       if (
@@ -114,6 +121,8 @@ export function insertBefore<T>(
       rightStep = leftStep.rightStep
     }
   }
+
+  if (!firstCompetitor) competitorAnchor.rightCompetitor = incomingStrip
 
   if (
     (leftStep !== directLeftStep || rightStep !== directRightStep) &&

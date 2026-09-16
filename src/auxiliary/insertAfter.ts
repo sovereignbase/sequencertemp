@@ -25,6 +25,7 @@ export function insertAfter<T>(
 
   let leftStep = containingStrip
   let rightStep: Strip<T>
+  let boundaryStrip: Strip<T>
 
   if (targetFramePosition <= containingStripLength) {
     rightStep = splitStrip.call(
@@ -32,45 +33,51 @@ export function insertAfter<T>(
       containingStrip,
       targetFramePosition - 1
     ) as Strip<T>
+    boundaryStrip = rightStep
   } else rightStep = containingStrip.rightStep
 
   incomingStrip.rightCompetitor = undefined
 
+  const firstCompetitor = boundaryStrip?.rightCompetitor ?? rightStep
+
   if (
-    rightStep &&
-    (containingStrip.rightFragment !== rightStep ||
-      (incomingStrip.anchorSession === 0 &&
-        incomingStrip.anchorTime === 0 &&
-        incomingStrip.anchorFrame === 0)) &&
-    rightStep.anchorSession === incomingStrip.anchorSession &&
-    rightStep.anchorTime === incomingStrip.anchorTime &&
-    rightStep.anchorFrame === incomingStrip.anchorFrame
+    firstCompetitor &&
+    firstCompetitor.anchorSession === incomingStrip.anchorSession &&
+    firstCompetitor.anchorTime === incomingStrip.anchorTime &&
+    firstCompetitor.anchorFrame === incomingStrip.anchorFrame
   ) {
     let largerCompetitor: NonNullable<Strip<T>> | undefined
-    let smallerCompetitor: Strip<T> = rightStep
+    let smallerCompetitor: Strip<T> = firstCompetitor
 
     while (
       smallerCompetitor &&
-      ((incomingStrip.insertionDiff < 0 &&
-        smallerCompetitor.insertionDiff > 0) ||
-        (incomingStrip.insertionDiff < 0 ===
-          smallerCompetitor.insertionDiff < 0 &&
-          (incomingStrip.insertionSession <
-            smallerCompetitor.insertionSession ||
-            (incomingStrip.insertionSession ===
-              smallerCompetitor.insertionSession &&
-              incomingStrip.insertionTime >=
-                smallerCompetitor.insertionTime +
-                  Math.abs(smallerCompetitor.insertionDiff) +
-                  1))))
+      smallerCompetitor.anchorSession === incomingStrip.anchorSession &&
+      smallerCompetitor.anchorTime === incomingStrip.anchorTime &&
+      smallerCompetitor.anchorFrame === incomingStrip.anchorFrame &&
+      (incomingStrip.insertionSession < smallerCompetitor.insertionSession ||
+        (incomingStrip.insertionSession ===
+          smallerCompetitor.insertionSession &&
+          incomingStrip.insertionTime >=
+            smallerCompetitor.insertionTime +
+              Math.abs(smallerCompetitor.insertionDiff) +
+              1))
     ) {
       largerCompetitor = smallerCompetitor
       smallerCompetitor = smallerCompetitor.rightCompetitor
     }
 
+    if (
+      smallerCompetitor &&
+      (smallerCompetitor.anchorSession !== incomingStrip.anchorSession ||
+        smallerCompetitor.anchorTime !== incomingStrip.anchorTime ||
+        smallerCompetitor.anchorFrame !== incomingStrip.anchorFrame)
+    )
+      smallerCompetitor = undefined
+
     incomingStrip.rightCompetitor = smallerCompetitor
 
     if (largerCompetitor) largerCompetitor.rightCompetitor = incomingStrip
+    else if (boundaryStrip) boundaryStrip.rightCompetitor = incomingStrip
 
     if (smallerCompetitor) {
       rightStep = smallerCompetitor
@@ -87,6 +94,9 @@ export function insertAfter<T>(
       this.rightJumpToPatch = undefined
     }
   }
+
+  if (!firstCompetitor && boundaryStrip)
+    boundaryStrip.rightCompetitor = incomingStrip
 
   incomingStrip.leftStep = leftStep
   incomingStrip.rightStep = rightStep
