@@ -7,7 +7,7 @@ import type { Delta, Strip } from '../types/type.js'
 
 export function replace<T>(
   this: Sequence<T>,
-  values: Array<T>,
+  withValues: Array<T>,
   startAt: number = 0,
   endAt: number = this.visibleFrameCount
 ): Delta<T> {
@@ -71,11 +71,11 @@ export function replace<T>(
     remaining -= decreasingLength
   }
 
-  if (values.length !== 0) {
+  if (withValues.length !== 0) {
     const targetFramePosition = findFrameByVisibleIndex.call(this, startAt)
     const containingStrip = this.gate!
 
-    this.increaseClock[1] += values.length + 1
+    this.increaseClock[1] += withValues.length + 1
 
     const increasingStrip: NonNullable<Strip<T>> = {
       anchorSequencer: containingStrip.insertionSequencer,
@@ -83,8 +83,8 @@ export function replace<T>(
       anchorFrame: targetFramePosition,
       insertionSequencer: this.increaseClock[0],
       insertionTime: this.increaseClock[1],
-      insertionDiff: values.length,
-      footage: values,
+      insertionDiff: withValues.length,
+      footage: withValues,
     }
 
     const previousStructuralStripCount = this.structuralStripCount

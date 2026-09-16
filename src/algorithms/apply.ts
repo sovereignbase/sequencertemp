@@ -5,14 +5,21 @@ import { insertFirst } from '../auxiliary/insertFirst.js'
 import { isAcknowledgement, isInsertion } from '../auxiliary/isDelta.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Sequence } from '../class.js'
-import type { Acknowledgement, Delta, Insertion, Strip } from '../types/type.js'
+import type {
+  Acknowledgement,
+  Change,
+  Insertion,
+  Result,
+  Strip,
+} from '../types/type.js'
 
 export function apply<T>(
   this: Sequence<T>,
   data: unknown
-): Delta<T> | undefined {
+): Result<T> | undefined {
   if (!Array.isArray(data)) return
 
+  const changes = []
   const acknowledgements: Array<Acknowledgement> = []
 
   for (const entry of data) {
@@ -103,6 +110,19 @@ export function apply<T>(
 
       this.containmentTable.set(incomingStrip)
 
+      const startAt = findVisibleIndexOfStrip.call(this, incomingStrip)
+
+      if (incomingStrip.insertionDiff > 0) {
+        changes.push([
+          startAt,
+          startAt,
+          incomingStrip.footage ??
+            new Array<T | undefined>(incomingStrip.insertionDiff),
+        ])
+      } else {
+        changes.push([startAt, startAt - incomingStrip.insertionDiff])
+      }
+
       const pending = this.pendingTable.take(incomingStrip)
 
       if (pending)
@@ -137,5 +157,7 @@ export function apply<T>(
     }
   }
 
-  return acknowledgements.length === 0 ? undefined : acknowledgements
+  return acknowledgements.length === 0
+    ? [changes as unknown as Change<T>]
+    : [changes as unknown as Change<T>, acknowledgements]
 }

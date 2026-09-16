@@ -131,26 +131,25 @@ export type Snapshot<T> = Readonly<
     projection: ReadonlyArray<Insertion<T>>,
   ]
 >
+/**
+ * Consumer-facing Projection splice.
+ *
+ * Replaces the half-open range `[startAt, endAt)` with optional `values`.
+ */
+export type Splice<T> = Readonly<
+  [startAt: number, endAt: number, values?: ReadonlyArray<T | undefined>]
+>
 
 /**
- * Flat list of changed Projection spans.
- *
- * Changes are encoded as repeating `[startAt, endAt]` pairs:
- * `[startAt, endAt, startAt, endAt, ...]`.
- *
- * Each pair identifies one contiguous Projection range affected by a
- * materialized update. Multiple pairs are emitted when one operation affects
- * disjoint ranges.
- *
- * `startAt` is inclusive and `endAt` is exclusive.
+ * Ordered visible Projection mutations produced by applying remote data.
  */
-export type Change = ReadonlyArray<number>
+export type Change<T> = ReadonlyArray<Splice<T>>
 
 /**
  * Result of a mutating Sequence operation.
  *
- * `change` describes the affected Projection spans.
+ * `change` describes the visible Projection mutations.
  *
  * `delta` contains replication data when the operation emitted any.
  */
-export type Result<T> = Readonly<[change: Change, delta?: Delta<T>]>
+export type Result<T> = Readonly<[change: Change<T>, delta?: Delta<T>]>

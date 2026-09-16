@@ -1,5 +1,5 @@
 import { create } from './algorithms/create.js'
-import { Delta, Snapshot, Strip } from './types/type.js'
+import { Delta, Snapshot, Result, Strip } from './types/type.js'
 import { FrontierTable } from './components/FrontierTable/class.js'
 import { ContainmentTable } from './components/ContainmentTable/class.js'
 import { find } from './algorithms/find.js'
@@ -9,6 +9,7 @@ import { PendingTable } from './components/PendingTable/class.js'
 import { merge } from './algorithms/merge.js'
 import { remove } from './algorithms/remove.js'
 import { replace } from './algorithms/replace.js'
+import { values } from './algorithms/values.js'
 
 export class Sequence<T> {
   public head: Strip<T> | undefined
@@ -29,8 +30,8 @@ export class Sequence<T> {
   public readonly increaseClock: [id: number, time: number] = [0, 0]
   public readonly decreaseClock: [id: number, time: number] = [0, 0]
   //
-  apply(data: unknown): Delta<T> | undefined {
-    return apply.call(this, data) as Delta<T> | undefined
+  apply(data: unknown): Result<T> | undefined {
+    return apply.call(this, data) as Result<T> | undefined
   }
   //
   constructor(actorID: number, trustedSnapshot?: unknown) {
@@ -45,8 +46,8 @@ export class Sequence<T> {
     return insert.call(this, values, at) as Delta<T>
   }
   //
-  merge(data: unknown): Delta<T> | undefined {
-    return merge.call(this, data) as Delta<T> | undefined
+  merge(data: unknown): Result<T> | undefined {
+    return merge.call(this, data) as Result<T> | undefined
   }
   //
   remove(startAt?: number, endAt?: number): Delta<T> {
@@ -55,5 +56,8 @@ export class Sequence<T> {
   //
   replace(withValues: Array<T>, startAt?: number, endAt?: number): Delta<T> {
     return replace.call(this, withValues, startAt, endAt) as Delta<T>
+  }
+  values(startAt?: number, endAt?: number): Array<T> {
+    return values.call(this, startAt, endAt) as Array<T>
   }
 }
