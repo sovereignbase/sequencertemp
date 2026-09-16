@@ -39,7 +39,10 @@ export function values<T>(
         fragment = fragment.rightFragment!
       }
 
-      const length = Math.min(remaining, stripDiff - framePosition + 1)
+      const length = Math.max(
+        0,
+        Math.min(remaining, stripDiff - framePosition + 1)
+      )
 
       for (let i = 0; i < length; ++i)
         values.push(strip.footage?.[footageOffset + framePosition + i - 1])
@@ -48,7 +51,7 @@ export function values<T>(
     }
 
     strip = strip.rightStep
-    framePosition = 1
+    framePosition = Math.max(1, framePosition - stripDiff)
   }
 
   return values

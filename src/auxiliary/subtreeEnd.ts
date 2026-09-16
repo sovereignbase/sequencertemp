@@ -32,7 +32,10 @@ export function subtreeEnd<T>(
         nextStrip.anchorFrame < ancestorFragmentFrame ||
         nextStrip.anchorFrame >
           ancestorFragmentFrame +
-            Math.abs(ancestorStrip.fragmentDiff ?? ancestorStrip.insertionDiff))
+            Math.abs(
+              ancestorStrip.fragmentDiff ?? ancestorStrip.insertionDiff
+            ) +
+            1)
     ) {
       const ancestor = ancestors.pop()
 

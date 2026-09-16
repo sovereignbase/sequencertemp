@@ -36,7 +36,7 @@ export function findVisibleIndexOfStrip<T>(
       leftCursor = leftCursor.leftStep!
 
       const leftDiff = leftCursor.fragmentDiff ?? leftCursor.insertionDiff
-      leftDistance += leftDiff > 0 ? leftDiff : 0
+      leftDistance += leftDiff
 
       ++leftStripDistance
 
@@ -57,7 +57,7 @@ export function findVisibleIndexOfStrip<T>(
 
     if (!rightJumpFound) {
       const rightDiff = rightCursor.fragmentDiff ?? rightCursor.insertionDiff
-      rightDistance += rightDiff > 0 ? rightDiff : 0
+      rightDistance += rightDiff
 
       rightCursor = rightCursor.rightStep!
       ++rightStripDistance
@@ -158,7 +158,7 @@ export function findVisibleIndexOfStrip<T>(
       const rightDiff = rightCursor.fragmentDiff ?? rightCursor.insertionDiff
 
       return (
-        this.visibleFrameCount - (rightDiff > 0 ? rightDiff : 0) - rightDistance
+        this.visibleFrameCount - rightDiff - rightDistance
       )
     }
 
@@ -207,7 +207,7 @@ export function findVisibleIndexOfStrip<T>(
       leftCursor = leftCursor.leftStep!
 
       const leftDiff = leftCursor.fragmentDiff ?? leftCursor.insertionDiff
-      leftDistance += leftDiff > 0 ? leftDiff : 0
+      leftDistance += leftDiff
     }
 
     // USE RIGHT JUMP IF AVAILABLE
@@ -253,7 +253,7 @@ export function findVisibleIndexOfStrip<T>(
       rightDistance += rightJumpFrameCount
     } else {
       const rightDiff = rightCursor.fragmentDiff ?? rightCursor.insertionDiff
-      rightDistance += rightDiff > 0 ? rightDiff : 0
+      rightDistance += rightDiff
 
       rightCursor = rightCursor.rightStep!
     }
