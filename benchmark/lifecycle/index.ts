@@ -91,6 +91,65 @@ const applyUpdate = (
   return result
 }
 
+const assertConverged = (
+  left: Sequence<number>,
+  right: Sequence<number>,
+  operation: string,
+  update: Delta<number>
+): void => {
+  if (left.visibleFrameCount !== right.visibleFrameCount)
+    throw new TypeError(`${operation} visibleFrameCount diverged.`)
+
+  const leftValues = Array.from(
+    { length: left.visibleFrameCount },
+    (_, index) => left.find(index)
+  )
+  const rightValues = Array.from(
+    { length: right.visibleFrameCount },
+    (_, index) => right.find(index)
+  )
+
+  for (let index = 0; index < left.visibleFrameCount; ++index)
+    if (leftValues[index] !== rightValues[index])
+      throw new TypeError(
+        `${operation} diverged at ${index}: ${JSON.stringify({
+          update,
+          leftValues,
+          rightValues,
+          leftTail: Array.from({ length: 8 }, (_, offset) => {
+            let strip = left.tail
+            for (let step = 0; step < offset; ++step) strip = strip?.leftStep
+            return strip
+              ? [
+                  strip.footage?.[0],
+                  strip.fragmentDiff ?? strip.insertionDiff,
+                  strip.anchorSequencer,
+                  strip.anchorTime,
+                  strip.anchorFrame,
+                  strip.insertionSequencer,
+                  strip.insertionTime,
+                ]
+              : null
+          }),
+          rightTail: Array.from({ length: 8 }, (_, offset) => {
+            let strip = right.tail
+            for (let step = 0; step < offset; ++step) strip = strip?.leftStep
+            return strip
+              ? [
+                  strip.footage?.[0],
+                  strip.fragmentDiff ?? strip.insertionDiff,
+                  strip.anchorSequencer,
+                  strip.anchorTime,
+                  strip.anchorFrame,
+                  strip.insertionSequencer,
+                  strip.insertionTime,
+                ]
+              : null
+          }),
+        })}`
+      )
+}
+
 const gossip = (
   sender: Sequence<number>,
   receiver: Sequence<number>,
@@ -100,13 +159,7 @@ const gossip = (
   const acknowledgements = applyUpdate(receiver, update, operation)[1]
   if (acknowledgements?.length)
     void applyUpdate(sender, acknowledgements, operation + ' acknowledgements')
-
-  const senderValues = new Sequence<number>(10_001, sender.snapshot()).values()
-  const receiverValues = new Sequence<number>(10_002, receiver.snapshot()).values()
-  if (JSON.stringify(senderValues) !== JSON.stringify(receiverValues))
-    throw new TypeError(
-      `${operation} diverged: ${JSON.stringify({ update, senderValues, receiverValues })}`
-    )
+  assertConverged(sender, receiver, operation, update)
 }
 
 const insertAt = (
@@ -118,10 +171,23 @@ const insertAt = (
 ): void => {
   const frameIndex = runtime.strips.frameOffsetAt(stripIndex)
   const strip = createStrip(runtime, config)
+  if (strip.id === 11)
+    console.log(
+      'DEBUG before',
+      Array.from(
+        { length: runtime.state.visibleFrameCount },
+        (_, index) => runtime.state.find(index)
+      )
+    )
   const mutation = timeOperation(runtime, direction, operationName, () =>
     runtime.state.insert(strip.values, frameIndex)
   )
-  gossip(runtime.state, runtime.peer, mutation, operationName)
+  gossip(
+    runtime.state,
+    runtime.peer,
+    mutation,
+    `${operationName}@${frameIndex}`
+  )
   runtime.strips.insert(stripIndex, strip)
 }
 
@@ -168,7 +234,12 @@ const randomReplace = (
       frameIndex + replaced.length
     )
   )
-  gossip(runtime.state, runtime.peer, mutation, 'randomReplace')
+  gossip(
+    runtime.state,
+    runtime.peer,
+    mutation,
+    `randomReplace@${frameIndex}`
+  )
   runtime.strips.replace(stripIndex, strip)
 }
 
@@ -188,12 +259,7 @@ const randomIngest = (runtime: Runtime, direction: Direction): void => {
   const acknowledgements = result[1]
   if (acknowledgements?.length)
     void applyUpdate(runtime.peer, acknowledgements, 'randomIngest acknowledgements')
-  const stateValues = new Sequence<number>(10_001, runtime.state.snapshot()).values()
-  const peerValues = new Sequence<number>(10_002, runtime.peer.snapshot()).values()
-  if (JSON.stringify(stateValues) !== JSON.stringify(peerValues))
-    throw new TypeError(
-      `randomIngest diverged: ${JSON.stringify({ mutation, stateValues, peerValues })}`
-    )
+  assertConverged(runtime.state, runtime.peer, 'randomIngest', mutation)
   runtime.strips.replace(stripIndex, strip)
 }
 
@@ -267,40 +333,21 @@ const observeReplica = (
   if (runtime.peer.visibleFrameCount !== publicFrameCount)
     throw new TypeError(`Replica ${runtime.name} peers did not converge.`)
 
-  const [valuesMetric, values] = snapshotMetric(() => runtime.state.values())
-  const peerValues = runtime.peer.values()
-  if (JSON.stringify(peerValues) !== JSON.stringify(values))
-    throw new TypeError(
-      `Replica ${runtime.name} peer values diverged: ${JSON.stringify({
-        values,
-        peerValues,
-        canonicalValues: new Sequence<number>(
-          10_003,
-          runtime.state.snapshot()
-        ).values(),
-        stateGate: [
-          runtime.state.visibleIndex,
-          runtime.state.gate?.insertionSequencer,
-          runtime.state.gate?.insertionTime,
-        ],
-        peerGate: [
-          runtime.peer.visibleIndex,
-          runtime.peer.gate?.insertionSequencer,
-          runtime.peer.gate?.insertionTime,
-        ],
-      })}`
-    )
+  for (let index = 0; index < publicFrameCount; ++index)
+    if (runtime.peer.find(index) !== runtime.state.find(index))
+      throw new TypeError(
+        `Replica ${runtime.name} peers diverged at visible Frame ${index}.`
+      )
+
+  const [valuesMetric] = snapshotMetric(() => runtime.state.values())
   const [snapshotResult, checkpointSnapshot] = snapshotMetric(() =>
     runtime.state.snapshot()
   )
   const snapshotBytes = serialize(checkpointSnapshot).byteLength
 
-  const [createMetric, initializedState] = snapshotMetric(() =>
+  const [createMetric] = snapshotMetric(() =>
     createReplica(runtime.actorId, checkpointSnapshot)
   )
-  const initializedPeer = createReplica(runtime.peerActorId, checkpointSnapshot)
-  runtime.state = initializedState
-  runtime.peer = initializedPeer
 
   const stripCount = runtime.strips.count
   const frameCount = runtime.strips.frameCount

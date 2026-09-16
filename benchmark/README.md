@@ -49,10 +49,10 @@ snapshot
 create(snapshot)
 ```
 
-The old Sequences are never reused. Both peers are recreated from the same
-synchronized snapshot with independent runtime state. There is no separate
-recovery or acknowledgement phase: acknowledgements travel as part of the
-ordinary two-way gossip after every update.
+Snapshot construction is measured with a temporary Sequence; the two active
+peers continue their uninterrupted gossip session across checkpoints. There is
+no separate recovery or acknowledgement phase: acknowledgements travel as
+part of the ordinary two-way gossip after every update.
 
 The report includes visible Strip and Frame counts, retained snapshot Delta
 count, serialized snapshot size, an estimated retained-state size, and shared

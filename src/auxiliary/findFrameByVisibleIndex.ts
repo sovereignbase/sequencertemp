@@ -61,7 +61,7 @@ export function findFrameByVisibleIndex<T>(
 
       let rightJump = cursorStrip.rightJump
 
-      if (rightJump && cursorIndex >= 0) {
+      if (tailPredecessorDiff >= 0 && rightJump && cursorIndex >= 0) {
         let rightJumpFrameCount = cursorStrip.rightJumpFrameCount!
         let rightJumpStripCount = cursorStrip.rightJumpStripCount!
 
@@ -103,7 +103,11 @@ export function findFrameByVisibleIndex<T>(
 
         const jumpDistance = Math.abs(jumpIndex - index)
 
-        if (jumpDistance < currentDistance && jumpDistance < walkDistance) {
+        if (
+          jumpIndex <= index &&
+          jumpDistance < currentDistance &&
+          jumpDistance < walkDistance
+        ) {
           cursorStrip = rightJump
           cursorIndex = jumpIndex
           continue
@@ -121,7 +125,7 @@ export function findFrameByVisibleIndex<T>(
 
       let leftJump = cursorStrip.leftJump
 
-      if (leftJump) {
+      if (tailPredecessorDiff >= 0 && leftJump) {
         let leftJumpFrameCount = cursorStrip.leftJumpFrameCount!
         let leftJumpStripCount = cursorStrip.leftJumpStripCount!
 
@@ -160,7 +164,11 @@ export function findFrameByVisibleIndex<T>(
 
         const jumpDistance = Math.abs(jumpIndex - index)
 
-        if (jumpDistance < currentDistance && jumpDistance < walkDistance) {
+        if (
+          index <= jumpIndex &&
+          jumpDistance < currentDistance &&
+          jumpDistance < walkDistance
+        ) {
           cursorStrip = leftJump
           cursorIndex = jumpIndex
           continue
