@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { Sequence } from '../../../src/class.js'
-import type { Delta, Snapshot } from '../../../src/types/type.js'
+import type { Gossip, Snapshot } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
 describe('concurrent root subtree', () => {
   it('orders a complete concurrent subtree delivered before the other root', () => {
     const primary = new Sequence<string>(100)
     const concurrent = new Sequence<string>(101)
-    const mutations: Array<Delta<string>> = [
+    const mutations: Array<Gossip<string>> = [
       primary.insert(['primary-root'], 0),
       concurrent.insert(['concurrent-root'], 0),
       primary.insert(['primary-2'], 0),
@@ -40,6 +40,24 @@ describe('concurrent root subtree', () => {
       hostile.visibleIndex,
       hostile.gate?.footage?.[0],
     ])
+    const structure = (sequence: Sequence<string>) => {
+      const strips = []
+      let strip = sequence.head
+      while (strip) {
+        strips.push(strip)
+        strip = strip.rightStep
+      }
+      return strips.map((entry) => [
+        entry.footage?.[0],
+        entry.fragmentDiff,
+        entry.insertionSession,
+        entry.insertionTime,
+        strips.indexOf(entry.rightFragment!),
+        strips.indexOf(entry.rightCompetitor!),
+      ])
+    }
+    console.log('ORDERED_STRUCTURE', structure(ordered))
+    console.log('HOSTILE_STRUCTURE', structure(hostile))
 
     expect_converged(ordered, hostile)
     expect(new Set(ordered.values())).toEqual(
