@@ -23,3 +23,11 @@ An insertion contains the following information:
 - `anchorTime` -- Logical time of the session when the anchoring insertion was made.
 
 - `anchorFrame` -- `Frame` offset within the original anchoring insertion from its `insertionTime` towards `insertionEnd` i. e. `insertionTime + |insertionDiff|`
+
+- `insertionSession` -- Session identifier that issued a given insertion.
+
+- `insertionTime` -- Logical time at which a given insertion begins.
+
+- `insertionDiff` -- Singed `Frame` length of this insertion and its effect on the Projection.
+
+- `footage?` -- Optional footage carried by positive insertions.
