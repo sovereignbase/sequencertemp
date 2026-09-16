@@ -30,18 +30,28 @@ export function insertBefore<T>(
 
   incomingStrip.rightCompetitor = undefined
 
+  const birth =
+    incomingStrip.anchorSequencer === 0 &&
+    incomingStrip.anchorTime === 0 &&
+    incomingStrip.anchorFrame === 0
+
+  if (birth && !containingStrip.rightCompetitor)
+    containingStrip.rightCompetitor = containingStrip.rightFragment
+
+  const firstCompetitor = birth
+    ? containingStrip.rightCompetitor
+    : rightStep
+
   if (
-    rightStep &&
+    firstCompetitor &&
     (containingStrip.rightFragment !== rightStep ||
-      (incomingStrip.anchorSequencer === 0 &&
-        incomingStrip.anchorTime === 0 &&
-        incomingStrip.anchorFrame === 0)) &&
-    rightStep.anchorSequencer === incomingStrip.anchorSequencer &&
-    rightStep.anchorTime === incomingStrip.anchorTime &&
-    rightStep.anchorFrame === incomingStrip.anchorFrame
+      birth) &&
+    firstCompetitor.anchorSequencer === incomingStrip.anchorSequencer &&
+    firstCompetitor.anchorTime === incomingStrip.anchorTime &&
+    firstCompetitor.anchorFrame === incomingStrip.anchorFrame
   ) {
     let largerCompetitor: NonNullable<Strip<T>> | undefined
-    let smallerCompetitor: Strip<T> = rightStep
+    let smallerCompetitor: Strip<T> = firstCompetitor
 
     while (
       smallerCompetitor &&
@@ -65,10 +75,20 @@ export function insertBefore<T>(
     incomingStrip.rightCompetitor = smallerCompetitor
 
     if (largerCompetitor) largerCompetitor.rightCompetitor = incomingStrip
+    else if (birth) containingStrip.rightCompetitor = incomingStrip
 
     if (smallerCompetitor) {
-      rightStep = smallerCompetitor
-      leftStep = smallerCompetitor.leftStep!
+      if (
+        !largerCompetitor &&
+        birth &&
+        smallerCompetitor === containingStrip.rightFragment
+      ) {
+        leftStep = containingStrip
+        rightStep = containingStrip.rightStep
+      } else {
+        rightStep = smallerCompetitor
+        leftStep = smallerCompetitor.leftStep!
+      }
     } else if (largerCompetitor) {
       leftStep = subtreeEnd(largerCompetitor)
       rightStep = leftStep.rightStep

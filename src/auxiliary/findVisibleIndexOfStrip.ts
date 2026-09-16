@@ -137,7 +137,10 @@ export function findVisibleIndexOfStrip<T>(
   if (strip.rightJump) {
     this.leftJumpToPatch = strip
     this.rightJumpToPatch = strip.rightJump
-  } else if (leftCursor.rightJump === rightCursor) {
+  } else if (
+    rightCursor !== strip &&
+    leftCursor.rightJump === rightCursor
+  ) {
     this.leftJumpToPatch = leftCursor
     this.rightJumpToPatch = rightCursor
   } else {
@@ -152,7 +155,13 @@ export function findVisibleIndexOfStrip<T>(
   while (true) {
     // CHECK IF LEFT IS AT HEAD
     if (leftCursor === this.head) {
-      if (strip !== this.gate && leftDistance <= this.visibleIndex)
+      if (
+        strip !== this.gate &&
+        this.gate !== this.head &&
+        (leftDistance < this.visibleIndex ||
+          (leftDistance === this.visibleIndex &&
+            (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) > 0))
+      )
         this.visibleIndex += gateDiff
 
       return leftDistance
@@ -163,7 +172,13 @@ export function findVisibleIndexOfStrip<T>(
       const rightDiff = rightCursor.fragmentDiff ?? rightCursor.insertionDiff
       const index = this.visibleFrameCount - rightDiff - rightDistance
 
-      if (strip !== this.gate && index <= this.visibleIndex)
+      if (
+        strip !== this.gate &&
+        this.gate !== this.head &&
+        (index < this.visibleIndex ||
+          (index === this.visibleIndex &&
+            (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) > 0))
+      )
         this.visibleIndex += gateDiff
 
       return index

@@ -1,0 +1,33 @@
+import { describe, expect, it } from 'vitest'
+import { Sequence } from '../../../src/class.js'
+import type { Delta, Snapshot } from '../../../src/types/type.js'
+import { deliver, expect_converged } from '../../.helpers/replica.js'
+
+describe('concurrent root snapshot', () => {
+  it('recreates three concurrent root subtrees in deterministic order', () => {
+    const primary = new Sequence<string>(100)
+    const second = new Sequence<string>(101)
+    const third = new Sequence<string>(102)
+    const mutations: Array<Delta<string>> = [
+      primary.insert(['primary-root'], 0),
+      primary.insert(['primary-1'], 0),
+      second.insert(['second-root'], 0),
+      third.insert(['third-root'], 0),
+      primary.insert(['primary-4'], 0),
+      primary.insert(['primary-5'], 0),
+    ]
+    const empty: Snapshot<string> = [[], []]
+    const ordered = deliver(empty, mutations)
+    const recreated = new Sequence<string>(103, ordered.snapshot())
+
+    expect_converged(ordered, recreated)
+    expect(ordered.values()).toEqual([
+      'third-root',
+      'second-root',
+      'primary-5',
+      'primary-4',
+      'primary-1',
+      'primary-root',
+    ])
+  })
+})

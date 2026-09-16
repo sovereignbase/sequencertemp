@@ -57,7 +57,7 @@ export function findFrameByVisibleIndex<T>(
 
       let rightJump = cursorStrip.rightJump
 
-      if (rightJump) {
+      if (rightJump && cursorIndex >= 0) {
         let rightJumpFrameCount = cursorStrip.rightJumpFrameCount!
         let rightJumpStripCount = cursorStrip.rightJumpStripCount!
 

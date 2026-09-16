@@ -79,6 +79,17 @@ export function insertAfter<T>(
       leftStep = subtreeEnd(largerCompetitor)
       rightStep = leftStep.rightStep
     }
+
+    if (
+      largerCompetitor &&
+      this.leftJumpToPatch &&
+      this.rightJumpToPatch
+    ) {
+      this.leftJumpToPatch.rightJump = undefined
+      this.rightJumpToPatch.leftJump = undefined
+      this.leftJumpToPatch = undefined
+      this.rightJumpToPatch = undefined
+    }
   }
 
   incomingStrip.leftStep = leftStep

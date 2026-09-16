@@ -123,7 +123,7 @@ export function replace<T>(
       this.structuralStripCount - previousStructuralStripCount
     )
 
-    if (replacementAnchor)
+    if (replacementAnchor && this.gate !== containingStrip)
       this.visibleIndex += increasingStrip.insertionDiff
 
     this.containmentTable.set(increasingStrip)
