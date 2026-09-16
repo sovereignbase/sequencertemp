@@ -131,3 +131,26 @@ export type Snapshot<T> = Readonly<
     projection: ReadonlyArray<Insertion<T>>,
   ]
 >
+
+/**
+ * Flat list of changed Projection spans.
+ *
+ * Changes are encoded as repeating `[startAt, endAt]` pairs:
+ * `[startAt, endAt, startAt, endAt, ...]`.
+ *
+ * Each pair identifies one contiguous Projection range affected by a
+ * materialized update. Multiple pairs are emitted when one operation affects
+ * disjoint ranges.
+ *
+ * `startAt` is inclusive and `endAt` is exclusive.
+ */
+export type Change = ReadonlyArray<number>
+
+/**
+ * Result of a mutating Sequence operation.
+ *
+ * `change` describes the affected Projection spans.
+ *
+ * `delta` contains replication data when the operation emitted any.
+ */
+export type Result<T> = Readonly<[change: Change, delta?: Delta<T>]>

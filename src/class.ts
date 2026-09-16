@@ -6,6 +6,9 @@ import { find } from './algorithms/find.js'
 import { insert } from './algorithms/insert.js'
 import { apply } from './algorithms/apply.js'
 import { PendingTable } from './components/PendingTable/class.js'
+import { merge } from './algorithms/merge.js'
+import { remove } from './algorithms/remove.js'
+import { replace } from './algorithms/replace.js'
 
 export class Sequence<T> {
   public head: Strip<T> | undefined
@@ -31,20 +34,26 @@ export class Sequence<T> {
   }
   //
   constructor(actorID: number, trustedSnapshot?: unknown) {
-    create.call(this, actorID, trustedSnapshot)
+    void create.call(this, actorID, trustedSnapshot)
   }
   //
   find(index: number): T | undefined {
     return find.call(this, index) as T | undefined
   }
   //
-  insert(values: Array<T>, at: number) {
-    return insert.call(this, values, at)
+  insert(values: Array<T>, at: number): Delta<T> {
+    return insert.call(this, values, at) as Delta<T>
   }
   //
-  merge() {}
+  merge(data: unknown): Delta<T> | undefined {
+    return merge.call(this, data) as Delta<T> | undefined
+  }
   //
-  remove() {}
+  remove(startAt?: number, endAt?: number): Delta<T> {
+    return remove.call(this, startAt, endAt) as Delta<T>
+  }
   //
-  replace() {}
+  replace(withValues: Array<T>, startAt?: number, endAt?: number): Delta<T> {
+    return replace.call(this, withValues, startAt, endAt) as Delta<T>
+  }
 }
