@@ -1,0 +1,14 @@
+# Same actor in multiple replicas
+
+Two tabs belonging to the same actor open the same Snapshot. Each Sequence
+instance owns distinct insertion and Mask sessions even though their actor ID
+is identical.
+
+Both tabs make dependent offline edits, exchange every Gossip with returned
+acknowledgements, and then make another pair of concurrent edits. A third
+same-actor replica receives the original Gossip in reverse order.
+
+All replicas must expose the same `visibleFrameCount` and return identical
+Footage from every visible index. Reusing an actor identity must not collide
+the per-instance Clocks.
+
