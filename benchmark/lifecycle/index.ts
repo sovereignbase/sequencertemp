@@ -86,8 +86,7 @@ const applyUpdate = (
   operation: string
 ): Result<number> => {
   const result = receiver.apply(update)
-  if (!result)
-    throw new TypeError(`Sequencer rejected benchmark ${operation}.`)
+  if (!result) throw new TypeError(`Sequencer rejected benchmark ${operation}.`)
   return result
 }
 
@@ -180,7 +179,11 @@ const randomIngest = (runtime: Runtime, direction: Direction): void => {
   )
   const acknowledgements = result[1]
   if (acknowledgements?.length)
-    void applyUpdate(runtime.peer, acknowledgements, 'randomIngest acknowledgements')
+    void applyUpdate(
+      runtime.peer,
+      acknowledgements,
+      'randomIngest acknowledgements'
+    )
   runtime.strips.replace(stripIndex, strip)
 }
 

@@ -24,9 +24,12 @@ export function insertBefore<T>(
   let leftStep = containingStrip
   let rightStep: Strip<T>
 
-  if (containingStripLength !== 0)
-    rightStep = splitStrip.call(this, containingStrip, 0) as Strip<T>
-  else rightStep = containingStrip.rightStep
+  if (containingStripLength !== 0) {
+    if (this.containmentTable.isRightFragment(containingStrip)) {
+      leftStep = containingStrip.leftStep!
+      rightStep = containingStrip
+    } else rightStep = splitStrip.call(this, containingStrip, 0) as Strip<T>
+  } else rightStep = containingStrip.rightStep
 
   incomingStrip.rightCompetitor = undefined
 
@@ -38,14 +41,11 @@ export function insertBefore<T>(
   if (birth && !containingStrip.rightCompetitor)
     containingStrip.rightCompetitor = containingStrip.rightFragment
 
-  const firstCompetitor = birth
-    ? containingStrip.rightCompetitor
-    : rightStep
+  const firstCompetitor = birth ? containingStrip.rightCompetitor : rightStep
 
   if (
     firstCompetitor &&
-    (containingStrip.rightFragment !== rightStep ||
-      birth) &&
+    (containingStrip.rightFragment !== rightStep || birth) &&
     firstCompetitor.anchorSequencer === incomingStrip.anchorSequencer &&
     firstCompetitor.anchorTime === incomingStrip.anchorTime &&
     firstCompetitor.anchorFrame === incomingStrip.anchorFrame
@@ -57,8 +57,8 @@ export function insertBefore<T>(
       smallerCompetitor &&
       ((incomingStrip.insertionDiff < 0 &&
         smallerCompetitor.insertionDiff > 0) ||
-        ((incomingStrip.insertionDiff < 0) ===
-          (smallerCompetitor.insertionDiff < 0) &&
+        (incomingStrip.insertionDiff < 0 ===
+          smallerCompetitor.insertionDiff < 0 &&
           (incomingStrip.insertionSequencer <
             smallerCompetitor.insertionSequencer ||
             (incomingStrip.insertionSequencer ===

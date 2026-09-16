@@ -14,9 +14,7 @@ export function findFrameByVisibleIndex<T>(
   const tailDiff = this.tail!.fragmentDiff ?? this.tail!.insertionDiff
   const tailIndex = this.visibleFrameCount - tailDiff
   const tailPredecessorDiff =
-    this.tail!.leftStep?.fragmentDiff ??
-    this.tail!.leftStep?.insertionDiff ??
-    0
+    this.tail!.leftStep?.fragmentDiff ?? this.tail!.leftStep?.insertionDiff ?? 0
 
   const distanceToTravel = Math.abs(this.visibleIndex - index)
   const tailDistance = Math.abs(tailIndex - index)
@@ -117,8 +115,18 @@ export function findFrameByVisibleIndex<T>(
         }
       }
 
+      if (rightJump) {
+        leftJumpToPatch = cursorStrip
+        rightJumpToPatch = rightJump
+      }
+
       cursorStrip = walkStrip
       cursorIndex = walkIndex
+
+      if (cursorStrip === rightJumpToPatch) {
+        leftJumpToPatch = undefined
+        rightJumpToPatch = undefined
+      }
     } else {
       // Traverse left
       const walkStrip = cursorStrip.leftStep!
@@ -178,8 +186,18 @@ export function findFrameByVisibleIndex<T>(
         }
       }
 
+      if (leftJump) {
+        leftJumpToPatch = leftJump
+        rightJumpToPatch = cursorStrip
+      }
+
       cursorStrip = walkStrip
       cursorIndex = walkIndex
+
+      if (cursorStrip === leftJumpToPatch) {
+        leftJumpToPatch = undefined
+        rightJumpToPatch = undefined
+      }
     }
   }
 }

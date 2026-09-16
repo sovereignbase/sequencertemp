@@ -15,6 +15,8 @@ export function replace<T>(
 
   let remaining = endAt - startAt
   let replacementAnchor: Strip<T>
+  let replacementLeftJumpToPatch: Strip<T>
+  let replacementRightJumpToPatch: Strip<T>
 
   while (remaining > 0) {
     const targetFramePosition = findFrameByVisibleIndex.call(this, startAt)
@@ -50,6 +52,11 @@ export function replace<T>(
         targetFramePosition
       )
 
+    if (!replacementAnchor) {
+      replacementLeftJumpToPatch = this.leftJumpToPatch
+      replacementRightJumpToPatch = this.rightJumpToPatch
+    }
+
     patchJumps.call(
       this,
       decreasingStrip.insertionDiff,
@@ -83,6 +90,8 @@ export function replace<T>(
     } else if (startAt === this.visibleFrameCount) {
       containingStrip = this.tail!
       targetFramePosition = 1
+      this.leftJumpToPatch = undefined
+      this.rightJumpToPatch = undefined
     } else {
       targetFramePosition = findFrameByVisibleIndex.call(this, startAt)
       containingStrip = this.gate!
@@ -109,6 +118,11 @@ export function replace<T>(
         containingStrip,
         targetFramePosition
       )
+
+    if (replacementAnchor) {
+      this.leftJumpToPatch = replacementLeftJumpToPatch
+      this.rightJumpToPatch = replacementRightJumpToPatch
+    }
 
     patchJumps.call(
       this,
