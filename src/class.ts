@@ -10,6 +10,7 @@ import { merge } from './algorithms/merge.js'
 import { remove } from './algorithms/remove.js'
 import { replace } from './algorithms/replace.js'
 import { values } from './algorithms/values.js'
+import { snapshot } from './algorithms/snapshot.js'
 
 export class Sequence<T> {
   public head: Strip<T> | undefined
@@ -57,6 +58,11 @@ export class Sequence<T> {
   replace(withValues: Array<T>, startAt?: number, endAt?: number): Delta<T> {
     return replace.call(this, withValues, startAt, endAt) as Delta<T>
   }
+  //
+  snapshot(): Snapshot<T> {
+    return snapshot.call(this) as Snapshot<T>
+  }
+  //
   values(startAt?: number, endAt?: number): Array<T> {
     return values.call(this, startAt, endAt) as Array<T>
   }
