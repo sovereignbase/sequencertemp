@@ -1,4 +1,5 @@
 import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js'
+import { findOriginalFramePosition } from '../auxiliary/findOriginalFramePosition.js'
 import { insertAfter } from '../auxiliary/insertAfter.js'
 import { insertBefore } from '../auxiliary/insertBefore.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
@@ -57,7 +58,10 @@ export function insert<T>(
   const increasingStrip: NonNullable<Strip<T>> = {
     anchorSession: containingStrip.insertionSession,
     anchorTime: containingStrip.insertionTime,
-    anchorFrame: targetFramePosition,
+    anchorFrame: findOriginalFramePosition(
+      containingStrip,
+      targetFramePosition
+    ),
     insertionSession: this.increaseClock[0],
     insertionTime: this.increaseClock[1],
     insertionDiff: values.length,

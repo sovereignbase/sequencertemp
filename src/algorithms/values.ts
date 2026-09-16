@@ -1,6 +1,7 @@
 import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js'
+import { findOriginalFramePosition } from '../auxiliary/findOriginalFramePosition.js'
 import type { Sequence } from '../class.js'
-import type { Insertion, Strip } from '../types/type.js'
+import type { Strip } from '../types/type.js'
 
 export function values<T>(
   this: Sequence<T>,
@@ -19,25 +20,10 @@ export function values<T>(
     const stripDiff = strip.fragmentDiff ?? strip.insertionDiff
 
     if (stripDiff > 0) {
-      const origin = this.containmentTable.get([
-        strip.insertionSession,
-        strip.insertionTime,
-        0,
-        0,
-        0,
-        1,
-      ] as Insertion<T>)!
-
-      let footageOffset = 0
-      let fragment = origin
-
-      while (fragment !== strip) {
-        footageOffset += Math.abs(
-          fragment.fragmentDiff ?? fragment.insertionDiff
-        )
-
-        fragment = fragment.rightFragment!
-      }
+      const originalFramePosition = findOriginalFramePosition(
+        strip,
+        framePosition
+      )
 
       const length = Math.max(
         0,
@@ -45,7 +31,7 @@ export function values<T>(
       )
 
       for (let i = 0; i < length; ++i)
-        values.push(strip.footage?.[footageOffset + framePosition + i - 1])
+        values.push(strip.footage?.[originalFramePosition + i - 1])
 
       remaining -= length
     }
