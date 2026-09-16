@@ -28,6 +28,14 @@ export function insertBefore<T>(
     if (this.containmentTable.isRightFragment(containingStrip)) {
       leftStep = containingStrip.leftStep!
       rightStep = containingStrip
+
+      if (containingStrip.leftJump) {
+        this.leftJumpToPatch = containingStrip.leftJump
+        this.rightJumpToPatch = containingStrip
+      } else if (this.leftJumpToPatch === containingStrip) {
+        this.leftJumpToPatch = undefined
+        this.rightJumpToPatch = undefined
+      }
     } else rightStep = splitStrip.call(this, containingStrip, 0) as Strip<T>
   } else rightStep = containingStrip.rightStep
 
@@ -42,6 +50,8 @@ export function insertBefore<T>(
     containingStrip.rightCompetitor = containingStrip.rightFragment
 
   const firstCompetitor = birth ? containingStrip.rightCompetitor : rightStep
+  const directLeftStep = leftStep
+  const directRightStep = rightStep
 
   if (
     firstCompetitor &&
@@ -93,6 +103,17 @@ export function insertBefore<T>(
       leftStep = subtreeEnd(largerCompetitor)
       rightStep = leftStep.rightStep
     }
+  }
+
+  if (
+    (leftStep !== directLeftStep || rightStep !== directRightStep) &&
+    this.leftJumpToPatch &&
+    this.rightJumpToPatch
+  ) {
+    this.leftJumpToPatch.rightJump = undefined
+    this.rightJumpToPatch.leftJump = undefined
+    this.leftJumpToPatch = undefined
+    this.rightJumpToPatch = undefined
   }
 
   incomingStrip.leftStep = leftStep

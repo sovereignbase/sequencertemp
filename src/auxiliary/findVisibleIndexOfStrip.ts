@@ -93,6 +93,12 @@ export function findVisibleIndexOfStrip<T>(
       frames: number,
       strips: number
     ) => {
+      if (left.rightJump && left.rightJump !== right)
+        left.rightJump.leftJump = undefined
+
+      if (right.leftJump && right.leftJump !== left)
+        right.leftJump.rightJump = undefined
+
       left.rightJump = right
       left.rightJumpFrameCount = frames
       left.rightJumpStripCount = strips
@@ -137,10 +143,7 @@ export function findVisibleIndexOfStrip<T>(
   if (strip.rightJump) {
     this.leftJumpToPatch = strip
     this.rightJumpToPatch = strip.rightJump
-  } else if (
-    rightCursor !== strip &&
-    leftCursor.rightJump === rightCursor
-  ) {
+  } else if (rightCursor !== strip && leftCursor.rightJump === rightCursor) {
     this.leftJumpToPatch = leftCursor
     this.rightJumpToPatch = rightCursor
   } else {

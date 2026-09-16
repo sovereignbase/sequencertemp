@@ -80,7 +80,8 @@ export function apply<T>(
 
             if (
               targetFramePosition <= containingStripLength ||
-              (targetFramePosition === containingStripLength + 1 &&
+              (incomingStrip.insertionDiff > 0 &&
+                targetFramePosition === containingStripLength + 1 &&
                 containingStrip.rightFragment !== containingStrip.rightStep &&
                 containingStrip.rightStep?.anchorSequencer ===
                   incomingStrip.anchorSequencer &&
@@ -105,7 +106,6 @@ export function apply<T>(
           1
 
         const previousStructuralStripCount = this.structuralStripCount
-
         if (targetFramePosition === 1)
           insertBefore.call(this, incomingStrip, containingStrip)
         else
