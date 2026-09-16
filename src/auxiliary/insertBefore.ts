@@ -63,10 +63,10 @@ export function insertBefore<T>(
             smallerCompetitor.insertionSequencer ||
             (incomingStrip.insertionSequencer ===
               smallerCompetitor.insertionSequencer &&
-              incomingStrip.insertionTime -
-                Math.abs(incomingStrip.insertionDiff) -
-                1 >=
-                smallerCompetitor.insertionTime))))
+              incomingStrip.insertionTime >=
+                smallerCompetitor.insertionTime +
+                  Math.abs(smallerCompetitor.insertionDiff) +
+                  1))))
     ) {
       largerCompetitor = smallerCompetitor
       smallerCompetitor = smallerCompetitor.rightCompetitor

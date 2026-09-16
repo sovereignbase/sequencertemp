@@ -11,8 +11,6 @@ export function insert<T>(
   values: Array<T>,
   at: number
 ): Delta<T> {
-  this.increaseClock[1] += values.length + 1
-
   if (this.structuralStripCount === 0) {
     const increasingStrip: NonNullable<Strip<T>> = {
       anchorSequencer: 0,
@@ -26,6 +24,7 @@ export function insert<T>(
 
     insertFirst.call(this, increasingStrip)
     this.containmentTable.set(increasingStrip)
+    this.increaseClock[1] += values.length + 1
 
     return [
       [
@@ -83,6 +82,7 @@ export function insert<T>(
   )
 
   this.containmentTable.set(increasingStrip)
+  this.increaseClock[1] += values.length + 1
 
   return [
     [

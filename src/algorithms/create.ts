@@ -47,7 +47,10 @@ export function create<T>(
         incomingStrip.insertionDiff > 0 &&
         incomingStrip.insertionSequencer === actorID
       )
-        time = Math.max(time, incomingStrip.insertionTime)
+        time = Math.max(
+          time,
+          incomingStrip.insertionTime + incomingStrip.insertionDiff + 1
+        )
 
       const birth =
         incomingStrip.anchorSequencer === 0 &&

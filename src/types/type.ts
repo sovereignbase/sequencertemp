@@ -19,7 +19,7 @@ export type Strip<T> =
       /** Actor or session identifier that issued this insertion. */
       readonly insertionSequencer: number
 
-      /** Logical time identifying this insertion. */
+      /** Logical time of this insertion's zero-reservation. */
       readonly insertionTime: number
 
       /** Signed number of Frames added to or removed from the Projection. */
@@ -89,7 +89,7 @@ export type Insertion<T> = Readonly<
     /** Actor or session identifier that issued this insertion. */
     insertionSequencer: number,
 
-    /** Logical time identifying this insertion. */
+    /** Logical time of this insertion's zero-reservation. */
     insertionTime: number,
 
     /** Signed number of Frames added to or removed from the Projection. */

@@ -29,8 +29,6 @@ export function replace<T>(
       containingStripLength - targetFramePosition + 1
     )
 
-    this.decreaseClock[1] += decreasingLength + 1
-
     const decreasingStrip: NonNullable<Strip<T>> = {
       anchorSequencer: containingStrip.insertionSequencer,
       anchorTime: containingStrip.insertionTime,
@@ -70,6 +68,8 @@ export function replace<T>(
       decreasingStrip.insertionDiff,
     ])
 
+    this.decreaseClock[1] += decreasingLength + 1
+
     remaining -= decreasingLength
   }
 
@@ -90,8 +90,6 @@ export function replace<T>(
       targetFramePosition = findFrameByVisibleIndex.call(this, startAt)
       containingStrip = this.gate!
     }
-
-    this.increaseClock[1] += withValues.length + 1
 
     const increasingStrip: NonNullable<Strip<T>> = {
       anchorSequencer:
@@ -127,6 +125,7 @@ export function replace<T>(
       this.visibleIndex += increasingStrip.insertionDiff
 
     this.containmentTable.set(increasingStrip)
+    this.increaseClock[1] += withValues.length + 1
 
     insertions.push([
       increasingStrip.anchorSequencer,

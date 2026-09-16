@@ -149,7 +149,7 @@ export function apply<T>(
         if (incomingStrip.insertionSequencer === this.increaseClock[0])
           this.increaseClock[1] = Math.max(
             this.increaseClock[1],
-            incomingStrip.insertionTime
+            incomingStrip.insertionTime + incomingStrip.insertionDiff + 1
           )
 
         continue
@@ -158,13 +158,13 @@ export function apply<T>(
       if (incomingStrip.insertionSequencer === this.decreaseClock[0])
         this.decreaseClock[1] = Math.max(
           this.decreaseClock[1],
-          incomingStrip.insertionTime
+          incomingStrip.insertionTime - incomingStrip.insertionDiff + 1
         )
 
       const acknowledgement: Acknowledgement = [
         this.increaseClock[0],
         incomingStrip.insertionSequencer,
-        incomingStrip.insertionTime,
+        incomingStrip.insertionTime - incomingStrip.insertionDiff + 1,
       ]
 
       this.frontierTable.observeAcknowledgement(acknowledgement)
