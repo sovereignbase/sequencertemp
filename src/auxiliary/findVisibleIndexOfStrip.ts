@@ -3,7 +3,8 @@ import type { Strip } from '../types/type.js'
 
 export function findVisibleIndexOfStrip<T>(
   this: Sequence<T>,
-  strip: NonNullable<Strip<T>>
+  strip: NonNullable<Strip<T>>,
+  gateDiff = 0
 ): number {
   let leftCursor: NonNullable<Strip<T>> = strip
   let rightCursor: NonNullable<Strip<T>> = strip
@@ -20,7 +21,8 @@ export function findVisibleIndexOfStrip<T>(
   let leftSplitDistance = 0
   let rightSplitDistance = 0
 
-  let knownIndex = strip === this.gate ? this.visibleIndex : undefined
+  let knownIndex =
+    gateDiff === 0 && strip === this.gate ? this.visibleIndex : undefined
 
   const optimalJumpSpacing = Math.round(Math.sqrt(this.structuralStripCount))
 
@@ -40,7 +42,7 @@ export function findVisibleIndexOfStrip<T>(
 
       ++leftStripDistance
 
-      if (leftCursor === this.gate) {
+      if (gateDiff === 0 && leftCursor === this.gate) {
         knownIndex = this.visibleIndex + leftDistance
       }
 
@@ -62,7 +64,7 @@ export function findVisibleIndexOfStrip<T>(
       rightCursor = rightCursor.rightStep!
       ++rightStripDistance
 
-      if (rightCursor === this.gate) {
+      if (gateDiff === 0 && rightCursor === this.gate) {
         knownIndex = this.visibleIndex - rightDistance
       }
 
@@ -150,16 +152,21 @@ export function findVisibleIndexOfStrip<T>(
   while (true) {
     // CHECK IF LEFT IS AT HEAD
     if (leftCursor === this.head) {
+      if (strip !== this.gate && leftDistance <= this.visibleIndex)
+        this.visibleIndex += gateDiff
+
       return leftDistance
     }
 
     // CHECK IF RIGHT IS AT TAIL
     if (rightCursor === this.tail) {
       const rightDiff = rightCursor.fragmentDiff ?? rightCursor.insertionDiff
+      const index = this.visibleFrameCount - rightDiff - rightDistance
 
-      return (
-        this.visibleFrameCount - rightDiff - rightDistance
-      )
+      if (strip !== this.gate && index <= this.visibleIndex)
+        this.visibleIndex += gateDiff
+
+      return index
     }
 
     // USE LEFT JUMP IF AVAILABLE

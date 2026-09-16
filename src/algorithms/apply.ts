@@ -80,7 +80,13 @@ export function apply<T>(
             if (
               targetFramePosition <= containingStripLength ||
               (targetFramePosition === containingStripLength + 1 &&
-                containingStrip.rightFragment !== containingStrip.rightStep)
+                containingStrip.rightFragment !== containingStrip.rightStep &&
+                containingStrip.rightStep?.anchorSequencer ===
+                  incomingStrip.anchorSequencer &&
+                containingStrip.rightStep.anchorTime ===
+                  incomingStrip.anchorTime &&
+                containingStrip.rightStep.anchorFrame ===
+                  incomingStrip.anchorFrame)
             )
               break
 
@@ -115,7 +121,11 @@ export function apply<T>(
 
       this.containmentTable.set(incomingStrip)
 
-      const startAt = findVisibleIndexOfStrip.call(this, incomingStrip)
+      const startAt = findVisibleIndexOfStrip.call(
+        this,
+        incomingStrip,
+        incomingStrip.insertionDiff
+      )
 
       if (incomingStrip.insertionDiff > 0) {
         changes.push([

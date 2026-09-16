@@ -78,7 +78,13 @@ export function create<T>(
             if (
               targetFramePosition <= containingStripLength ||
               (targetFramePosition === containingStripLength + 1 &&
-                containingStrip.rightFragment !== containingStrip.rightStep)
+                containingStrip.rightFragment !== containingStrip.rightStep &&
+                containingStrip.rightStep?.anchorSequencer ===
+                  incomingStrip.anchorSequencer &&
+                containingStrip.rightStep.anchorTime ===
+                  incomingStrip.anchorTime &&
+                containingStrip.rightStep.anchorFrame ===
+                  incomingStrip.anchorFrame)
             )
               break
 

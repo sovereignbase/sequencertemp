@@ -99,10 +99,7 @@ export function findFrameByVisibleIndex<T>(
 
         const jumpDistance = Math.abs(jumpIndex - index)
 
-        if (
-          (jumpDistance < currentDistance && jumpDistance < walkDistance) ||
-          (jumpDistance === 0 && rightJumpFrameCount === 0)
-        ) {
+        if (jumpDistance < currentDistance && jumpDistance < walkDistance) {
           cursorStrip = rightJump
           cursorIndex = jumpIndex
           continue
