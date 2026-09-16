@@ -13,6 +13,10 @@ export function findFrameByVisibleIndex<T>(
 
   const tailDiff = this.tail!.fragmentDiff ?? this.tail!.insertionDiff
   const tailIndex = this.visibleFrameCount - tailDiff
+  const tailPredecessorDiff =
+    this.tail!.leftStep?.fragmentDiff ??
+    this.tail!.leftStep?.insertionDiff ??
+    0
 
   const distanceToTravel = Math.abs(this.visibleIndex - index)
   const tailDistance = Math.abs(tailIndex - index)
@@ -23,7 +27,7 @@ export function findFrameByVisibleIndex<T>(
 
     leftJumpToPatch = cursorStrip
     rightJumpToPatch = cursorStrip.rightJump
-  } else if (tailDistance < distanceToTravel) {
+  } else if (tailPredecessorDiff >= 0 && tailDistance < distanceToTravel) {
     cursorStrip = this.tail!
     cursorIndex = tailIndex
 

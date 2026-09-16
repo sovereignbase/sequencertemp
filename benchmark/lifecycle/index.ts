@@ -100,6 +100,13 @@ const gossip = (
   const acknowledgements = applyUpdate(receiver, update, operation)[1]
   if (acknowledgements?.length)
     void applyUpdate(sender, acknowledgements, operation + ' acknowledgements')
+
+  const senderValues = new Sequence<number>(10_001, sender.snapshot()).values()
+  const receiverValues = new Sequence<number>(10_002, receiver.snapshot()).values()
+  if (JSON.stringify(senderValues) !== JSON.stringify(receiverValues))
+    throw new TypeError(
+      `${operation} diverged: ${JSON.stringify({ update, senderValues, receiverValues })}`
+    )
 }
 
 const insertAt = (
@@ -181,6 +188,12 @@ const randomIngest = (runtime: Runtime, direction: Direction): void => {
   const acknowledgements = result[1]
   if (acknowledgements?.length)
     void applyUpdate(runtime.peer, acknowledgements, 'randomIngest acknowledgements')
+  const stateValues = new Sequence<number>(10_001, runtime.state.snapshot()).values()
+  const peerValues = new Sequence<number>(10_002, runtime.peer.snapshot()).values()
+  if (JSON.stringify(stateValues) !== JSON.stringify(peerValues))
+    throw new TypeError(
+      `randomIngest diverged: ${JSON.stringify({ mutation, stateValues, peerValues })}`
+    )
   runtime.strips.replace(stripIndex, strip)
 }
 
@@ -255,10 +268,28 @@ const observeReplica = (
     throw new TypeError(`Replica ${runtime.name} peers did not converge.`)
 
   const [valuesMetric, values] = snapshotMetric(() => runtime.state.values())
-  if (
-    JSON.stringify(runtime.peer.values()) !== JSON.stringify(values)
-  )
-    throw new TypeError(`Replica ${runtime.name} peer values diverged.`)
+  const peerValues = runtime.peer.values()
+  if (JSON.stringify(peerValues) !== JSON.stringify(values))
+    throw new TypeError(
+      `Replica ${runtime.name} peer values diverged: ${JSON.stringify({
+        values,
+        peerValues,
+        canonicalValues: new Sequence<number>(
+          10_003,
+          runtime.state.snapshot()
+        ).values(),
+        stateGate: [
+          runtime.state.visibleIndex,
+          runtime.state.gate?.insertionSequencer,
+          runtime.state.gate?.insertionTime,
+        ],
+        peerGate: [
+          runtime.peer.visibleIndex,
+          runtime.peer.gate?.insertionSequencer,
+          runtime.peer.gate?.insertionTime,
+        ],
+      })}`
+    )
   const [snapshotResult, checkpointSnapshot] = snapshotMetric(() =>
     runtime.state.snapshot()
   )
