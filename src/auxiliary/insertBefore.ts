@@ -76,22 +76,29 @@ export function insertBefore<T>(
 
     while (
       smallerCompetitor &&
-      smallerCompetitor.anchorSession === incomingStrip.anchorSession &&
-      smallerCompetitor.anchorTime === incomingStrip.anchorTime &&
-      smallerCompetitor.anchorFrame === incomingStrip.anchorFrame &&
-      (incomingStrip.insertionSession < smallerCompetitor.insertionSession ||
-        (incomingStrip.insertionSession ===
-          smallerCompetitor.insertionSession &&
-          incomingStrip.insertionTime >=
-            smallerCompetitor.insertionTime +
-              Math.abs(smallerCompetitor.insertionDiff) +
-              1))
+      (!birth ||
+        (smallerCompetitor.anchorSession === incomingStrip.anchorSession &&
+          smallerCompetitor.anchorTime === incomingStrip.anchorTime &&
+          smallerCompetitor.anchorFrame === incomingStrip.anchorFrame)) &&
+      ((incomingStrip.insertionDiff < 0 &&
+        smallerCompetitor.insertionDiff > 0) ||
+        (incomingStrip.insertionDiff < 0 ===
+          smallerCompetitor.insertionDiff < 0 &&
+          (incomingStrip.insertionSession <
+            smallerCompetitor.insertionSession ||
+            (incomingStrip.insertionSession ===
+              smallerCompetitor.insertionSession &&
+              incomingStrip.insertionTime >=
+                smallerCompetitor.insertionTime +
+                  Math.abs(smallerCompetitor.insertionDiff) +
+                  1))))
     ) {
       largerCompetitor = smallerCompetitor
       smallerCompetitor = smallerCompetitor.rightCompetitor
     }
 
     if (
+      birth &&
       smallerCompetitor &&
       (smallerCompetitor.anchorSession !== incomingStrip.anchorSession ||
         smallerCompetitor.anchorTime !== incomingStrip.anchorTime ||

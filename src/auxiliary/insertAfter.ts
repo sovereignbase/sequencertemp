@@ -34,11 +34,16 @@ export function insertAfter<T>(
       targetFramePosition - 1
     ) as Strip<T>
     boundaryStrip = rightStep
-  } else rightStep = containingStrip.rightStep
+  } else {
+    rightStep = containingStrip.rightStep
+    boundaryStrip = containingStrip.rightFragment
+  }
 
   incomingStrip.rightCompetitor = undefined
 
-  const firstCompetitor = boundaryStrip?.rightCompetitor ?? rightStep
+  const firstCompetitor = boundaryStrip
+    ? boundaryStrip.rightCompetitor
+    : rightStep
 
   if (
     firstCompetitor &&
@@ -51,28 +56,22 @@ export function insertAfter<T>(
 
     while (
       smallerCompetitor &&
-      smallerCompetitor.anchorSession === incomingStrip.anchorSession &&
-      smallerCompetitor.anchorTime === incomingStrip.anchorTime &&
-      smallerCompetitor.anchorFrame === incomingStrip.anchorFrame &&
-      (incomingStrip.insertionSession < smallerCompetitor.insertionSession ||
-        (incomingStrip.insertionSession ===
-          smallerCompetitor.insertionSession &&
-          incomingStrip.insertionTime >=
-            smallerCompetitor.insertionTime +
-              Math.abs(smallerCompetitor.insertionDiff) +
-              1))
+      ((incomingStrip.insertionDiff < 0 &&
+        smallerCompetitor.insertionDiff > 0) ||
+        (incomingStrip.insertionDiff < 0 ===
+          smallerCompetitor.insertionDiff < 0 &&
+          (incomingStrip.insertionSession <
+            smallerCompetitor.insertionSession ||
+            (incomingStrip.insertionSession ===
+              smallerCompetitor.insertionSession &&
+              incomingStrip.insertionTime >=
+                smallerCompetitor.insertionTime +
+                  Math.abs(smallerCompetitor.insertionDiff) +
+                  1))))
     ) {
       largerCompetitor = smallerCompetitor
       smallerCompetitor = smallerCompetitor.rightCompetitor
     }
-
-    if (
-      smallerCompetitor &&
-      (smallerCompetitor.anchorSession !== incomingStrip.anchorSession ||
-        smallerCompetitor.anchorTime !== incomingStrip.anchorTime ||
-        smallerCompetitor.anchorFrame !== incomingStrip.anchorFrame)
-    )
-      smallerCompetitor = undefined
 
     incomingStrip.rightCompetitor = smallerCompetitor
 
