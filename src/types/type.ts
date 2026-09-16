@@ -8,7 +8,7 @@
 export type Strip<T> =
   | {
       /** Actor or session identifier of the insertion containing the anchor. */
-      readonly anchorSequencer: number
+      readonly anchorSession: number
 
       /** Logical time identifying the insertion containing the anchor. */
       readonly anchorTime: number
@@ -17,7 +17,7 @@ export type Strip<T> =
       readonly anchorFrame: number
 
       /** Actor or session identifier that issued this insertion. */
-      readonly insertionSequencer: number
+      readonly insertionSession: number
 
       /** Logical time of this insertion's zero-reservation. */
       readonly insertionTime: number
@@ -71,31 +71,37 @@ export type Strip<T> =
  * a negative `insertionDiff` decreases `visibleFrameCount`,
  * while a positive `insertionDiff` increases it.
  *
+ * The absolute value of `insertionDiff` is the Frame length of the insertion,
+ * while its sign determines its effect on the Projection.
+ *
  * Structurally, every insertion grows the Sequence.
  * Its position is described commutatively so that it can be applied
  * idempotently to Structural Order.
  */
 export type Insertion<T> = Readonly<
   [
-    /** Actor or Session identifier of the anchoring insertion, i.e. its `insertionSequencer`. */
-    anchorSequencer: number,
+    /** Session identifier of the anchoring insertion, i.e. its `insertionSession`. */
+    anchorSession: number,
 
-    /** Logical time identifying the insertion containing the anchor. */
+    /** Logical time of the Session when the anchoring insertion was made. */
     anchorTime: number,
 
-    /** Stable Frame offset marking the boundary within the original anchor insertion. */
+    /** Frame offset within the original anchoring insertion, from its `insertionTime` towards `insertionEnd`, i.e. `insertionTime + insertionDiff`. */
     anchorFrame: number,
 
-    /** Actor or session identifier that issued this insertion. */
-    insertionSequencer: number,
+    /** Session identifier that issued this insertion. */
+    insertionSession: number,
 
-    /** Logical time of this insertion's zero-reservation. */
+    /** Logical time at which this insertion begins. */
     insertionTime: number,
 
-    /** Signed number of Frames added to or removed from the Projection. */
+    /**
+     * Signed Frame length of this insertion and its effect on the Projection:
+     * positive adds Frames, negative removes Frames.
+     */
     insertionDiff: number,
 
-    /** Optional Footage carried by an increasing insertion. */
+    /** Optional Footage carried by a positive insertion. */
     footage?: ReadonlyArray<T | undefined>,
   ]
 >

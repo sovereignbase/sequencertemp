@@ -51,15 +51,12 @@
     "fast-check": "^4.10.1",
     "husky": "^9.1.7",
     "playwright": "^1.63.0",
-    "prettier": "^3.9.6",
+    "prettier": "^3.9.7",
     "tsdown": "^0.23.0",
     "typedoc": "^0.28.20",
     "typescript": "^5.9.3",
     "vitest": "^5.0.1",
     "ws": "^8.21.3"
-  },
-  "dependencies": {
-    "@sovereignbase/bytecodec": "^2.0.1"
   },
   "repository": {
     "type": "git",
