@@ -21,7 +21,7 @@ export class Sequence<T> {
   //
   public readonly containmentTable: ContainmentTable<T> = new ContainmentTable()
   public readonly frontierTable: FrontierTable = new FrontierTable()
-  public readonly pendingtable: PendingTable<T> = new PendingTable()
+  public readonly pendingTable: PendingTable<T> = new PendingTable()
   //
   public readonly increaseClock: [id: number, time: number] = [0, 0]
   public readonly decreaseClock: [id: number, time: number] = [0, 0]
