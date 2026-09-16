@@ -21,7 +21,10 @@ export function findFrameByVisibleIndex<T>(
   const distanceToTravel = Math.abs(this.visibleIndex - index)
   const tailDistance = Math.abs(tailIndex - index)
 
-  if (index < distanceToTravel && index <= tailDistance) {
+  if (
+    tailPredecessorDiff < 0 ||
+    (index < distanceToTravel && index <= tailDistance)
+  ) {
     cursorStrip = this.head!
     cursorIndex = 0
 

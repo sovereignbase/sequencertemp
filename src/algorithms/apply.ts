@@ -51,6 +51,7 @@ export function apply<T>(
         incomingStrip.anchorSequencer === 0 &&
         incomingStrip.anchorTime === 0 &&
         incomingStrip.anchorFrame === 0
+      let startAt = 0
 
       if (birth && this.structuralStripCount === 0) {
         insertFirst.call(this, incomingStrip)
@@ -98,7 +99,10 @@ export function apply<T>(
           }
         }
 
-        findVisibleIndexOfStrip.call(this, containingStrip)
+        startAt =
+          findVisibleIndexOfStrip.call(this, containingStrip) +
+          targetFramePosition -
+          1
 
         const previousStructuralStripCount = this.structuralStripCount
 
@@ -117,15 +121,18 @@ export function apply<T>(
           incomingStrip.insertionDiff,
           this.structuralStripCount - previousStructuralStripCount
         )
+
+        if (
+          incomingStrip !== this.gate &&
+          this.gate !== this.head &&
+          (startAt < this.visibleIndex ||
+            (startAt === this.visibleIndex &&
+              (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) > 0))
+        )
+          this.visibleIndex += incomingStrip.insertionDiff
       }
 
       this.containmentTable.set(incomingStrip)
-
-      const startAt = findVisibleIndexOfStrip.call(
-        this,
-        incomingStrip,
-        incomingStrip.insertionDiff
-      )
 
       if (incomingStrip.insertionDiff > 0) {
         changes.push([
@@ -141,7 +148,7 @@ export function apply<T>(
       const pending = this.pendingTable.take(incomingStrip)
 
       if (pending)
-        for (let i = 0; i < pending.length; ++i) queue.push(pending[i])
+        for (let i = pending.length - 1; i >= 0; --i) queue.push(pending[i])
 
       if (incomingStrip.insertionDiff > 0) {
         this.frontierTable.observeActor(incomingStrip.insertionSequencer)

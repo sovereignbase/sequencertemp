@@ -78,11 +78,8 @@ export function replace<T>(
     let containingStrip: NonNullable<Strip<T>>
 
     if (replacementAnchor) {
-      containingStrip = replacementAnchor.leftStep!
-      targetFramePosition =
-        Math.abs(
-          containingStrip.fragmentDiff ?? containingStrip.insertionDiff
-        ) + 1
+      containingStrip = replacementAnchor
+      targetFramePosition = 1
     } else if (startAt === this.visibleFrameCount) {
       containingStrip = this.tail!
       targetFramePosition = 1
@@ -92,11 +89,9 @@ export function replace<T>(
     }
 
     const increasingStrip: NonNullable<Strip<T>> = {
-      anchorSequencer:
-        replacementAnchor?.anchorSequencer ?? containingStrip.insertionSequencer,
-      anchorTime:
-        replacementAnchor?.anchorTime ?? containingStrip.insertionTime,
-      anchorFrame: replacementAnchor?.anchorFrame ?? targetFramePosition,
+      anchorSequencer: containingStrip.insertionSequencer,
+      anchorTime: containingStrip.insertionTime,
+      anchorFrame: targetFramePosition,
       insertionSequencer: this.increaseClock[0],
       insertionTime: this.increaseClock[1],
       insertionDiff: withValues.length,
