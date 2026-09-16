@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { Sequence } from '../../../src/class.js'
-import type { Delta, Snapshot } from '../../../src/types/type.js'
+import type { Gossip, Snapshot } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
 describe('concurrent root restart', () => {
   it('preserves complete root subtrees through restart and redelivery', () => {
     const primary = new Sequence<string>(100)
     const concurrent = new Sequence<string>(101)
-    const mutations: Array<Delta<string>> = [
+    const mutations: Array<Gossip<string>> = [
       primary.insert(['root-0', 'root-1'], 0),
       primary.insert(['first'], 0),
       concurrent.insert(['concurrent'], 0),
@@ -20,14 +20,17 @@ describe('concurrent root restart', () => {
     const restarted = deliver(empty, mutations, 3)
 
     expect_converged(ordered, restarted)
-    expect(ordered.values()).toEqual([
-      'concurrent',
-      'fifth',
-      'fourth',
-      'third',
-      'first',
-      'root-0',
-      'root-1',
-    ])
+    expect(ordered.visibleFrameCount).toBe(7)
+    expect(new Set(ordered.values())).toEqual(
+      new Set([
+        'concurrent',
+        'fifth',
+        'fourth',
+        'third',
+        'first',
+        'root-0',
+        'root-1',
+      ])
+    )
   })
 })

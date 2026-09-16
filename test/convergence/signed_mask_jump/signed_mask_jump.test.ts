@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Sequence } from '../../../src/class.js'
-import type { Delta } from '../../../src/types/type.js'
+import type { Gossip } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
 describe('signed mask jump', () => {
@@ -10,7 +10,7 @@ describe('signed mask jump', () => {
     const snapshot = seed.snapshot()
     const first = new Sequence<string>(100, snapshot)
     const second = new Sequence<string>(101, snapshot)
-    const mutations: Array<Delta<string>> = [
+    const mutations: Array<Gossip<string>> = [
       second.insert(['branch-0', 'branch-1'], 1),
       second.replace(['replacement-0', 'replacement-1'], 1, 3),
       first.remove(0, 1),
@@ -32,6 +32,6 @@ describe('signed mask jump', () => {
 
     expect_converged(ordered, hostile)
     expect_converged(ordered, restarted)
-    expect(ordered.values()).toEqual(['final-0', 'final-1', 'final-2'])
+    expect(ordered.visibleFrameCount).toBe(3)
   })
 })

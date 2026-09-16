@@ -74,3 +74,5 @@ export class Sequence<T> {
     return values.call(this, startAt, endAt) as Array<T>
   }
 }
+
+export type * from './types/type.js'

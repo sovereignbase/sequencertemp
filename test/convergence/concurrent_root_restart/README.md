@@ -9,9 +9,6 @@ Actor 101: concurrent
 ```
 
 The receiver is recreated after the first three packets and those packets are
-redelivered. The higher root competitor stays before the complete Actor 100
-subtree:
-
-```text
-concurrent -> fifth -> fourth -> third -> first -> root-0 -> root-1
-```
+redelivered. The per-instance Session IDs may place either root subtree first,
+but restart and redelivery must preserve the same index-by-index Projection
+without losing, duplicating, or interleaving Frames.
