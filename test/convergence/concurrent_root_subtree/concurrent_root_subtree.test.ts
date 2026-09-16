@@ -26,39 +26,6 @@ describe('concurrent root subtree', () => {
       mutations[5],
     ])
 
-    const project = (sequence: Sequence<string>) =>
-      Array.from({ length: sequence.visibleFrameCount }, (_, index) =>
-        sequence.find(index)
-      )
-    console.log('ORDERED_VALUES', ordered.values())
-    console.log('ORDERED_FIND', project(ordered))
-    console.log('HOSTILE_VALUES', hostile.values())
-    console.log('HOSTILE_FIND', project(hostile))
-    console.log('GATES', [
-      ordered.visibleIndex,
-      ordered.gate?.footage?.[0],
-      hostile.visibleIndex,
-      hostile.gate?.footage?.[0],
-    ])
-    const structure = (sequence: Sequence<string>) => {
-      const strips = []
-      let strip = sequence.head
-      while (strip) {
-        strips.push(strip)
-        strip = strip.rightStep
-      }
-      return strips.map((entry) => [
-        entry.footage?.[0],
-        entry.fragmentDiff,
-        entry.insertionSession,
-        entry.insertionTime,
-        strips.indexOf(entry.rightFragment!),
-        strips.indexOf(entry.rightCompetitor!),
-      ])
-    }
-    console.log('ORDERED_STRUCTURE', structure(ordered))
-    console.log('HOSTILE_STRUCTURE', structure(hostile))
-
     expect_converged(ordered, hostile)
     expect(new Set(ordered.values())).toEqual(
       new Set([

@@ -25,7 +25,6 @@ export function insertAfter<T>(
 
   let leftStep = containingStrip
   let rightStep: Strip<T>
-  let boundaryStrip: Strip<T>
 
   if (targetFramePosition <= containingStripLength) {
     rightStep = splitStrip.call(
@@ -33,12 +32,9 @@ export function insertAfter<T>(
       containingStrip,
       targetFramePosition - 1
     ) as Strip<T>
-    boundaryStrip = rightStep
   } else rightStep = containingStrip.rightStep
 
   incomingStrip.rightCompetitor = undefined
-
-  if (boundaryStrip) boundaryStrip.rightCompetitor = incomingStrip
 
   if (
     rightStep &&
