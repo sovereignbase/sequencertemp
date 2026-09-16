@@ -28,15 +28,16 @@ randomInsert
 randomIngest
 ```
 
-All deletes are hard. `insert`, `remove`, and `replace` return complete
-acknowledgement-plus-Delta Mutation packets. Those packets are ingested by the
-peer immediately outside the local timed region. Native physical compaction is
-measured only by `create(snapshot)`.
+The benchmark calls `Sequence.insert`, `Sequence.remove`, and
+`Sequence.replace` directly. Their Deltas are immediately sent to the other
+peer with `apply`. If `apply` returns acknowledgements, those acknowledgements
+are immediately gossiped back to the sender with another `apply` call.
 
 For `randomIngest`, the peer performs an equal-length replacement outside the
-timed region. The measured Replica then ingests its single ACK plus native
-Mask-and-insert Delta batch in one call. The final scale-down step has no
-`randomIngest` sample because no visible Strip remains to replace.
+timed region. The measured Sequence then applies the remote Delta inside the
+timed region, after which any acknowledgements are sent back outside it. The
+final scale-down step has no `randomIngest` sample because no visible Strip
+remains to replace.
 
 ## Checkpoints
 
@@ -45,15 +46,13 @@ At each checkpoint the benchmark validates the public Frame count and measures:
 ```text
 values
 snapshot
-destroy
 create(snapshot)
 ```
 
-The old Replica is never reused. Both replicas are recreated from the same
-synchronized snapshot, with independent native and JavaScript runtime state.
-There is no separate recovery, acknowledgement, merge, or compact phase.
-Native collection happens during ordinary mutations and ingestion, and native
-`create` performs the safe restore-time compaction.
+The old Sequences are never reused. Both peers are recreated from the same
+synchronized snapshot with independent runtime state. There is no separate
+recovery or acknowledgement phase: acknowledgements travel as part of the
+ordinary two-way gossip after every update.
 
 The report includes visible Strip and Frame counts, retained snapshot Delta
 count, serialized snapshot size, an estimated retained-state size, and shared

@@ -223,7 +223,7 @@ const makeMarkdown = (report: BenchmarkReport): string => {
     '- ' + report.methodology.ingest,
     '- ' + report.methodology.memory,
     '- ' + report.methodology.storage,
-    '- Every checkpoint explicitly destroys the old Replica and creates a fresh Replica from the automatically collected snapshot.',
+    '- Every checkpoint drops the old Sequence references and creates fresh peers from the synchronized snapshot.',
     ''
   )
   return lines.join('\n')

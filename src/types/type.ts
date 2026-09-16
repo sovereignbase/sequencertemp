@@ -66,15 +66,18 @@ export type Strip<T> =
 /**
  * Describes one insertion into Structural Order.
  *
+ * @remarks
  * An insertion always has one of two effects on the Projection:
  * a negative `insertionDiff` decreases `visibleFrameCount`,
  * while a positive `insertionDiff` increases it.
  *
- * Structural placement is independent of the effect direction.
+ * Structurally, every insertion grows the Sequence.
+ * Its position is described commutatively so that it can be applied
+ * idempotently to Structural Order.
  */
 export type Insertion<T> = Readonly<
   [
-    /** Actor or session identifier of the insertion containing the anchor. */
+    /** Actor or Session identifier of the anchoring insertion, i.e. its `insertionSequencer`. */
     anchorSequencer: number,
 
     /** Logical time identifying the insertion containing the anchor. */

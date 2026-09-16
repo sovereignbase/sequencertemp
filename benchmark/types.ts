@@ -13,7 +13,6 @@ export const operation_names = [
 export const management_names = [
   'values',
   'snapshot',
-  'destroy',
   'create',
 ] as const
 
@@ -60,11 +59,9 @@ export type MemoryResult = {
   bytes: number
   bytesPerStrip: number | null
   bytesPerFrame: number | null
-  measurement: 'estimated-native-words-plus-js-footage-slots'
-  nativeSnapshotWordBytes: number
+  measurement: 'estimated-snapshot-words-plus-js-footage-slots'
+  snapshotMetadataWordBytes: number
   javascriptFootageSlotBytes: number
-  wasmLinearMemoryBytes: null
-  wasmLinearMemoryReason: string
 }
 
 export type StorageResult = {
@@ -154,7 +151,7 @@ export type BenchmarkReport = {
   }
   config: BenchmarkConfig
   methodology: {
-    implementation: 'TypeScript public API backed by the package WebAssembly runtime'
+    implementation: 'TypeScript Sequence class public API'
     timer: 'process.hrtime.bigint'
     stripCount: string
     ingest: string

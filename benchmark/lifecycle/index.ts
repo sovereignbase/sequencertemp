@@ -1,6 +1,6 @@
 import { serialize } from 'node:v8'
-import * as api from '../../dist/index.js'
-import type { Delta, Replica } from '../../dist/index.js'
+import { Sequence } from '../../dist/class.js'
+import type { Delta, Result } from '../../dist/class.js'
 import {
   deriveSeed,
   formatSeed,
@@ -31,8 +31,8 @@ type Runtime = {
   name: ReplicaName
   actorId: number
   peerActorId: number
-  state: Replica<number>
-  peer: Replica<number>
+  state: Sequence<number>
+  peer: Sequence<number>
   strips: StripIndex
   random: Random
   nextStripId: number
@@ -42,20 +42,11 @@ type Runtime = {
 
 let resultSink: unknown
 
-const createReplica = (actorId: number, data?: unknown): Replica<number> =>
-  api.create<number>(actorId, data)
+const createReplica = (actorId: number, data?: unknown): Sequence<number> =>
+  new Sequence<number>(actorId, data)
 
 const ratio = (bytes: number, units: number): number | null =>
   units === 0 ? null : bytes / units
-
-const requireMutation = (
-  result: Delta<number> | false,
-  operation: string
-): Delta<number> => {
-  if (result === false)
-    throw new TypeError(`Sequencer rejected benchmark ${operation}.`)
-  return result
-}
 
 const timeOperation = <T>(
   runtime: Runtime,
@@ -89,16 +80,33 @@ const createReplacementStrip = (
   return { id, length, values: new Array<number>(length).fill(id) }
 }
 
-const ingestIntoPeer = (
-  runtime: Runtime,
-  mutation: Delta<number>,
+const applyUpdate = (
+  receiver: Sequence<number>,
+  update: Delta<number>,
+  operation: string
+): Result<number> => {
+  const result = receiver.apply(update)
+  if (!result)
+    throw new TypeError(`Sequencer rejected benchmark ${operation}.`)
+  return result
+}
+
+const gossip = (
+  sender: Sequence<number>,
+  receiver: Sequence<number>,
+  update: Delta<number>,
   operation: string
 ): void => {
-  if (api.ingest(runtime.peer, mutation) === false)
+  console.log('DEBUG gossip', operation, JSON.stringify(update))
+  const acknowledgements = applyUpdate(receiver, update, operation)[1]
+  if (acknowledgements?.length)
+    void applyUpdate(sender, acknowledgements, operation + ' acknowledgements')
+
+  const senderValues = sender.values()
+  const receiverValues = receiver.values()
+  if (JSON.stringify(senderValues) !== JSON.stringify(receiverValues))
     throw new TypeError(
-      `Replica ${runtime.name} peer rejected new ${operation} Mutation ` +
-        `(state=${api.length(runtime.state)}, peer=${api.length(runtime.peer)}, ` +
-        `deltas=${mutation[1].length / 8}).`
+      `${operation} diverged: ${JSON.stringify({ update, senderValues, receiverValues })}`
     )
 }
 
@@ -111,11 +119,11 @@ const insertAt = (
 ): void => {
   const frameIndex = runtime.strips.frameOffsetAt(stripIndex)
   const strip = createStrip(runtime, config)
+  console.log('DEBUG local', runtime.state === runtime.peer ? 'same' : 'state', 'insert', JSON.stringify([strip.values, frameIndex]))
   const mutation = timeOperation(runtime, direction, operationName, () =>
-    api.insert(runtime.state, frameIndex, strip.values)
+    runtime.state.insert(strip.values, frameIndex)
   )
-  const accepted = requireMutation(mutation, operationName)
-  ingestIntoPeer(runtime, accepted, operationName)
+  gossip(runtime.state, runtime.peer, mutation, operationName)
   runtime.strips.insert(stripIndex, strip)
 }
 
@@ -128,18 +136,18 @@ const removeAt = (
 ): void => {
   const frameIndex = runtime.strips.frameOffsetAt(stripIndex)
   const strip = runtime.strips.at(stripIndex)
+  console.log('DEBUG local state remove', JSON.stringify([frameIndex, frameIndex + strip.length]))
   const mutation = timeOperation(runtime, direction, operationName, () =>
-    api.remove(runtime.state, frameIndex, frameIndex + strip.length)
+    runtime.state.remove(frameIndex, frameIndex + strip.length)
   )
-  const accepted = requireMutation(mutation, operationName)
-  ingestIntoPeer(runtime, accepted, operationName)
+  gossip(runtime.state, runtime.peer, mutation, operationName)
   runtime.strips.remove(stripIndex)
 }
 
 const randomFind = (runtime: Runtime, direction: Direction): void => {
   const frameIndex = runtime.random.integer(runtime.strips.frameCount)
   const value = timeOperation(runtime, direction, 'randomFind', () =>
-    api.find(runtime.state, frameIndex)
+    runtime.state.find(frameIndex)
   )
   if (value === undefined)
     throw new TypeError('Random find did not resolve a visible Frame.')
@@ -156,11 +164,15 @@ const randomReplace = (
   // The public replace operation removes exactly values.length Frames. Keeping
   // the selected Strip's length preserves Strip boundaries and scale.
   const strip = createReplacementStrip(runtime, replaced.length)
+  console.log('DEBUG local state replace', JSON.stringify([strip.values, frameIndex, frameIndex + replaced.length]))
   const mutation = timeOperation(runtime, direction, 'randomReplace', () =>
-    api.replace(runtime.state, frameIndex, strip.values)
+    runtime.state.replace(
+      strip.values,
+      frameIndex,
+      frameIndex + replaced.length
+    )
   )
-  const accepted = requireMutation(mutation, 'randomReplace')
-  ingestIntoPeer(runtime, accepted, 'randomReplace')
+  gossip(runtime.state, runtime.peer, mutation, 'randomReplace')
   runtime.strips.replace(stripIndex, strip)
 }
 
@@ -169,17 +181,25 @@ const randomIngest = (runtime: Runtime, direction: Direction): void => {
   const frameIndex = runtime.strips.frameOffsetAt(stripIndex)
   const replaced = runtime.strips.at(stripIndex)
   const strip = createReplacementStrip(runtime, replaced.length)
-  const mutation = requireMutation(
-    api.replace(runtime.peer, frameIndex, strip.values),
-    'randomIngest peer replacement'
+  console.log('DEBUG local peer replace', JSON.stringify([strip.values, frameIndex, frameIndex + replaced.length]))
+  const mutation = runtime.peer.replace(
+    strip.values,
+    frameIndex,
+    frameIndex + replaced.length
   )
-  if (!mutation[2]?.length)
-    throw new TypeError('Random ingest received no Footage Mutation.')
-  const change = timeOperation(runtime, direction, 'randomIngest', () =>
-    api.ingest(runtime.state, mutation)
+  console.log('DEBUG gossip randomIngest', JSON.stringify(mutation))
+  const result = timeOperation(runtime, direction, 'randomIngest', () =>
+    applyUpdate(runtime.state, mutation, 'randomIngest peer replacement')
   )
-  if (change === false)
-    throw new TypeError('Random ingest did not integrate a new peer Mutation.')
+  const acknowledgements = result[1]
+  if (acknowledgements?.length)
+    void applyUpdate(runtime.peer, acknowledgements, 'randomIngest acknowledgements')
+  const stateValues = runtime.state.values()
+  const peerValues = runtime.peer.values()
+  if (JSON.stringify(stateValues) !== JSON.stringify(peerValues))
+    throw new TypeError(
+      `randomIngest diverged: ${JSON.stringify({ mutation, stateValues, peerValues })}`
+    )
   runtime.strips.replace(stripIndex, strip)
 }
 
@@ -244,21 +264,25 @@ const observeReplica = (
   runtime: Runtime,
   direction: Direction
 ): ReplicaCheckpoint => {
-  const publicFrameCount = api.length(runtime.state)
+  const publicFrameCount = runtime.state.visibleFrameCount
   if (publicFrameCount !== runtime.strips.frameCount)
     throw new TypeError(
       `Replica ${runtime.name} model has ${runtime.strips.frameCount} Frames but Sequencer reports ${publicFrameCount}.`
     )
 
-  const [valuesMetric] = snapshotMetric(() => api.values(runtime.state))
+  if (runtime.peer.visibleFrameCount !== publicFrameCount)
+    throw new TypeError(`Replica ${runtime.name} peers did not converge.`)
+
+  const [valuesMetric, values] = snapshotMetric(() => runtime.state.values())
+  if (
+    JSON.stringify(runtime.peer.values()) !== JSON.stringify(values)
+  )
+    throw new TypeError(`Replica ${runtime.name} peer values diverged.`)
   const [snapshotResult, checkpointSnapshot] = snapshotMetric(() =>
-    api.snapshot(runtime.state)
+    runtime.state.snapshot()
   )
   const snapshotBytes = serialize(checkpointSnapshot).byteLength
 
-  const oldState = runtime.state
-  const [destroyMetric] = snapshotMetric(() => api.destroy(oldState))
-  void api.destroy(runtime.peer)
   const [createMetric, initializedState] = snapshotMetric(() =>
     createReplica(runtime.actorId, checkpointSnapshot)
   )
@@ -268,35 +292,35 @@ const observeReplica = (
 
   const stripCount = runtime.strips.count
   const frameCount = runtime.strips.frameCount
-  const nativeSnapshotWordBytes =
+  const snapshotMetadataWordBytes =
     (checkpointSnapshot[0].reduce(
       (words, acknowledgement) => words + acknowledgement.length,
       0
     ) +
-      checkpointSnapshot[1].length) *
+      checkpointSnapshot[1].length * 6) *
     4
-  const javascriptFootageSlotBytes = checkpointSnapshot[2].length * 8
+  const javascriptFootageSlotBytes =
+    checkpointSnapshot[1].reduce(
+      (slots, insertion) => slots + (insertion[6]?.length ?? 0),
+      0
+    ) * 8
   const estimatedMemoryBytes =
-    nativeSnapshotWordBytes + javascriptFootageSlotBytes
+    snapshotMetadataWordBytes + javascriptFootageSlotBytes
 
   const checkpoint: ReplicaCheckpoint = {
     operations: runtime.metrics.snapshot(),
     management: {
       values: valuesMetric,
       snapshot: snapshotResult,
-      destroy: destroyMetric,
       create: createMetric,
     },
     memory: {
       bytes: estimatedMemoryBytes,
       bytesPerStrip: ratio(estimatedMemoryBytes, stripCount),
       bytesPerFrame: ratio(estimatedMemoryBytes, frameCount),
-      measurement: 'estimated-native-words-plus-js-footage-slots',
-      nativeSnapshotWordBytes,
+      measurement: 'estimated-snapshot-words-plus-js-footage-slots',
+      snapshotMetadataWordBytes,
       javascriptFootageSlotBytes,
-      wasmLinearMemoryBytes: null,
-      wasmLinearMemoryReason:
-        'The public package API does not expose its shared WebAssembly.Memory.',
     },
     storage: {
       serialization: 'node:v8.serialize',
@@ -310,7 +334,7 @@ const observeReplica = (
       averageStripLength: ratio(frameCount, stripCount),
       minimumStripLength: runtime.strips.minimumLength,
       maximumStripLength: runtime.strips.maximumLength,
-      retainedDeltaCount: checkpointSnapshot[1].length / 8,
+      retainedDeltaCount: checkpointSnapshot[1].length,
     },
   }
 
@@ -429,7 +453,7 @@ const printCheckpoint = (checkpoint: CheckpointResult): void => {
 
 const makeRuntime = (
   name: ReplicaName,
-  state: Replica<number>,
+  state: Sequence<number>,
   workloadSeed: number,
   actorId: number,
   peerActorId: number
@@ -438,7 +462,7 @@ const makeRuntime = (
   actorId,
   peerActorId,
   state,
-  peer: createReplica(peerActorId, api.snapshot(state)),
+  peer: createReplica(peerActorId, state.snapshot()),
   strips: new StripIndex(),
   random: new Random(workloadSeed),
   nextStripId: 1,
@@ -491,8 +515,6 @@ async function runOneLifecycle(
     if (checkpointSet.has(runtime.strips.count)) await record('down')
   }
 
-  void api.destroy(runtime.state)
-  void api.destroy(runtime.peer)
   resultSink = undefined
   return {
     run,
@@ -507,7 +529,7 @@ async function runOneLifecycle(
   }
 }
 
-/** Warms the package, JS/WASM boundary, JIT paths, buffers, and timer code. */
+/** Warms the package, Sequence methods, JIT paths, arrays, and timer code. */
 export async function warmUp(config: BenchmarkConfig): Promise<void> {
   if (config.warmupCycles === 0) return
   const state = createReplica(3)
@@ -527,8 +549,6 @@ export async function warmUp(config: BenchmarkConfig): Promise<void> {
   for (let cycle = 0; cycle < config.warmupCycles; cycle++)
     runScaleDownStep(runtime, config)
 
-  void api.destroy(runtime.state)
-  void api.destroy(runtime.peer)
   resultSink = undefined
 }
 

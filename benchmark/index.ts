@@ -133,17 +133,16 @@ export async function runBenchmark(
     },
     config,
     methodology: {
-      implementation:
-        'TypeScript public API backed by the package WebAssembly runtime',
+      implementation: 'TypeScript Sequence class public API',
       timer: 'process.hrtime.bigint',
       stripCount:
         'Scale is the number of visible logical Strips maintained by the benchmark model. Every mutation targets a complete Strip boundary; retained Mask structures are reported separately.',
       ingest:
-        'The workload has two Replicas editing the same document. Local Mutations are ingested by the peer outside timed regions; randomIngest times the measured Replica consuming each atomic acknowledgement-plus-Delta packet from a peer replacement.',
+        'The workload has two peers editing the same document. Every local Delta is applied by the receiver and every acknowledgement returned by apply is gossiped back to the sender. randomIngest times only the measured peer applying the remote replacement Delta.',
       average:
         'Operation averages are calculated directly from count and total measured nanoseconds; checkpoint averages are never averaged together.',
       memory:
-        'Per-Replica bytes after automatic native collection and restart are an explicit estimate: four bytes per retained snapshot metadata word plus eight bytes per JavaScript Footage array slot. Process RSS is shared and reported at checkpoint scope; WebAssembly linear memory is unavailable through the public API.',
+        'Per-Replica retained bytes after restart are estimated as four bytes per snapshot metadata word plus eight bytes per JavaScript Footage array slot. Process RSS is shared and reported at checkpoint scope.',
       storage:
         'Persistent representation size is the byte length of node:v8.serialize over the automatically collected public snapshot.',
     },
