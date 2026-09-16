@@ -82,6 +82,8 @@ export function insert<T>(
   )
 
   this.containmentTable.set(increasingStrip)
+  this.gate = increasingStrip
+  this.visibleIndex = at
   this.increaseClock[1] += values.length + 1
 
   return [

@@ -47,6 +47,10 @@ export class Sequence<T> {
     return insert.call(this, values, at) as Delta<T>
   }
   //
+  length(): number {
+    return this.visibleFrameCount
+  }
+  //
   merge(data: unknown): Result<T> | undefined {
     return merge.call(this, data) as Result<T> | undefined
   }

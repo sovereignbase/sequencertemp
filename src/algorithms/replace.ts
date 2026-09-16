@@ -125,6 +125,8 @@ export function replace<T>(
       this.visibleIndex += increasingStrip.insertionDiff
 
     this.containmentTable.set(increasingStrip)
+    this.gate = increasingStrip
+    this.visibleIndex = startAt
     this.increaseClock[1] += withValues.length + 1
 
     insertions.push([
