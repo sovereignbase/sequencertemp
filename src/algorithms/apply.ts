@@ -151,8 +151,6 @@ export function apply<T>(
         for (let i = pending.length - 1; i >= 0; --i) queue.push(pending[i])
 
       if (incomingStrip.insertionDiff > 0) {
-        this.frontierTable.observeActor(incomingStrip.insertionSession)
-
         if (incomingStrip.insertionSession === this.increaseClock[0])
           this.increaseClock[1] = Math.max(
             this.increaseClock[1],
@@ -169,7 +167,7 @@ export function apply<T>(
         )
 
       const acknowledgement: Acknowledgement = [
-        this.increaseClock[0],
+        this.actorID,
         incomingStrip.insertionSession,
         incomingStrip.insertionTime - incomingStrip.insertionDiff + 1,
       ]

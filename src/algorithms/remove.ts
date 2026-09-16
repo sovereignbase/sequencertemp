@@ -1,5 +1,5 @@
 import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js'
-import { findOriginalFramePosition } from '../auxiliary/findOriginalFramePosition.js'
+import { findAnchorFrame } from '../auxiliary/findAnchorFrame.js'
 import { insertAfter } from '../auxiliary/insertAfter.js'
 import { insertBefore } from '../auxiliary/insertBefore.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
@@ -31,10 +31,7 @@ export function remove<T>(
     const decreasingStrip: NonNullable<Strip<T>> = {
       anchorSession: containingStrip.insertionSession,
       anchorTime: containingStrip.insertionTime,
-      anchorFrame: findOriginalFramePosition(
-        containingStrip,
-        targetFramePosition
-      ),
+      anchorFrame: findAnchorFrame(containingStrip, targetFramePosition),
       insertionSession: this.decreaseClock[0],
       insertionTime: this.decreaseClock[1],
       insertionDiff: -decreasingLength,

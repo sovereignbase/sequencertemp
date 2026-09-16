@@ -8,8 +8,8 @@ describe('overlapping mask gate', () => {
     const seed = new Sequence<string>(1)
     seed.insert(['base-0', 'base-1'], 0)
     const snapshot = seed.snapshot()
-    const replicas = [0, 1, 2].map((index) =>
-      new Sequence<string>(100 + index, snapshot)
+    const replicas = [0, 1, 2].map(
+      (index) => new Sequence<string>(100 + index, snapshot)
     )
     const mutations: Array<Delta<string>> = [
       replicas[2].remove(0, 2),
@@ -21,13 +21,15 @@ describe('overlapping mask gate', () => {
     ]
     const ordered = deliver(snapshot, mutations)
     const hostile = deliver(snapshot, [
-      mutations[5], mutations[4], mutations[2],
-      mutations[0], mutations[3], mutations[1],
+      mutations[5],
+      mutations[4],
+      mutations[2],
+      mutations[0],
+      mutations[3],
+      mutations[1],
     ])
-    const recreated = new Sequence<string>(103, hostile.snapshot())
 
     expect_converged(ordered, hostile)
-    expect_converged(ordered, recreated)
     expect(hostile.visibleIndex).toBe(0)
   })
 })

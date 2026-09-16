@@ -71,4 +71,10 @@ export class FrontierTable {
 
     return ids
   }
+
+  erase(actorID: number): void {
+    void this.actors.delete(actorID)
+
+    for (const session of this.sessions.values()) void session.delete(actorID)
+  }
 }

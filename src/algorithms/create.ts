@@ -7,13 +7,7 @@ import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Sequence } from '../class.js'
 import type { Snapshot, Strip } from '../types/type.js'
 
-export function create<T>(
-  this: Sequence<T>,
-  actorID: number,
-  trustedSnapshot?: unknown
-): void {
-  let time = 0
-
+export function create<T>(this: Sequence<T>, trustedSnapshot?: unknown): void {
   const [frontiers, projection] = (trustedSnapshot as Snapshot<T>) ?? []
 
   if (Array.isArray(frontiers)) {
@@ -41,15 +35,6 @@ export function create<T>(
         insertionDiff: incoming[5],
         footage: incoming[6],
       }
-
-      if (
-        incomingStrip.insertionDiff > 0 &&
-        incomingStrip.insertionSession === actorID
-      )
-        time = Math.max(
-          time,
-          incomingStrip.insertionTime + incomingStrip.insertionDiff + 1
-        )
 
       const birth =
         incomingStrip.anchorSession === 0 &&
@@ -133,7 +118,7 @@ export function create<T>(
   }
 
   this.increaseClock[0] = getSafeSessionID()
-  this.increaseClock[1] = time
+  this.increaseClock[1] = 0
 
   this.decreaseClock[0] = getSafeSessionID()
   this.decreaseClock[1] = 0

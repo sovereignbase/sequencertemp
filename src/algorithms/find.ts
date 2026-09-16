@@ -1,11 +1,11 @@
 import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js'
-import { findOriginalFramePosition } from '../auxiliary/findOriginalFramePosition.js'
+import { findAnchorFrame } from '../auxiliary/findAnchorFrame.js'
 import { Sequence } from '../class.js'
 
 export function find<T>(this: Sequence<T>, index: number): T | undefined {
-  const fragmentFramePosition = findFrameByVisibleIndex.call(this, index)
+  const targetFramePosition = findFrameByVisibleIndex.call(this, index)
   const strip = this.gate!
-  const framePosition = findOriginalFramePosition(strip, fragmentFramePosition)
+  const anchorFrame = findAnchorFrame(strip, targetFramePosition)
 
-  return strip.footage?.[framePosition - 1]
+  return strip.footage?.[anchorFrame - 1]
 }

@@ -1,5 +1,5 @@
 import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js'
-import { findOriginalFramePosition } from '../auxiliary/findOriginalFramePosition.js'
+import { findAnchorFrame } from '../auxiliary/findAnchorFrame.js'
 import type { Sequence } from '../class.js'
 import type { Strip } from '../types/type.js'
 
@@ -20,10 +20,7 @@ export function values<T>(
     const stripDiff = strip.fragmentDiff ?? strip.insertionDiff
 
     if (stripDiff > 0) {
-      const originalFramePosition = findOriginalFramePosition(
-        strip,
-        framePosition
-      )
+      const anchorFrame = findAnchorFrame(strip, framePosition)
 
       const length = Math.max(
         0,
@@ -31,7 +28,7 @@ export function values<T>(
       )
 
       for (let i = 0; i < length; ++i)
-        values.push(strip.footage?.[originalFramePosition + i - 1])
+        values.push(strip.footage?.[anchorFrame + i - 1])
 
       remaining -= length
     }

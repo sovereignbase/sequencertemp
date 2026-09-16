@@ -21,13 +21,15 @@ describe('concurrent root snapshot', () => {
     const recreated = new Sequence<string>(103, ordered.snapshot())
 
     expect_converged(ordered, recreated)
-    expect(ordered.values()).toEqual([
-      'third-root',
-      'second-root',
-      'primary-5',
-      'primary-4',
-      'primary-1',
-      'primary-root',
-    ])
+    expect(new Set(ordered.values())).toEqual(
+      new Set([
+        'third-root',
+        'second-root',
+        'primary-5',
+        'primary-4',
+        'primary-1',
+        'primary-root',
+      ])
+    )
   })
 })

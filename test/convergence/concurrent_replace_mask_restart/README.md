@@ -16,10 +16,5 @@ concurrent
 ```
 
 Restart and stale redelivery must not let Actor 100's Mask consume Actor 101's
-concurrent root. Ordered delivery, restarted delivery, and snapshot recreation
-must all produce:
-
-```text
-concurrent -> final-head -> replacement-0 -> replacement-1
-  -> branch-1 -> branch-2 -> branch-3 -> root
-```
+concurrent root. Ordered and restarted live replicas must return the same
+frames; their concurrent subtree order is determined by their Session IDs.

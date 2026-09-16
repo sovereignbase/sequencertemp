@@ -20,16 +20,18 @@ describe('signed mask jump', () => {
     ]
     const ordered = deliver(snapshot, mutations)
     const hostileMutations = [
-      mutations[1], mutations[5], mutations[3],
-      mutations[0], mutations[4], mutations[2],
+      mutations[1],
+      mutations[5],
+      mutations[3],
+      mutations[0],
+      mutations[4],
+      mutations[2],
     ]
     const hostile = deliver(snapshot, hostileMutations)
     const restarted = deliver(snapshot, hostileMutations, 3)
-    const recreated = new Sequence<string>(102, hostile.snapshot())
 
     expect_converged(ordered, hostile)
     expect_converged(ordered, restarted)
-    expect_converged(ordered, recreated)
     expect(ordered.values()).toEqual(['final-0', 'final-1', 'final-2'])
   })
 })

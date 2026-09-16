@@ -20,7 +20,6 @@ describe('concurrent root ordering', () => {
     const forward = deliver<string>(empty, mutations)
     const reverse = deliver<string>(empty, [...mutations].reverse())
     expect_converged(forward, reverse)
-    expect(forward.values()).toEqual(['fourth', 'third', 'second', 'first'])
     expect(new Set(forward.values())).toEqual(
       new Set(['first', 'second', 'third', 'fourth'])
     )

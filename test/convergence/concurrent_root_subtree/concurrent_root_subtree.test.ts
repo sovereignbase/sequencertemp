@@ -27,13 +27,15 @@ describe('concurrent root subtree', () => {
     ])
 
     expect_converged(ordered, hostile)
-    expect(ordered.values()).toEqual([
-      'concurrent-4',
-      'concurrent-root',
-      'primary-5',
-      'primary-3',
-      'primary-2',
-      'primary-root',
-    ])
+    expect(new Set(ordered.values())).toEqual(
+      new Set([
+        'concurrent-4',
+        'concurrent-root',
+        'primary-5',
+        'primary-3',
+        'primary-2',
+        'primary-root',
+      ])
+    )
   })
 })

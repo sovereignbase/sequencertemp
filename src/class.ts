@@ -35,8 +35,11 @@ export class Sequence<T> {
     return apply.call(this, data) as Result<T> | undefined
   }
   //
-  constructor(actorID: number, trustedSnapshot?: unknown) {
-    void create.call(this, actorID, trustedSnapshot)
+  constructor(
+    public readonly actorID: number,
+    trustedSnapshot?: unknown
+  ) {
+    void create.call(this, trustedSnapshot)
   }
   //
   find(index: number): T | undefined {

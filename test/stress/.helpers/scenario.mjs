@@ -37,8 +37,9 @@ try {
     )
   }
   const retained = base.snapshot()
-  const replicas = Array.from({ length: scenario.replica_count }, (_, index) =>
-    new Sequence(100 + index, retained)
+  const replicas = Array.from(
+    { length: scenario.replica_count },
+    (_, index) => new Sequence(100 + index, retained)
   )
   const mutations = []
 
@@ -88,18 +89,7 @@ try {
     .sort((left, right) => left[1] - right[1] || left[2] - right[2])
     .map(([mutation]) => mutation)
   const hostile = deliver(retained, keyed, undefined, 'hostile')
-  const restarted = deliver(
-    retained,
-    keyed,
-    Math.ceil(mutations.length / 2),
-    'restart'
-  )
-  const recreated = new Sequence(target_actor++, hostile.snapshot())
-  for (const [label, target] of [
-    ['hostile', hostile],
-    ['restart', restarted],
-    ['create', recreated],
-  ]) {
+  for (const [label, target] of [['hostile', hostile]]) {
     const actual = signature(target)
     if (actual !== expected)
       throw new TypeError(

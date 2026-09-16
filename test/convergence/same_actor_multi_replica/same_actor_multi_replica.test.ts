@@ -23,7 +23,11 @@ const gossip = <T>(
   update: Gossip<T>
 ): void => {
   const acknowledgements = receiver.apply(update)?.[1]
-  if (acknowledgements) author.apply(acknowledgements)
+  if (acknowledgements) {
+    for (const acknowledgement of acknowledgements)
+      expect(acknowledgement[0]).toBe(42)
+    author.apply(acknowledgements)
+  }
 }
 
 describe('same actor in multiple replicas', () => {

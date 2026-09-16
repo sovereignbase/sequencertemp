@@ -1,8 +1,8 @@
 import type { Strip } from '../types/type.js'
 
-export function findOriginalFramePosition<T>(
+export function findAnchorFrame<T>(
   strip: NonNullable<Strip<T>>,
-  fragmentFramePosition: number
+  targetFramePosition: number
 ): number {
   let remaining = 0
   let fragment: Strip<T> = strip
@@ -12,7 +12,5 @@ export function findOriginalFramePosition<T>(
     fragment = fragment.rightFragment
   }
 
-  return (
-    Math.abs(strip.insertionDiff) - remaining + fragmentFramePosition
-  )
+  return Math.abs(strip.insertionDiff) - remaining + targetFramePosition
 }
