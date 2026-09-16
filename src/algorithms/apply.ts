@@ -5,7 +5,7 @@ import { insertFirst } from '../auxiliary/insertFirst.js'
 import { isAcknowledgement, isInsertion } from '../auxiliary/isDelta.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Sequence } from '../class.js'
-import type { Acknowledgement, Delta, Strip } from '../types/type.js'
+import type { Acknowledgement, Delta, Insertion, Strip } from '../types/type.js'
 
 export function apply<T>(
   this: Sequence<T>,
@@ -22,103 +22,119 @@ export function apply<T>(
     }
 
     if (!isInsertion<T>(entry)) return
-    if (this.containmentTable.has(entry)) continue
 
-    const incomingStrip: NonNullable<Strip<T>> = {
-      anchorSequencer: entry[0],
-      anchorTime: entry[1],
-      anchorFrame: entry[2],
-      insertionSequencer: entry[3],
-      insertionTime: entry[4],
-      insertionDiff: entry[5],
-      footage: entry[6],
-    }
+    const queue: Array<Insertion<T>> = [entry]
 
-    const birth =
-      incomingStrip.anchorSequencer === 0 &&
-      incomingStrip.anchorTime === 0 &&
-      incomingStrip.anchorFrame === 0
+    while (queue.length !== 0) {
+      const incoming = queue.pop()!
 
-    if (birth && this.structuralStripCount === 0) {
-      insertFirst.call(this, incomingStrip)
-    } else {
-      let containingStrip: NonNullable<Strip<T>>
-      let targetFramePosition: number
+      if (this.containmentTable.has(incoming)) continue
 
-      if (birth) {
-        containingStrip = this.head!
-        targetFramePosition = 0
-      } else {
-        const origin = this.containmentTable.get(entry)
-        if (!origin) return
-
-        containingStrip = origin
-        targetFramePosition = incomingStrip.anchorFrame
-
-        while (true) {
-          const containingStripLength = Math.abs(
-            containingStrip.fragmentDiff ?? containingStrip.insertionDiff
-          )
-
-          if (targetFramePosition < containingStripLength) break
-
-          const rightFragment = containingStrip.rightFragment
-          if (!rightFragment) break
-
-          targetFramePosition -= containingStripLength
-          containingStrip = rightFragment
-        }
+      const incomingStrip: NonNullable<Strip<T>> = {
+        anchorSequencer: incoming[0],
+        anchorTime: incoming[1],
+        anchorFrame: incoming[2],
+        insertionSequencer: incoming[3],
+        insertionTime: incoming[4],
+        insertionDiff: incoming[5],
+        footage: incoming[6],
       }
 
-      findVisibleIndexOfStrip.call(this, containingStrip)
+      const birth =
+        incomingStrip.anchorSequencer === 0 &&
+        incomingStrip.anchorTime === 0 &&
+        incomingStrip.anchorFrame === 0
 
-      const previousStructuralStripCount = this.structuralStripCount
+      if (birth && this.structuralStripCount === 0) {
+        insertFirst.call(this, incomingStrip)
+      } else {
+        let containingStrip: NonNullable<Strip<T>>
+        let targetFramePosition: number
 
-      if (targetFramePosition === 1)
-        insertBefore.call(this, incomingStrip, containingStrip)
-      else
-        insertAfter.call(
+        if (birth) {
+          containingStrip = this.head!
+          targetFramePosition = 0
+        } else {
+          const origin = this.containmentTable.get(incoming)
+
+          if (!origin) {
+            this.pendingTable.set(incoming)
+            continue
+          }
+
+          containingStrip = origin
+          targetFramePosition = incomingStrip.anchorFrame
+
+          while (true) {
+            const containingStripLength = Math.abs(
+              containingStrip.fragmentDiff ?? containingStrip.insertionDiff
+            )
+
+            if (targetFramePosition < containingStripLength) break
+
+            const rightFragment = containingStrip.rightFragment
+            if (!rightFragment) break
+
+            targetFramePosition -= containingStripLength
+            containingStrip = rightFragment
+          }
+        }
+
+        findVisibleIndexOfStrip.call(this, containingStrip)
+
+        const previousStructuralStripCount = this.structuralStripCount
+
+        if (targetFramePosition === 1)
+          insertBefore.call(this, incomingStrip, containingStrip)
+        else
+          insertAfter.call(
+            this,
+            incomingStrip,
+            containingStrip,
+            targetFramePosition
+          )
+
+        patchJumps.call(
           this,
-          incomingStrip,
-          containingStrip,
-          targetFramePosition
+          incomingStrip.insertionDiff,
+          this.structuralStripCount - previousStructuralStripCount
         )
+      }
 
-      patchJumps.call(
-        this,
-        incomingStrip.insertionDiff,
-        this.structuralStripCount - previousStructuralStripCount
-      )
-    }
+      this.containmentTable.set(incomingStrip)
 
-    this.containmentTable.set(incomingStrip)
+      const pending = this.pendingTable.take(incomingStrip)
 
-    if (incomingStrip.insertionDiff > 0) {
-      this.frontierTable.observeActor(incomingStrip.insertionSequencer)
+      if (pending)
+        for (let i = 0; i < pending.length; ++i) queue.push(pending[i])
 
-      if (incomingStrip.insertionSequencer === this.increaseClock[0])
-        this.increaseClock[1] = Math.max(
-          this.increaseClock[1],
+      if (incomingStrip.insertionDiff > 0) {
+        this.frontierTable.observeActor(incomingStrip.insertionSequencer)
+
+        if (incomingStrip.insertionSequencer === this.increaseClock[0])
+          this.increaseClock[1] = Math.max(
+            this.increaseClock[1],
+            incomingStrip.insertionTime
+          )
+
+        continue
+      }
+
+      if (incomingStrip.insertionSequencer === this.decreaseClock[0])
+        this.decreaseClock[1] = Math.max(
+          this.decreaseClock[1],
           incomingStrip.insertionTime
         )
 
-      continue
+      const acknowledgement: Acknowledgement = [
+        this.increaseClock[0],
+        incomingStrip.insertionSequencer,
+        incomingStrip.insertionTime,
+      ]
+
+      this.frontierTable.observeAcknowledgement(acknowledgement)
+      acknowledgements.push(acknowledgement)
     }
-
-    if (incomingStrip.insertionSequencer === this.decreaseClock[0])
-      this.decreaseClock[1] = Math.max(
-        this.decreaseClock[1],
-        incomingStrip.insertionTime
-      )
-
-    const acknowledgement: Acknowledgement = [
-      this.increaseClock[0],
-      incomingStrip.insertionSequencer,
-      incomingStrip.insertionTime,
-    ]
-
-    this.frontierTable.observeAcknowledgement(acknowledgement)
-    acknowledgements.push(acknowledgement)
   }
 
   return acknowledgements.length === 0 ? undefined : acknowledgements

@@ -5,6 +5,7 @@ import { ContainmentTable } from './components/ContainmentTable/class.js'
 import { find } from './algorithms/find.js'
 import { insert } from './algorithms/insert.js'
 import { apply } from './algorithms/apply.js'
+import { PendingTable } from './components/PendingTable/class.js'
 
 export class Sequence<T> {
   public head: Strip<T> | undefined
@@ -20,6 +21,7 @@ export class Sequence<T> {
   //
   public readonly containmentTable: ContainmentTable<T> = new ContainmentTable()
   public readonly frontierTable: FrontierTable = new FrontierTable()
+  public readonly pendingtable: PendingTable<T> = new PendingTable()
   //
   public readonly increaseClock: [id: number, time: number] = [0, 0]
   public readonly decreaseClock: [id: number, time: number] = [0, 0]
