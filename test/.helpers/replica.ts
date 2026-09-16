@@ -1,6 +1,6 @@
 import { expect } from 'vitest'
 import { Sequence } from '../../src/class.js'
-import type { Delta, Snapshot } from '../../src/types/type.js'
+import type { Gossip, Snapshot } from '../../src/types/type.js'
 
 export type Replica<T> = Sequence<T>
 
@@ -14,7 +14,7 @@ export function create_seed<T>(values: Array<T>): Sequence<T> {
 
 export function deliver<T>(
   base: Snapshot<T>,
-  mutations: Array<Delta<T>>,
+  mutations: Array<Gossip<T>>,
   restartAt?: number
 ): Sequence<T> {
   let sequence = new Sequence<T>(actor++, base)
@@ -43,9 +43,9 @@ export function expect_converged<T>(
 }
 
 export function shuffle_mutations<T>(
-  mutations: Array<Delta<T>>,
+  mutations: Array<Gossip<T>>,
   seed: number
-): Array<Delta<T>> {
+): Array<Gossip<T>> {
   const shuffled = [...mutations]
 
   for (let index = shuffled.length - 1; index > 0; --index) {
