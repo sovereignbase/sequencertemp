@@ -96,8 +96,7 @@ export type Insertion<T> = Readonly<
     insertionTime: number,
 
     /**
-     * Signed Frame length of this insertion and its effect on the Projection:
-     * positive adds Frames, negative removes Frames.
+     * Signed Frame length of this insertion and its effect on the Projection.
      */
     insertionDiff: number,
 
