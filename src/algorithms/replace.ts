@@ -3,14 +3,14 @@ import { insertAfter } from '../auxiliary/insertAfter.js'
 import { insertBefore } from '../auxiliary/insertBefore.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Sequence } from '../class.js'
-import type { Delta, Strip } from '../types/type.js'
+import type { Gossip, Strip } from '../types/type.js'
 
 export function replace<T>(
   this: Sequence<T>,
   withValues: Array<T>,
   startAt: number = 0,
   endAt: number = this.visibleFrameCount
-): Delta<T> {
+): Gossip<T> {
   const insertions = []
 
   let remaining = endAt - startAt
@@ -32,10 +32,10 @@ export function replace<T>(
     )
 
     const decreasingStrip: NonNullable<Strip<T>> = {
-      anchorSequencer: containingStrip.insertionSequencer,
+      anchorSession: containingStrip.insertionSession,
       anchorTime: containingStrip.insertionTime,
       anchorFrame: targetFramePosition,
-      insertionSequencer: this.decreaseClock[0],
+      insertionSession: this.decreaseClock[0],
       insertionTime: this.decreaseClock[1],
       insertionDiff: -decreasingLength,
     }
@@ -67,10 +67,10 @@ export function replace<T>(
     replacementAnchor ??= decreasingStrip
 
     insertions.push([
-      decreasingStrip.anchorSequencer,
+      decreasingStrip.anchorSession,
       decreasingStrip.anchorTime,
       decreasingStrip.anchorFrame,
-      decreasingStrip.insertionSequencer,
+      decreasingStrip.insertionSession,
       decreasingStrip.insertionTime,
       decreasingStrip.insertionDiff,
     ])
@@ -98,10 +98,10 @@ export function replace<T>(
     }
 
     const increasingStrip: NonNullable<Strip<T>> = {
-      anchorSequencer: containingStrip.insertionSequencer,
+      anchorSession: containingStrip.insertionSession,
       anchorTime: containingStrip.insertionTime,
       anchorFrame: targetFramePosition,
-      insertionSequencer: this.increaseClock[0],
+      insertionSession: this.increaseClock[0],
       insertionTime: this.increaseClock[1],
       insertionDiff: withValues.length,
       footage: withValues,
@@ -139,15 +139,15 @@ export function replace<T>(
     this.increaseClock[1] += withValues.length + 1
 
     insertions.push([
-      increasingStrip.anchorSequencer,
+      increasingStrip.anchorSession,
       increasingStrip.anchorTime,
       increasingStrip.anchorFrame,
-      increasingStrip.insertionSequencer,
+      increasingStrip.insertionSession,
       increasingStrip.insertionTime,
       increasingStrip.insertionDiff,
       increasingStrip.footage,
     ])
   }
 
-  return insertions as Delta<T>
+  return insertions as Gossip<T>
 }

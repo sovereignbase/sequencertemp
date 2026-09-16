@@ -1,4 +1,4 @@
-import type { Acknowledgement, Delta, Insertion } from '../types/type.js'
+import type { Acknowledgement, Gossip, Insertion } from '../types/type.js'
 
 const isSafeInteger = Number.isSafeInteger
 
@@ -30,7 +30,7 @@ export function isAcknowledgement(data: unknown): data is Acknowledgement {
   return true
 }
 
-export function isDelta<T>(data: unknown): data is Delta<T> {
+export function isGossip<T>(data: unknown): data is Gossip<T> {
   if (!Array.isArray(data) || data.length === 0) return false
 
   if (data.length === 6) return isInsertion<T>(data)

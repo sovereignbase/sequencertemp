@@ -1,5 +1,5 @@
 import { create } from './algorithms/create.js'
-import { Delta, Snapshot, Result, Strip } from './types/type.js'
+import { Gossip, Snapshot, Result, Strip } from './types/type.js'
 import { FrontierTable } from './components/FrontierTable/class.js'
 import { ContainmentTable } from './components/ContainmentTable/class.js'
 import { find } from './algorithms/find.js'
@@ -43,8 +43,8 @@ export class Sequence<T> {
     return find.call(this, index) as T | undefined
   }
   //
-  insert(values: Array<T>, at: number): Delta<T> {
-    return insert.call(this, values, at) as Delta<T>
+  insert(values: Array<T>, at: number): Gossip<T> {
+    return insert.call(this, values, at) as Gossip<T>
   }
   //
   length(): number {
@@ -55,12 +55,12 @@ export class Sequence<T> {
     return merge.call(this, data) as Result<T> | undefined
   }
   //
-  remove(startAt?: number, endAt?: number): Delta<T> {
-    return remove.call(this, startAt, endAt) as Delta<T>
+  remove(startAt?: number, endAt?: number): Gossip<T> {
+    return remove.call(this, startAt, endAt) as Gossip<T>
   }
   //
-  replace(withValues: Array<T>, startAt?: number, endAt?: number): Delta<T> {
-    return replace.call(this, withValues, startAt, endAt) as Delta<T>
+  replace(withValues: Array<T>, startAt?: number, endAt?: number): Gossip<T> {
+    return replace.call(this, withValues, startAt, endAt) as Gossip<T>
   }
   //
   snapshot(): Snapshot<T> {

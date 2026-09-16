@@ -8,21 +8,21 @@ export function snapshot<T>(this: Sequence<T>): Snapshot<T> {
   let strip: Strip<T> = this.head
 
   while (strip) {
-    let sequencer = included.get(strip.insertionSequencer)
+    let sequencer = included.get(strip.insertionSession)
 
     if (!sequencer) {
       sequencer = new Set()
-      included.set(strip.insertionSequencer, sequencer)
+      included.set(strip.insertionSession, sequencer)
     }
 
     if (!sequencer.has(strip.insertionTime)) {
       sequencer.add(strip.insertionTime)
 
       projection.push([
-        strip.anchorSequencer,
+        strip.anchorSession,
         strip.anchorTime,
         strip.anchorFrame,
-        strip.insertionSequencer,
+        strip.insertionSession,
         strip.insertionTime,
         strip.insertionDiff,
         strip.footage,

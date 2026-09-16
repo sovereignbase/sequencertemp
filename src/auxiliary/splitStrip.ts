@@ -26,11 +26,11 @@ export function splitStrip<T>(
   const rightStep = strip.rightStep
 
   const rightFragment: NonNullable<Strip<T>> = {
-    anchorSequencer: strip.anchorSequencer,
+    anchorSession: strip.anchorSession,
     anchorTime: strip.anchorTime,
     anchorFrame: strip.anchorFrame,
 
-    insertionSequencer: strip.insertionSequencer,
+    insertionSession: strip.insertionSession,
     insertionTime: strip.insertionTime,
     insertionDiff: strip.insertionDiff,
 

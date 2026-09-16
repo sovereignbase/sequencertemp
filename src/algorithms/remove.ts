@@ -3,13 +3,13 @@ import { insertAfter } from '../auxiliary/insertAfter.js'
 import { insertBefore } from '../auxiliary/insertBefore.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Sequence } from '../class.js'
-import type { Delta, Strip } from '../types/type.js'
+import type { Gossip, Strip } from '../types/type.js'
 
 export function remove<T>(
   this: Sequence<T>,
   startAt: number = 0,
   endAt: number = this.visibleFrameCount
-): Delta<T> {
+): Gossip<T> {
   const insertions = []
 
   let remaining = endAt - startAt
@@ -28,10 +28,10 @@ export function remove<T>(
     )
 
     const decreasingStrip: NonNullable<Strip<T>> = {
-      anchorSequencer: containingStrip.insertionSequencer,
+      anchorSession: containingStrip.insertionSession,
       anchorTime: containingStrip.insertionTime,
       anchorFrame: targetFramePosition,
-      insertionSequencer: this.decreaseClock[0],
+      insertionSession: this.decreaseClock[0],
       insertionTime: this.decreaseClock[1],
       insertionDiff: -decreasingLength,
     }
@@ -57,10 +57,10 @@ export function remove<T>(
     this.containmentTable.set(decreasingStrip)
 
     insertions.push([
-      decreasingStrip.anchorSequencer,
+      decreasingStrip.anchorSession,
       decreasingStrip.anchorTime,
       decreasingStrip.anchorFrame,
-      decreasingStrip.insertionSequencer,
+      decreasingStrip.insertionSession,
       decreasingStrip.insertionTime,
       decreasingStrip.insertionDiff,
     ])

@@ -23,7 +23,7 @@ export class PendingTable<T> {
   }
 
   take(incomingStrip: NonNullable<Strip<T>>): Array<Insertion<T>> | undefined {
-    const sequencer = this.insertions.get(incomingStrip.insertionSequencer)
+    const sequencer = this.insertions.get(incomingStrip.insertionSession)
     if (!sequencer) return
 
     const pending = sequencer.get(incomingStrip.insertionTime)
@@ -32,7 +32,7 @@ export class PendingTable<T> {
     sequencer.delete(incomingStrip.insertionTime)
 
     if (sequencer.size === 0)
-      this.insertions.delete(incomingStrip.insertionSequencer)
+      this.insertions.delete(incomingStrip.insertionSession)
 
     return pending
   }

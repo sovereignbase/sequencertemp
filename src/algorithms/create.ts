@@ -34,10 +34,10 @@ export function create<T>(
       if (incoming[5] < 0 && compactableIDs.has(incoming[3])) continue
 
       const incomingStrip: NonNullable<Strip<T>> = {
-        anchorSequencer: incoming[0],
+        anchorSession: incoming[0],
         anchorTime: incoming[1],
         anchorFrame: incoming[2],
-        insertionSequencer: incoming[3],
+        insertionSession: incoming[3],
         insertionTime: incoming[4],
         insertionDiff: incoming[5],
         footage: incoming[6],
@@ -45,7 +45,7 @@ export function create<T>(
 
       if (
         incomingStrip.insertionDiff > 0 &&
-        incomingStrip.insertionSequencer === actorID
+        incomingStrip.insertionSession === actorID
       )
         time = Math.max(
           time,
@@ -53,7 +53,7 @@ export function create<T>(
         )
 
       const birth =
-        incomingStrip.anchorSequencer === 0 &&
+        incomingStrip.anchorSession === 0 &&
         incomingStrip.anchorTime === 0 &&
         incomingStrip.anchorFrame === 0
 
@@ -83,8 +83,8 @@ export function create<T>(
               (incomingStrip.insertionDiff > 0 &&
                 targetFramePosition === containingStripLength + 1 &&
                 containingStrip.rightFragment !== containingStrip.rightStep &&
-                containingStrip.rightStep?.anchorSequencer ===
-                  incomingStrip.anchorSequencer &&
+                containingStrip.rightStep?.anchorSession ===
+                  incomingStrip.anchorSession &&
                 containingStrip.rightStep.anchorTime ===
                   incomingStrip.anchorTime &&
                 containingStrip.rightStep.anchorFrame ===
@@ -124,7 +124,7 @@ export function create<T>(
       this.containmentTable.set(incomingStrip)
 
       if (incomingStrip.insertionDiff > 0)
-        void this.frontierTable.observeActor(incomingStrip.insertionSequencer)
+        void this.frontierTable.observeActor(incomingStrip.insertionSession)
     }
 
   // The current actor becomes part of the frontier only after determining

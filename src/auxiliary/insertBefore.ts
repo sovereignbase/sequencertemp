@@ -42,7 +42,7 @@ export function insertBefore<T>(
   incomingStrip.rightCompetitor = undefined
 
   const birth =
-    incomingStrip.anchorSequencer === 0 &&
+    incomingStrip.anchorSession === 0 &&
     incomingStrip.anchorTime === 0 &&
     incomingStrip.anchorFrame === 0
 
@@ -56,7 +56,7 @@ export function insertBefore<T>(
   if (
     firstCompetitor &&
     (containingStrip.rightFragment !== rightStep || birth) &&
-    firstCompetitor.anchorSequencer === incomingStrip.anchorSequencer &&
+    firstCompetitor.anchorSession === incomingStrip.anchorSession &&
     firstCompetitor.anchorTime === incomingStrip.anchorTime &&
     firstCompetitor.anchorFrame === incomingStrip.anchorFrame
   ) {
@@ -69,10 +69,10 @@ export function insertBefore<T>(
         smallerCompetitor.insertionDiff > 0) ||
         (incomingStrip.insertionDiff < 0 ===
           smallerCompetitor.insertionDiff < 0 &&
-          (incomingStrip.insertionSequencer <
-            smallerCompetitor.insertionSequencer ||
-            (incomingStrip.insertionSequencer ===
-              smallerCompetitor.insertionSequencer &&
+          (incomingStrip.insertionSession <
+            smallerCompetitor.insertionSession ||
+            (incomingStrip.insertionSession ===
+              smallerCompetitor.insertionSession &&
               incomingStrip.insertionTime >=
                 smallerCompetitor.insertionTime +
                   Math.abs(smallerCompetitor.insertionDiff) +

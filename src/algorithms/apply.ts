@@ -2,7 +2,7 @@ import { findVisibleIndexOfStrip } from '../auxiliary/findVisibleIndexOfStrip.js
 import { insertAfter } from '../auxiliary/insertAfter.js'
 import { insertBefore } from '../auxiliary/insertBefore.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
-import { isAcknowledgement, isInsertion } from '../auxiliary/isDelta.js'
+import { isAcknowledgement, isInsertion } from '../auxiliary/isGossip.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Sequence } from '../class.js'
 import type {
@@ -38,17 +38,17 @@ export function apply<T>(
       if (this.containmentTable.has(incoming)) continue
 
       const incomingStrip: NonNullable<Strip<T>> = {
-        anchorSequencer: incoming[0],
+        anchorSession: incoming[0],
         anchorTime: incoming[1],
         anchorFrame: incoming[2],
-        insertionSequencer: incoming[3],
+        insertionSession: incoming[3],
         insertionTime: incoming[4],
         insertionDiff: incoming[5],
         footage: incoming[6],
       }
 
       const birth =
-        incomingStrip.anchorSequencer === 0 &&
+        incomingStrip.anchorSession === 0 &&
         incomingStrip.anchorTime === 0 &&
         incomingStrip.anchorFrame === 0
       let startAt = 0
@@ -83,8 +83,8 @@ export function apply<T>(
               (incomingStrip.insertionDiff > 0 &&
                 targetFramePosition === containingStripLength + 1 &&
                 containingStrip.rightFragment !== containingStrip.rightStep &&
-                containingStrip.rightStep?.anchorSequencer ===
-                  incomingStrip.anchorSequencer &&
+                containingStrip.rightStep?.anchorSession ===
+                  incomingStrip.anchorSession &&
                 containingStrip.rightStep.anchorTime ===
                   incomingStrip.anchorTime &&
                 containingStrip.rightStep.anchorFrame ===
@@ -151,9 +151,9 @@ export function apply<T>(
         for (let i = pending.length - 1; i >= 0; --i) queue.push(pending[i])
 
       if (incomingStrip.insertionDiff > 0) {
-        this.frontierTable.observeActor(incomingStrip.insertionSequencer)
+        this.frontierTable.observeActor(incomingStrip.insertionSession)
 
-        if (incomingStrip.insertionSequencer === this.increaseClock[0])
+        if (incomingStrip.insertionSession === this.increaseClock[0])
           this.increaseClock[1] = Math.max(
             this.increaseClock[1],
             incomingStrip.insertionTime + incomingStrip.insertionDiff + 1
@@ -162,7 +162,7 @@ export function apply<T>(
         continue
       }
 
-      if (incomingStrip.insertionSequencer === this.decreaseClock[0])
+      if (incomingStrip.insertionSession === this.decreaseClock[0])
         this.decreaseClock[1] = Math.max(
           this.decreaseClock[1],
           incomingStrip.insertionTime - incomingStrip.insertionDiff + 1
@@ -170,7 +170,7 @@ export function apply<T>(
 
       const acknowledgement: Acknowledgement = [
         this.increaseClock[0],
-        incomingStrip.insertionSequencer,
+        incomingStrip.insertionSession,
         incomingStrip.insertionTime - incomingStrip.insertionDiff + 1,
       ]
 

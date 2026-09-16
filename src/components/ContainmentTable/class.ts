@@ -11,7 +11,7 @@ export class ContainmentTable<T> {
 
   isRightFragment(strip: NonNullable<Strip<T>>): boolean {
     const origin = this.strips
-      .get(strip.insertionSequencer)
+      .get(strip.insertionSession)
       ?.get(strip.insertionTime)
 
     return origin !== undefined && origin !== strip
@@ -26,10 +26,10 @@ export class ContainmentTable<T> {
 
   set(incomingStrip: NonNullable<Strip<T>>): void {
     const sequencer =
-      this.strips.get(incomingStrip.insertionSequencer) ?? new Map()
+      this.strips.get(incomingStrip.insertionSession) ?? new Map()
 
     if (sequencer.size === 0)
-      void this.strips.set(incomingStrip.insertionSequencer, sequencer)
+      void this.strips.set(incomingStrip.insertionSession, sequencer)
 
     void sequencer.set(incomingStrip.insertionTime, incomingStrip)
   }

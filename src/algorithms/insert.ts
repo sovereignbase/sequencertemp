@@ -4,19 +4,19 @@ import { insertBefore } from '../auxiliary/insertBefore.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Sequence } from '../class.js'
-import type { Delta, Strip } from '../types/type.js'
+import type { Gossip, Strip } from '../types/type.js'
 
 export function insert<T>(
   this: Sequence<T>,
   values: Array<T>,
   at: number
-): Delta<T> {
+): Gossip<T> {
   if (this.structuralStripCount === 0) {
     const increasingStrip: NonNullable<Strip<T>> = {
-      anchorSequencer: 0,
+      anchorSession: 0,
       anchorTime: 0,
       anchorFrame: 0,
-      insertionSequencer: this.increaseClock[0],
+      insertionSession: this.increaseClock[0],
       insertionTime: this.increaseClock[1],
       insertionDiff: values.length,
       footage: values,
@@ -28,10 +28,10 @@ export function insert<T>(
 
     return [
       [
-        increasingStrip.anchorSequencer,
+        increasingStrip.anchorSession,
         increasingStrip.anchorTime,
         increasingStrip.anchorFrame,
-        increasingStrip.insertionSequencer,
+        increasingStrip.insertionSession,
         increasingStrip.insertionTime,
         increasingStrip.insertionDiff,
         increasingStrip.footage,
@@ -55,10 +55,10 @@ export function insert<T>(
   }
 
   const increasingStrip: NonNullable<Strip<T>> = {
-    anchorSequencer: containingStrip.insertionSequencer,
+    anchorSession: containingStrip.insertionSession,
     anchorTime: containingStrip.insertionTime,
     anchorFrame: targetFramePosition,
-    insertionSequencer: this.increaseClock[0],
+    insertionSession: this.increaseClock[0],
     insertionTime: this.increaseClock[1],
     insertionDiff: values.length,
     footage: values,
@@ -89,10 +89,10 @@ export function insert<T>(
 
   return [
     [
-      increasingStrip.anchorSequencer,
+      increasingStrip.anchorSession,
       increasingStrip.anchorTime,
       increasingStrip.anchorFrame,
-      increasingStrip.insertionSequencer,
+      increasingStrip.insertionSession,
       increasingStrip.insertionTime,
       increasingStrip.insertionDiff,
       increasingStrip.footage,

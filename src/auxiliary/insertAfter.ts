@@ -39,10 +39,10 @@ export function insertAfter<T>(
   if (
     rightStep &&
     (containingStrip.rightFragment !== rightStep ||
-      (incomingStrip.anchorSequencer === 0 &&
+      (incomingStrip.anchorSession === 0 &&
         incomingStrip.anchorTime === 0 &&
         incomingStrip.anchorFrame === 0)) &&
-    rightStep.anchorSequencer === incomingStrip.anchorSequencer &&
+    rightStep.anchorSession === incomingStrip.anchorSession &&
     rightStep.anchorTime === incomingStrip.anchorTime &&
     rightStep.anchorFrame === incomingStrip.anchorFrame
   ) {
@@ -53,12 +53,12 @@ export function insertAfter<T>(
       smallerCompetitor &&
       ((incomingStrip.insertionDiff < 0 &&
         smallerCompetitor.insertionDiff > 0) ||
-        ((incomingStrip.insertionDiff < 0) ===
-          (smallerCompetitor.insertionDiff < 0) &&
-          (incomingStrip.insertionSequencer <
-            smallerCompetitor.insertionSequencer ||
-            (incomingStrip.insertionSequencer ===
-              smallerCompetitor.insertionSequencer &&
+        (incomingStrip.insertionDiff < 0 ===
+          smallerCompetitor.insertionDiff < 0 &&
+          (incomingStrip.insertionSession <
+            smallerCompetitor.insertionSession ||
+            (incomingStrip.insertionSession ===
+              smallerCompetitor.insertionSession &&
               incomingStrip.insertionTime >=
                 smallerCompetitor.insertionTime +
                   Math.abs(smallerCompetitor.insertionDiff) +
@@ -80,11 +80,7 @@ export function insertAfter<T>(
       rightStep = leftStep.rightStep
     }
 
-    if (
-      largerCompetitor &&
-      this.leftJumpToPatch &&
-      this.rightJumpToPatch
-    ) {
+    if (largerCompetitor && this.leftJumpToPatch && this.rightJumpToPatch) {
       this.leftJumpToPatch.rightJump = undefined
       this.rightJumpToPatch.leftJump = undefined
       this.leftJumpToPatch = undefined

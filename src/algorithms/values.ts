@@ -20,7 +20,7 @@ export function values<T>(
 
     if (stripDiff > 0) {
       const origin = this.containmentTable.get([
-        strip.insertionSequencer,
+        strip.insertionSession,
         strip.insertionTime,
         0,
         0,

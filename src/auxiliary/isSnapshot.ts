@@ -1,4 +1,4 @@
-import { isAcknowledgement, isInsertion } from './isDelta.js'
+import { isAcknowledgement, isInsertion } from './isGossip.js'
 import type { Snapshot } from '../types/type.js'
 
 export function isSnapshot<T>(data: unknown): data is Snapshot<T> {
