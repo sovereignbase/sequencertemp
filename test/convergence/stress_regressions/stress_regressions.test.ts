@@ -94,4 +94,34 @@ describe('shrunk stress regressions', () => {
       'root',
     ])
   })
+
+  it('keeps a tail replacement paired with its Mask through restart', () => {
+    const primary = new Sequence<string>(100)
+    const concurrent = new Sequence<string>(101)
+    const mutations: Array<Delta<string>> = [
+      primary.insert(['root'], 0),
+      primary.insert(['branch-0', 'branch-1', 'branch-2', 'branch-3'], 0),
+      concurrent.insert(['concurrent'], 0),
+      primary.replace(['replacement'], 4, 5),
+      primary.insert(['head-4'], 0),
+      primary.insert(['head-5'], 0),
+    ]
+
+    const ordered = deliver(empty, mutations)
+    const restarted = deliver(empty, mutations, 3)
+    const recreated = new Sequence<string>(102, restarted.snapshot())
+
+    expect_converged(ordered, restarted)
+    expect_converged(ordered, recreated)
+    expect(ordered.values()).toEqual([
+      'concurrent',
+      'head-5',
+      'head-4',
+      'branch-0',
+      'branch-1',
+      'branch-2',
+      'branch-3',
+      'replacement',
+    ])
+  })
 })

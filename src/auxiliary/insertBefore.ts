@@ -45,14 +45,18 @@ export function insertBefore<T>(
 
     while (
       smallerCompetitor &&
-      (incomingStrip.insertionSequencer <
-        smallerCompetitor.insertionSequencer ||
-        (incomingStrip.insertionSequencer ===
-          smallerCompetitor.insertionSequencer &&
-          incomingStrip.insertionTime -
-            Math.abs(incomingStrip.insertionDiff) -
-            1 >=
-            smallerCompetitor.insertionTime))
+      ((incomingStrip.insertionDiff < 0 &&
+        smallerCompetitor.insertionDiff > 0) ||
+        ((incomingStrip.insertionDiff < 0) ===
+          (smallerCompetitor.insertionDiff < 0) &&
+          (incomingStrip.insertionSequencer <
+            smallerCompetitor.insertionSequencer ||
+            (incomingStrip.insertionSequencer ===
+              smallerCompetitor.insertionSequencer &&
+              incomingStrip.insertionTime -
+                Math.abs(incomingStrip.insertionDiff) -
+                1 >=
+                smallerCompetitor.insertionTime))))
     ) {
       largerCompetitor = smallerCompetitor
       smallerCompetitor = smallerCompetitor.rightCompetitor

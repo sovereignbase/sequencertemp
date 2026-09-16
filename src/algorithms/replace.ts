@@ -14,6 +14,7 @@ export function replace<T>(
   const insertions = []
 
   let remaining = endAt - startAt
+  let replacementAnchor: Strip<T>
 
   while (remaining > 0) {
     const targetFramePosition = findFrameByVisibleIndex.call(this, startAt)
@@ -58,6 +59,7 @@ export function replace<T>(
     )
 
     this.containmentTable.set(decreasingStrip)
+    replacementAnchor ??= decreasingStrip
 
     insertions.push([
       decreasingStrip.anchorSequencer,
@@ -75,7 +77,13 @@ export function replace<T>(
     let targetFramePosition: number
     let containingStrip: NonNullable<Strip<T>>
 
-    if (startAt === this.visibleFrameCount) {
+    if (replacementAnchor) {
+      containingStrip = replacementAnchor.leftStep!
+      targetFramePosition =
+        Math.abs(
+          containingStrip.fragmentDiff ?? containingStrip.insertionDiff
+        ) + 1
+    } else if (startAt === this.visibleFrameCount) {
       containingStrip = this.tail!
       targetFramePosition = 1
     } else {
@@ -86,9 +94,11 @@ export function replace<T>(
     this.increaseClock[1] += withValues.length + 1
 
     const increasingStrip: NonNullable<Strip<T>> = {
-      anchorSequencer: containingStrip.insertionSequencer,
-      anchorTime: containingStrip.insertionTime,
-      anchorFrame: targetFramePosition,
+      anchorSequencer:
+        replacementAnchor?.anchorSequencer ?? containingStrip.insertionSequencer,
+      anchorTime:
+        replacementAnchor?.anchorTime ?? containingStrip.insertionTime,
+      anchorFrame: replacementAnchor?.anchorFrame ?? targetFramePosition,
       insertionSequencer: this.increaseClock[0],
       insertionTime: this.increaseClock[1],
       insertionDiff: withValues.length,
@@ -112,6 +122,9 @@ export function replace<T>(
       increasingStrip.insertionDiff,
       this.structuralStripCount - previousStructuralStripCount
     )
+
+    if (replacementAnchor)
+      this.visibleIndex += increasingStrip.insertionDiff
 
     this.containmentTable.set(increasingStrip)
 
