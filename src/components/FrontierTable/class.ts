@@ -1,26 +1,23 @@
+import { getRandom53bitNumber } from '../../auxiliary/getRandom53bitNumber.js'
 import type { Acknowledgement } from '../../types/type.js'
 
 export class FrontierTable {
   private readonly actors: Set<number> = new Set()
   private readonly sessions: Map<number, Map<number, number>> = new Map()
 
-  observeActor(actorID: number): void {
-    void this.actors.add(actorID)
-  }
-
   observeAcknowledgement(frontier: Acknowledgement): void {
     const actorID = frontier[0]
-    if (!this.actors.has(actorID)) return
+    void this.actors.add(actorID)
 
     for (let i = 1; i < frontier.length; i += 2) {
       const sessionID = frontier[i]
-      const count = frontier[i + 1]
+      const time = frontier[i + 1]
 
       const session = this.sessions.get(sessionID) ?? new Map<number, number>()
 
       if (session.size === 0) void this.sessions.set(sessionID, session)
 
-      void session.set(actorID, count)
+      void session.set(actorID, time)
     }
   }
 
@@ -31,10 +28,10 @@ export class FrontierTable {
       const acknowledgement: Array<number> = [actorID]
 
       for (const [sessionID, session] of this.sessions) {
-        const count = session.get(actorID)
-        if (count === undefined) continue
+        const time = session.get(actorID)
+        if (time === undefined) continue
 
-        void acknowledgement.push(sessionID, count)
+        void acknowledgement.push(sessionID, time)
       }
 
       void frontiers.push(acknowledgement)
@@ -73,19 +70,5 @@ export class FrontierTable {
     }
 
     return ids
-  }
-
-  getSafeSessionID(): number {
-    const buffer = new Uint32Array(1)
-
-    do {
-      void crypto.getRandomValues(buffer)
-    } while (this.sessions.has(buffer[0]))
-
-    const sessionID = buffer[0]
-
-    void this.sessions.set(sessionID, new Map())
-
-    return sessionID
   }
 }

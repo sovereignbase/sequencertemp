@@ -1,4 +1,5 @@
 import { findVisibleIndexOfStrip } from '../auxiliary/findVisibleIndexOfStrip.js'
+import { getRandom53bitNumber } from '../auxiliary/getRandom53bitNumber.js'
 import { insertAfter } from '../auxiliary/insertAfter.js'
 import { insertBefore } from '../auxiliary/insertBefore.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
@@ -16,22 +17,20 @@ export function create<T>(
   const [frontiers, projection] = (trustedSnapshot as Snapshot<T>) ?? []
 
   if (Array.isArray(frontiers)) {
-    // Actors must exist before acknowledgements are observed.
-    for (const acknowledgement of frontiers) {
-      if (acknowledgement.length === 0) continue
-      void this.frontierTable.observeActor(acknowledgement[0])
-    }
-
     for (const acknowledgement of frontiers)
       void this.frontierTable.observeAcknowledgement(acknowledgement)
   }
 
+  const unsafeIDs: Set<number> = new Set()
   const compactableIDs = new Set(this.frontierTable.getCompactableSessions())
 
   if (Array.isArray(projection))
     for (const incoming of projection) {
       // compact snapshot by not materializing compactable decreasing insertions
       if (incoming[5] < 0 && compactableIDs.has(incoming[3])) continue
+
+      void unsafeIDs.add(incoming[0])
+      void unsafeIDs.add(incoming[3])
 
       const incomingStrip: NonNullable<Strip<T>> = {
         anchorSession: incoming[0],
@@ -122,19 +121,21 @@ export function create<T>(
       }
 
       this.containmentTable.set(incomingStrip)
-
-      if (incomingStrip.insertionDiff > 0)
-        void this.frontierTable.observeActor(incomingStrip.insertionSession)
     }
 
-  // The current actor becomes part of the frontier only after determining
-  // what was already compactable in the stored snapshot.
-  void this.frontierTable.observeActor(actorID)
+  const getSafeSessionID = () => {
+    let sessionID
+    do {
+      sessionID = getRandom53bitNumber()
+    } while (unsafeIDs.has(sessionID))
+    void unsafeIDs.add(sessionID)
+    return sessionID
+  }
 
-  this.increaseClock[0] = actorID
+  this.increaseClock[0] = getSafeSessionID()
   this.increaseClock[1] = time
 
-  this.decreaseClock[0] = this.frontierTable.getSafeSessionID()
+  this.decreaseClock[0] = getSafeSessionID()
   this.decreaseClock[1] = 0
 
   void this.frontierTable.freeCompactedSessions(Array.from(compactableIDs))
