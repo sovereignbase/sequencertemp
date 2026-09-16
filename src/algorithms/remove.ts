@@ -1,5 +1,6 @@
 import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js'
 import { insertAfter } from '../auxiliary/insertAfter.js'
+import { insertBefore } from '../auxiliary/insertBefore.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Sequence } from '../class.js'
 import type { Delta, Strip } from '../types/type.js'
@@ -39,12 +40,15 @@ export function remove<T>(
 
     const previousStructuralStripCount = this.structuralStripCount
 
-    insertAfter.call(
-      this,
-      decreasingStrip,
-      containingStrip,
-      targetFramePosition
-    )
+    if (targetFramePosition === 1)
+      insertBefore.call(this, decreasingStrip, containingStrip)
+    else
+      insertAfter.call(
+        this,
+        decreasingStrip,
+        containingStrip,
+        targetFramePosition
+      )
 
     patchJumps.call(
       this,

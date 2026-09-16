@@ -1,5 +1,6 @@
 import { findVisibleIndexOfStrip } from '../auxiliary/findVisibleIndexOfStrip.js'
 import { insertAfter } from '../auxiliary/insertAfter.js'
+import { insertBefore } from '../auxiliary/insertBefore.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Sequence } from '../class.js'
@@ -88,12 +89,15 @@ export function create<T>(
 
         const previousStructuralStripCount = this.structuralStripCount
 
-        insertAfter.call(
-          this,
-          incomingStrip,
-          containingStrip,
-          targetFramePosition
-        )
+        if (targetFramePosition === 1)
+          insertBefore.call(this, incomingStrip, containingStrip)
+        else
+          insertAfter.call(
+            this,
+            incomingStrip,
+            containingStrip,
+            targetFramePosition
+          )
 
         patchJumps.call(
           this,

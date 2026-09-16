@@ -18,6 +18,6 @@ describe('concurrent Mask and insert', () => {
     const mask_first = deliver(retained, [deletion, insertion])
     const insert_first = deliver(retained, [insertion, deletion])
     expect_converged(mask_first, insert_first)
-    expect(mask_first.values()).toEqual(['a', 'b', 'beside'])
+    expect(mask_first.values()).toEqual(['a', 'beside', 'c'])
   })
 })

@@ -1,5 +1,6 @@
 import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js'
 import { insertAfter } from '../auxiliary/insertAfter.js'
+import { insertBefore } from '../auxiliary/insertBefore.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Sequence } from '../class.js'
 import type { Delta, Strip } from '../types/type.js'
@@ -40,12 +41,15 @@ export function replace<T>(
 
     const previousStructuralStripCount = this.structuralStripCount
 
-    insertAfter.call(
-      this,
-      decreasingStrip,
-      containingStrip,
-      targetFramePosition
-    )
+    if (targetFramePosition === 1)
+      insertBefore.call(this, decreasingStrip, containingStrip)
+    else
+      insertAfter.call(
+        this,
+        decreasingStrip,
+        containingStrip,
+        targetFramePosition
+      )
 
     patchJumps.call(
       this,
@@ -68,8 +72,16 @@ export function replace<T>(
   }
 
   if (withValues.length !== 0) {
-    const targetFramePosition = findFrameByVisibleIndex.call(this, startAt)
-    const containingStrip = this.gate!
+    let targetFramePosition: number
+    let containingStrip: NonNullable<Strip<T>>
+
+    if (startAt === this.visibleFrameCount) {
+      containingStrip = this.tail!
+      targetFramePosition = 0
+    } else {
+      targetFramePosition = findFrameByVisibleIndex.call(this, startAt)
+      containingStrip = this.gate!
+    }
 
     this.increaseClock[1] += withValues.length + 1
 
@@ -85,12 +97,15 @@ export function replace<T>(
 
     const previousStructuralStripCount = this.structuralStripCount
 
-    insertAfter.call(
-      this,
-      increasingStrip,
-      containingStrip,
-      targetFramePosition
-    )
+    if (targetFramePosition === 1)
+      insertBefore.call(this, increasingStrip, containingStrip)
+    else
+      insertAfter.call(
+        this,
+        increasingStrip,
+        containingStrip,
+        targetFramePosition
+      )
 
     patchJumps.call(
       this,
