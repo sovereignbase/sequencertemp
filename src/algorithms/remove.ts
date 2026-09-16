@@ -1,6 +1,5 @@
 import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js'
 import { insertAfter } from '../auxiliary/insertAfter.js'
-import { insertBefore } from '../auxiliary/insertBefore.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Sequence } from '../class.js'
 import type { Delta, Strip } from '../types/type.js'
@@ -40,23 +39,20 @@ export function remove<T>(
 
     const previousStructuralStripCount = this.structuralStripCount
 
-    // the deletion starts at a visible index that uses a boundary marker
-    // as its anchor when it is immediately after the end of a Strip
-    if (targetFramePosition === 1)
-      insertBefore.call(this, decreasingStrip, containingStrip)
-    else
-      insertAfter.call(
-        this,
-        decreasingStrip,
-        containingStrip,
-        targetFramePosition
-      )
+    insertAfter.call(
+      this,
+      decreasingStrip,
+      containingStrip,
+      targetFramePosition
+    )
 
     patchJumps.call(
       this,
       decreasingStrip.insertionDiff,
       this.structuralStripCount - previousStructuralStripCount
     )
+
+    this.containmentTable.set(decreasingStrip)
 
     insertions.push([
       decreasingStrip.anchorSequencer,

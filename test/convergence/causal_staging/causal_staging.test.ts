@@ -1,18 +1,17 @@
-import { assert, describe, expect, it } from 'vitest'
-import { create, ingest, insert } from '../../../src/typescript/index.js'
+import { describe, expect, it } from 'vitest'
+import { Sequence } from '../../../src/class.js'
 import { expect_converged } from '../../.helpers/replica.js'
 
 describe('causal staging', () => {
   it('retains a child and resolves it when its missing parent arrives', () => {
-    const source = create<string>(21)
-    const parent = insert(source, 0, ['parent'])
-    const child = insert(source, 1, ['child'])
-    assert(parent !== false && child !== false)
+    const source = new Sequence<string>(21)
+    const parent = source.insert(['parent'], 0)
+    const child = source.insert(['child'], 1)
 
-    const target = create<string>(22)
-    expect(ingest(target, child)).not.toBe(false)
-    expect(target[1]).toEqual([])
-    expect(ingest(target, parent)).not.toBe(false)
+    const target = new Sequence<string>(22)
+    expect(target.apply(child)).toBeDefined()
+    expect(target.values()).toEqual([])
+    expect(target.apply(parent)).toBeDefined()
     expect_converged(source, target)
   })
 })

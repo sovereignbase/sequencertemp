@@ -1,6 +1,5 @@
 import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js'
 import { insertAfter } from '../auxiliary/insertAfter.js'
-import { insertBefore } from '../auxiliary/insertBefore.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Sequence } from '../class.js'
@@ -25,6 +24,7 @@ export function insert<T>(
     }
 
     insertFirst.call(this, increasingStrip)
+    this.containmentTable.set(increasingStrip)
 
     return [
       [
@@ -39,8 +39,18 @@ export function insert<T>(
     ]
   }
 
-  const targetFramePosition = findFrameByVisibleIndex.call(this, at)
-  const containingStrip = this.gate!
+  let targetFramePosition: number
+  let containingStrip: NonNullable<Strip<T>>
+
+  if (at === this.visibleFrameCount) {
+    containingStrip = this.tail!
+    targetFramePosition = Math.abs(
+      containingStrip.fragmentDiff ?? containingStrip.insertionDiff
+    )
+  } else {
+    targetFramePosition = findFrameByVisibleIndex.call(this, at)
+    containingStrip = this.gate!
+  }
 
   const increasingStrip: NonNullable<Strip<T>> = {
     anchorSequencer: containingStrip.insertionSequencer,
@@ -54,23 +64,20 @@ export function insert<T>(
 
   const previousStructuralStripCount = this.structuralStripCount
 
-  // the visible index that should move right from under the insertion
-  // uses a boundary marker when it is immediately after the end of a Strip
-  if (targetFramePosition === 1)
-    insertBefore.call(this, increasingStrip, containingStrip)
-  else
-    insertAfter.call(
-      this,
-      increasingStrip,
-      containingStrip,
-      targetFramePosition
-    )
+  insertAfter.call(
+    this,
+    increasingStrip,
+    containingStrip,
+    targetFramePosition
+  )
 
   patchJumps.call(
     this,
     increasingStrip.insertionDiff,
     this.structuralStripCount - previousStructuralStripCount
   )
+
+  this.containmentTable.set(increasingStrip)
 
   return [
     [

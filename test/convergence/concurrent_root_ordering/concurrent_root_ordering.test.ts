@@ -1,6 +1,6 @@
-import { assert, describe, expect, it } from 'vitest'
-import { create, insert, values } from '../../../src/typescript/index.js'
-import type { Delta, Snapshot } from '../../../src/typescript/index.js'
+import { describe, expect, it } from 'vitest'
+import { Sequence } from '../../../src/class.js'
+import type { Delta, Snapshot } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
 describe('concurrent root ordering', () => {
@@ -12,18 +12,16 @@ describe('concurrent root ordering', () => {
       [13, 'third'],
       [14, 'fourth'],
     ] as const) {
-      const state = create<string>(actor)
-      const mutation = insert(state, 0, [value])
-      assert(mutation !== false)
-      mutations.push(mutation)
+      const state = new Sequence<string>(actor)
+      mutations.push(state.insert([value], 0))
     }
 
-    const empty: Snapshot<string> = [[], new Uint32Array(), []]
+    const empty: Snapshot<string> = [[], []]
     const forward = deliver<string>(empty, mutations)
     const reverse = deliver<string>(empty, [...mutations].reverse())
     expect_converged(forward, reverse)
-    expect(values(forward)).toEqual(['fourth', 'third', 'second', 'first'])
-    expect(new Set(values(forward))).toEqual(
+    expect(forward.values()).toEqual(['fourth', 'third', 'second', 'first'])
+    expect(new Set(forward.values())).toEqual(
       new Set(['first', 'second', 'third', 'fourth'])
     )
   })

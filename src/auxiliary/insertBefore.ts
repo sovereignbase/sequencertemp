@@ -32,7 +32,10 @@ export function insertBefore<T>(
 
   if (
     rightStep &&
-    containingStrip.rightFragment !== rightStep &&
+    (containingStrip.rightFragment !== rightStep ||
+      (incomingStrip.anchorSequencer === 0 &&
+        incomingStrip.anchorTime === 0 &&
+        incomingStrip.anchorFrame === 0)) &&
     rightStep.anchorSequencer === incomingStrip.anchorSequencer &&
     rightStep.anchorTime === incomingStrip.anchorTime &&
     rightStep.anchorFrame === incomingStrip.anchorFrame

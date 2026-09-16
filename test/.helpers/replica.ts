@@ -1,22 +1,42 @@
-/** Shared fixtures for the current actor-id and Delta API. */
 import { expect } from 'vitest'
-import {
-  create,
-  ingest,
-  insert,
-  length,
-  snapshot,
-  values,
-} from '../../src/typescript/index.js'
-import type { Delta, Replica, Snapshot } from '../../src/typescript/index.js'
+import { Sequence } from '../../src/class.js'
+import type { Delta, Snapshot } from '../../src/types/type.js'
 
-let next_actor_id = 10_000
+export type Replica<T> = Sequence<T>
 
-export function create_seed<T>(seed_values: Array<T>): Replica<T> {
-  const state = create<T>(next_actor_id++)
-  if (seed_values.length !== 0)
-    expect(insert(state, 0, seed_values)).not.toBe(false)
-  return state
+let actor = 10_000
+
+export function create_seed<T>(values: Array<T>): Sequence<T> {
+  const sequence = new Sequence<T>(actor++)
+  sequence.insert(values, 0)
+  return sequence
+}
+
+export function deliver<T>(
+  base: Snapshot<T>,
+  mutations: Array<Delta<T>>,
+  restartAt?: number
+): Sequence<T> {
+  let sequence = new Sequence<T>(actor++, base)
+
+  for (let index = 0; index < mutations.length; ++index) {
+    sequence.apply(mutations[index])
+
+    if (index + 1 === restartAt) {
+      sequence = new Sequence<T>(actor++, sequence.snapshot())
+      for (let replay = 0; replay <= index; ++replay)
+        sequence.apply(mutations[replay])
+    }
+  }
+
+  return sequence
+}
+
+export function expect_converged<T>(
+  expected: Sequence<T>,
+  actual: Sequence<T>
+): void {
+  expect(actual.values()).toEqual(expected.values())
 }
 
 export function shuffle_mutations<T>(
@@ -24,49 +44,12 @@ export function shuffle_mutations<T>(
   seed: number
 ): Array<Delta<T>> {
   const shuffled = [...mutations]
-  let state = seed >>> 0
+
   for (let index = shuffled.length - 1; index > 0; --index) {
-    state = (Math.imul(state, 1_664_525) + 1_013_904_223) >>> 0
-    const selected = state % (index + 1)
-    ;[shuffled[index], shuffled[selected]] = [
-      shuffled[selected],
-      shuffled[index],
-    ]
+    seed = (Math.imul(seed, 1_664_525) + 1_013_904_223) >>> 0
+    const other = seed % (index + 1)
+    ;[shuffled[index], shuffled[other]] = [shuffled[other], shuffled[index]]
   }
+
   return shuffled
-}
-
-export function deliver<T>(
-  base: Snapshot<T>,
-  mutations: Array<Delta<T>>,
-  restart_index?: number
-): Replica<T> {
-  let state = create<T>(next_actor_id++, base)
-  let pending = [...mutations]
-  let delivered = 0
-  while (pending.length !== 0) {
-    const next: Array<Delta<T>> = []
-    let progress = false
-    for (const mutation of pending) {
-      if (delivered === restart_index)
-        state = create<T>(next_actor_id++, snapshot(state))
-      if (ingest(state, mutation) === false) next.push(mutation)
-      else {
-        ++delivered
-        progress = true
-      }
-    }
-    if (!progress)
-      throw new TypeError(`${pending.length} Mutations remained unresolved.`)
-    pending = next
-  }
-  return state
-}
-
-export function expect_converged<T>(
-  expected: Replica<T>,
-  actual: Replica<T>
-): void {
-  expect(values(actual)).toEqual(values(expected))
-  expect(length(actual)).toBe(length(expected))
 }

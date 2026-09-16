@@ -1,11 +1,5 @@
-import { assert, describe, expect, it } from 'vitest'
-import {
-  create,
-  insert,
-  remove,
-  snapshot,
-  values,
-} from '../../../src/typescript/index.js'
+import { describe, expect, it } from 'vitest'
+import { Sequence } from '../../../src/class.js'
 import {
   create_seed,
   deliver,
@@ -15,16 +9,15 @@ import {
 describe('concurrent Mask and insert', () => {
   it('keeps the concurrent insertion outside the origin Mask', () => {
     const base = create_seed(['a', 'b', 'c'])
-    const retained = snapshot(base)
-    const deleting = create<string>(31, retained)
-    const inserting = create<string>(32, retained)
-    const deletion = remove(deleting, 1, 2)
-    const insertion = insert(inserting, 2, ['beside'])
-    assert(deletion !== false && insertion !== false)
+    const retained = base.snapshot()
+    const deleting = new Sequence<string>(31, retained)
+    const inserting = new Sequence<string>(32, retained)
+    const deletion = deleting.remove(1, 2)
+    const insertion = inserting.insert(['beside'], 2)
 
     const mask_first = deliver(retained, [deletion, insertion])
     const insert_first = deliver(retained, [insertion, deletion])
     expect_converged(mask_first, insert_first)
-    expect(values(mask_first)).toEqual(['a', 'beside', 'c'])
+    expect(mask_first.values()).toEqual(['a', 'b', 'beside'])
   })
 })

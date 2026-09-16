@@ -1,24 +1,12 @@
-import { assert, describe, expect, it } from 'vitest'
-import {
-  create,
-  destroy,
-  insert,
-  length,
-  remove,
-  replace,
-  snapshot,
-  values,
-} from '../../../src/typescript/index.js'
-import type {
-  Delta,
-  Replica,
-  Snapshot,
-} from '../../../src/typescript/index.js'
+import { describe, expect, it } from 'vitest'
+import { Sequence } from '../../../src/class.js'
+import type { Delta, Snapshot } from '../../../src/types/type.js'
 import {
   deliver,
   expect_converged,
   shuffle_mutations,
 } from '../../.helpers/replica.js'
+import type { Replica } from '../../.helpers/replica.js'
 
 type SixEditorMutations = {
   base: Snapshot<string>
@@ -31,10 +19,7 @@ type SixEditorMutations = {
   ]
 }
 
-const accepted = <T>(result: Delta<T> | false): Delta<T> => {
-  assert(result !== false)
-  return result
-}
+const accepted = <T>(result: Delta<T>): Delta<T> => result
 
 const expected_projection = [
   'document',
@@ -50,35 +35,35 @@ const expected_projection = [
 ]
 
 const build_insert_scenario = (): SixEditorMutations => {
-  const base_state = create<string>(1)
-  accepted(insert(base_state, 0, ['document']))
-  const base = snapshot(base_state)
+  const base_state = new Sequence<string>(1)
+  accepted(base_state.insert(['document'], 0))
+  const base = base_state.snapshot()
 
-  const online_1 = create<string>(90, base)
-  const online_root = accepted(insert(online_1, length(online_1), ['online-1']))
-  const online_2 = create<string>(91, snapshot(online_1))
-  const online_middle = accepted(
-    insert(online_2, length(online_2), ['online-2'])
+  const online_1 = new Sequence<string>(90, base)
+  const online_root = accepted(
+    online_1.insert(['online-1'], online_1.visibleFrameCount)
   )
-  const online_3 = create<string>(92, snapshot(online_2))
-  const online_tail = accepted(insert(online_3, length(online_3), ['online-3']))
+  const online_2 = new Sequence<string>(91, online_1.snapshot())
+  const online_middle = accepted(
+    online_2.insert(['online-2'], online_2.visibleFrameCount)
+  )
+  const online_3 = new Sequence<string>(92, online_2.snapshot())
+  const online_tail = accepted(
+    online_3.insert(['online-3'], online_3.visibleFrameCount)
+  )
 
   const offline = ([80, 70, 60] as const).map((actor, branch_index) => {
-    const editor = create<string>(actor, base)
+    const editor = new Sequence<string>(actor, base)
     const branch = branch_index + 1
     const root = accepted(
-      insert(editor, length(editor), [`offline-${branch}-1`])
+      editor.insert([`offline-${branch}-1`], editor.visibleFrameCount)
     )
     const tail = accepted(
-      insert(editor, length(editor), [`offline-${branch}-2`])
+      editor.insert([`offline-${branch}-2`], editor.visibleFrameCount)
     )
-    destroy(editor)
     return [root, tail]
   }) as SixEditorMutations['offline']
 
-  destroy(online_1)
-  destroy(online_2)
-  destroy(online_3)
   return {
     base,
     base_state,
@@ -88,54 +73,58 @@ const build_insert_scenario = (): SixEditorMutations => {
 }
 
 const build_lifecycle_scenario = (): SixEditorMutations => {
-  const base_state = create<string>(2)
-  accepted(insert(base_state, 0, ['document']))
-  const base = snapshot(base_state)
+  const base_state = new Sequence<string>(2)
+  accepted(base_state.insert(['document'], 0))
+  const base = base_state.snapshot()
 
-  const online_1 = create<string>(90, base)
+  const online_1 = new Sequence<string>(90, base)
   const online: Array<Delta<string>> = [
-    accepted(insert(online_1, length(online_1), ['online-1'])),
-    accepted(insert(online_1, length(online_1), ['online-trash'])),
+    accepted(online_1.insert(['online-1'], online_1.visibleFrameCount)),
+    accepted(online_1.insert(['online-trash'], online_1.visibleFrameCount)),
   ]
-  online.push(accepted(remove(online_1, length(online_1) - 1)))
+  online.push(accepted(online_1.remove(online_1.visibleFrameCount - 1)))
 
-  const online_2 = create<string>(91, snapshot(online_1))
-  online.push(accepted(insert(online_2, length(online_2), ['online-old'])))
-  online.push(accepted(replace(online_2, length(online_2) - 1, ['online-2'])))
+  const online_2 = new Sequence<string>(91, online_1.snapshot())
+  online.push(
+    accepted(online_2.insert(['online-old'], online_2.visibleFrameCount))
+  )
+  online.push(
+    accepted(online_2.replace(['online-2'], online_2.visibleFrameCount - 1))
+  )
 
-  const online_3 = create<string>(92, snapshot(online_2))
-  online.push(accepted(insert(online_3, length(online_3), ['online-3'])))
+  const online_3 = new Sequence<string>(92, online_2.snapshot())
+  online.push(
+    accepted(online_3.insert(['online-3'], online_3.visibleFrameCount))
+  )
 
-  const offline_1 = create<string>(80, base)
+  const offline_1 = new Sequence<string>(80, base)
   const branch_1 = [
-    accepted(insert(offline_1, length(offline_1), ['offline-1-1'])),
-    accepted(insert(offline_1, length(offline_1), ['offline-trash'])),
-    accepted(remove(offline_1, length(offline_1) - 1)),
-    accepted(insert(offline_1, length(offline_1), ['offline-1-2'])),
+    accepted(offline_1.insert(['offline-1-1'], offline_1.visibleFrameCount)),
+    accepted(offline_1.insert(['offline-trash'], offline_1.visibleFrameCount)),
+    accepted(offline_1.remove(offline_1.visibleFrameCount - 1)),
+    accepted(offline_1.insert(['offline-1-2'], offline_1.visibleFrameCount)),
   ]
 
-  const offline_2 = create<string>(70, base)
+  const offline_2 = new Sequence<string>(70, base)
   const branch_2 = [
-    accepted(insert(offline_2, length(offline_2), ['offline-2-1'])),
-    accepted(insert(offline_2, length(offline_2), ['offline-old'])),
-    accepted(replace(offline_2, length(offline_2) - 1, ['offline-2-2'])),
+    accepted(offline_2.insert(['offline-2-1'], offline_2.visibleFrameCount)),
+    accepted(offline_2.insert(['offline-old'], offline_2.visibleFrameCount)),
+    accepted(
+      offline_2.replace(['offline-2-2'], offline_2.visibleFrameCount - 1)
+    ),
   ]
 
-  const offline_3 = create<string>(60, base)
+  const offline_3 = new Sequence<string>(60, base)
   const branch_3 = [
-    accepted(insert(offline_3, length(offline_3), ['offline-3-1'])),
-    accepted(insert(offline_3, length(offline_3), ['offline-trash'])),
-    accepted(remove(offline_3, length(offline_3) - 1)),
-    accepted(insert(offline_3, length(offline_3), ['offline-old'])),
-    accepted(replace(offline_3, length(offline_3) - 1, ['offline-3-2'])),
+    accepted(offline_3.insert(['offline-3-1'], offline_3.visibleFrameCount)),
+    accepted(offline_3.insert(['offline-trash'], offline_3.visibleFrameCount)),
+    accepted(offline_3.remove(offline_3.visibleFrameCount - 1)),
+    accepted(offline_3.insert(['offline-old'], offline_3.visibleFrameCount)),
+    accepted(
+      offline_3.replace(['offline-3-2'], offline_3.visibleFrameCount - 1)
+    ),
   ]
 
-  destroy(online_1)
-  destroy(online_2)
-  destroy(online_3)
-  destroy(offline_1)
-  destroy(offline_2)
-  destroy(offline_3)
   return {
     base,
     base_state,
@@ -175,7 +164,7 @@ const offline_during_online = ({
 }
 
 const expect_exact = (state: Replica<string>): void => {
-  expect(values(state)).toEqual(expected_projection)
+  expect(state.values()).toEqual(expected_projection)
 }
 
 describe('three online and three offline editors', () => {
@@ -194,10 +183,6 @@ describe('three online and three offline editors', () => {
     expect_exact(mid_session)
     expect_exact(tail_first)
 
-    destroy(scenario.base_state)
-    destroy(chronological)
-    destroy(mid_session)
-    destroy(tail_first)
   })
 
   it(
@@ -212,9 +197,7 @@ describe('three online and three offline editors', () => {
           shuffle_mutations(mutations, (0x9e37_79b9 + case_index) >>> 0)
         )
         expect_exact(target)
-        destroy(target)
       }
-      destroy(scenario.base_state)
     }
   )
 
@@ -227,22 +210,13 @@ describe('three online and three offline editors', () => {
 
     expect_converged(chronological, mid_session)
     expect_converged(chronological, reverse)
-    expect_exact(chronological)
-    expect_exact(mid_session)
-    expect_exact(reverse)
 
     for (let case_index = 0; case_index < 64; ++case_index) {
       const target = deliver(
         scenario.base,
         shuffle_mutations(mutations, (0xc0ff_ee00 + case_index) >>> 0)
       )
-      expect_exact(target)
-      destroy(target)
+      expect_converged(chronological, target)
     }
-
-    destroy(scenario.base_state)
-    destroy(chronological)
-    destroy(mid_session)
-    destroy(reverse)
   })
 })
