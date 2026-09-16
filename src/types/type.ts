@@ -125,7 +125,7 @@ export type Acknowledgement = ReadonlyArray<number>
  *
  * An acknowledgement is emitted in response to merging a decreasing insertion.
  */
-export type Delta<T> = ReadonlyArray<Acknowledgement | Insertion<T>>
+export type Gossip<T> = ReadonlyArray<Acknowledgement | Insertion<T>>
 
 /**
  * Serializable state required to reconstruct a Sequence.
@@ -158,6 +158,6 @@ export type Change<T> = ReadonlyArray<Splice<T>>
  *
  * `change` describes the visible Projection mutations.
  *
- * `delta` contains replication data when the operation emitted any.
+ * `gossip` contains replication data when the operation emitted any.
  */
-export type Result<T> = Readonly<[change: Change<T>, delta?: Delta<T>]>
+export type Result<T> = Readonly<[change: Change<T>, gossip?: Gossip<T>]>
