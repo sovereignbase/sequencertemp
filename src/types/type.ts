@@ -37,9 +37,6 @@ export type Strip<T> =
       /** Signed Projection effect represented by this fragment. */
       fragmentDiff?: number
 
-      /** Number of original insertion Frames preceding this fragment. */
-      fragmentFrame?: number
-
       /** Immediately preceding Strip in Structural Order. */
       leftStep?: Strip<T>
 

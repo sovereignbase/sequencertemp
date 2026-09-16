@@ -30,8 +30,7 @@ export function remove<T>(
     const decreasingStrip: NonNullable<Strip<T>> = {
       anchorSequencer: containingStrip.insertionSequencer,
       anchorTime: containingStrip.insertionTime,
-      anchorFrame:
-        (containingStrip.fragmentFrame ?? 0) + targetFramePosition,
+      anchorFrame: targetFramePosition,
       insertionSequencer: this.decreaseClock[0],
       insertionTime: this.decreaseClock[1],
       insertionDiff: -decreasingLength,
