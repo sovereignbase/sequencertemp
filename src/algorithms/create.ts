@@ -75,7 +75,12 @@ export function create<T>(
               containingStrip.fragmentDiff ?? containingStrip.insertionDiff
             )
 
-            if (targetFramePosition <= containingStripLength) break
+            if (
+              targetFramePosition <= containingStripLength ||
+              (targetFramePosition === containingStripLength + 1 &&
+                containingStrip.rightFragment !== containingStrip.rightStep)
+            )
+              break
 
             const rightFragment = containingStrip.rightFragment
             if (!rightFragment) break
