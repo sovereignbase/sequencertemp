@@ -86,7 +86,7 @@ export type Insertion<T> = Readonly<
     /** Logical time of the Session when the anchoring insertion was made. */
     anchorTime: number,
 
-    /** Frame offset within the original anchoring insertion, from its `insertionTime` towards `insertionEnd`, i.e. `insertionTime + insertionDiff`. */
+    /** Frame offset within the original anchoring insertion, from its `insertionTime` towards `insertionEnd`, i.e. `insertionTime + |insertionDiff|`. */
     anchorFrame: number,
 
     /** Session identifier that issued this insertion. */
