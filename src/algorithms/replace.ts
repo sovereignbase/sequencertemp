@@ -77,7 +77,7 @@ export function replace<T>(
 
     if (startAt === this.visibleFrameCount) {
       containingStrip = this.tail!
-      targetFramePosition = 0
+      targetFramePosition = 1
     } else {
       targetFramePosition = findFrameByVisibleIndex.call(this, startAt)
       containingStrip = this.gate!

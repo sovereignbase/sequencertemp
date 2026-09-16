@@ -45,9 +45,10 @@ export function insert<T>(
 
   if (at === this.visibleFrameCount) {
     containingStrip = this.tail!
-    targetFramePosition = Math.abs(
-      containingStrip.fragmentDiff ?? containingStrip.insertionDiff
-    )
+    targetFramePosition =
+      Math.abs(
+        containingStrip.fragmentDiff ?? containingStrip.insertionDiff
+      ) + 1
   } else {
     targetFramePosition = findFrameByVisibleIndex.call(this, at)
     containingStrip = this.gate!

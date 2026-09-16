@@ -26,11 +26,11 @@ export function insertAfter<T>(
   let leftStep = containingStrip
   let rightStep: Strip<T>
 
-  if (targetFramePosition < containingStripLength)
+  if (targetFramePosition <= containingStripLength)
     rightStep = splitStrip.call(
       this,
       containingStrip,
-      targetFramePosition
+      targetFramePosition - 1
     ) as Strip<T>
   else rightStep = containingStrip.rightStep
 

@@ -44,7 +44,7 @@ export function findFrameByVisibleIndex<T>(
       this.leftJumpToPatch = leftJumpToPatch
       this.rightJumpToPatch = rightJumpToPatch
 
-      return index - cursorIndex
+      return index - cursorIndex + 1
     }
 
     const currentDistance = Math.abs(cursorIndex - index)

@@ -62,7 +62,7 @@ export function create<T>(
 
         if (birth) {
           containingStrip = this.head!
-          targetFramePosition = 0
+          targetFramePosition = 1
         } else {
           const origin = this.containmentTable.get(incoming)
           if (!origin) continue
@@ -75,7 +75,7 @@ export function create<T>(
               containingStrip.fragmentDiff ?? containingStrip.insertionDiff
             )
 
-            if (targetFramePosition < containingStripLength) break
+            if (targetFramePosition <= containingStripLength) break
 
             const rightFragment = containingStrip.rightFragment
             if (!rightFragment) break
