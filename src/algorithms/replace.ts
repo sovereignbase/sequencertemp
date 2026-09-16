@@ -64,6 +64,9 @@ export function replace<T>(
       this.structuralStripCount - previousStructuralStripCount
     )
 
+    if (targetFramePosition === 1)
+      this.visibleIndex += decreasingStrip.insertionDiff
+
     this.containmentTable.set(decreasingStrip)
     replacementAnchor ??= decreasingStrip
 
