@@ -32,7 +32,8 @@ export function replace<T>(
     const decreasingStrip: NonNullable<Strip<T>> = {
       anchorSequencer: containingStrip.insertionSequencer,
       anchorTime: containingStrip.insertionTime,
-      anchorFrame: targetFramePosition,
+      anchorFrame:
+        (containingStrip.fragmentFrame ?? 0) + targetFramePosition,
       insertionSequencer: this.decreaseClock[0],
       insertionTime: this.decreaseClock[1],
       insertionDiff: -decreasingLength,
@@ -96,7 +97,9 @@ export function replace<T>(
         replacementAnchor?.anchorSequencer ?? containingStrip.insertionSequencer,
       anchorTime:
         replacementAnchor?.anchorTime ?? containingStrip.insertionTime,
-      anchorFrame: replacementAnchor?.anchorFrame ?? targetFramePosition,
+      anchorFrame:
+        replacementAnchor?.anchorFrame ??
+        (containingStrip.fragmentFrame ?? 0) + targetFramePosition,
       insertionSequencer: this.increaseClock[0],
       insertionTime: this.increaseClock[1],
       insertionDiff: withValues.length,

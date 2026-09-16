@@ -40,6 +40,7 @@ export function splitStrip<T>(
 
     rightFragment: strip.rightFragment,
     fragmentDiff: rightDiff,
+    fragmentFrame: (strip.fragmentFrame ?? 0) + framePosition,
 
     leftStep: strip,
     leftJump: undefined,

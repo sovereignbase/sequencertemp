@@ -11,24 +11,14 @@ export function findFrameByVisibleIndex<T>(
   let leftJumpToPatch = this.leftJumpToPatch
   let rightJumpToPatch = this.rightJumpToPatch
 
-  const tailDiff = this.tail!.fragmentDiff ?? this.tail!.insertionDiff
-  const tailIndex = this.visibleFrameCount - tailDiff
-
   const distanceToTravel = Math.abs(this.visibleIndex - index)
-  const tailDistance = Math.abs(tailIndex - index)
 
-  if (index < distanceToTravel && index <= tailDistance) {
+  if (index < distanceToTravel) {
     cursorStrip = this.head!
     cursorIndex = 0
 
     leftJumpToPatch = cursorStrip
     rightJumpToPatch = cursorStrip.rightJump
-  } else if (tailDistance < distanceToTravel) {
-    cursorStrip = this.tail!
-    cursorIndex = tailIndex
-
-    leftJumpToPatch = cursorStrip.leftJump
-    rightJumpToPatch = cursorStrip
   }
 
   const optimalJumpSpacing = Math.round(Math.sqrt(this.structuralStripCount))

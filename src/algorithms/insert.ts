@@ -56,7 +56,8 @@ export function insert<T>(
   const increasingStrip: NonNullable<Strip<T>> = {
     anchorSequencer: containingStrip.insertionSequencer,
     anchorTime: containingStrip.insertionTime,
-    anchorFrame: targetFramePosition,
+    anchorFrame:
+      (containingStrip.fragmentFrame ?? 0) + targetFramePosition,
     insertionSequencer: this.increaseClock[0],
     insertionTime: this.increaseClock[1],
     insertionDiff: values.length,

@@ -97,17 +97,9 @@ const gossip = (
   update: Delta<number>,
   operation: string
 ): void => {
-  console.log('DEBUG gossip', operation, JSON.stringify(update))
   const acknowledgements = applyUpdate(receiver, update, operation)[1]
   if (acknowledgements?.length)
     void applyUpdate(sender, acknowledgements, operation + ' acknowledgements')
-
-  const senderValues = sender.values()
-  const receiverValues = receiver.values()
-  if (JSON.stringify(senderValues) !== JSON.stringify(receiverValues))
-    throw new TypeError(
-      `${operation} diverged: ${JSON.stringify({ update, senderValues, receiverValues })}`
-    )
 }
 
 const insertAt = (
@@ -119,7 +111,6 @@ const insertAt = (
 ): void => {
   const frameIndex = runtime.strips.frameOffsetAt(stripIndex)
   const strip = createStrip(runtime, config)
-  console.log('DEBUG local', runtime.state === runtime.peer ? 'same' : 'state', 'insert', JSON.stringify([strip.values, frameIndex]))
   const mutation = timeOperation(runtime, direction, operationName, () =>
     runtime.state.insert(strip.values, frameIndex)
   )
@@ -136,7 +127,6 @@ const removeAt = (
 ): void => {
   const frameIndex = runtime.strips.frameOffsetAt(stripIndex)
   const strip = runtime.strips.at(stripIndex)
-  console.log('DEBUG local state remove', JSON.stringify([frameIndex, frameIndex + strip.length]))
   const mutation = timeOperation(runtime, direction, operationName, () =>
     runtime.state.remove(frameIndex, frameIndex + strip.length)
   )
@@ -164,7 +154,6 @@ const randomReplace = (
   // The public replace operation removes exactly values.length Frames. Keeping
   // the selected Strip's length preserves Strip boundaries and scale.
   const strip = createReplacementStrip(runtime, replaced.length)
-  console.log('DEBUG local state replace', JSON.stringify([strip.values, frameIndex, frameIndex + replaced.length]))
   const mutation = timeOperation(runtime, direction, 'randomReplace', () =>
     runtime.state.replace(
       strip.values,
@@ -181,25 +170,17 @@ const randomIngest = (runtime: Runtime, direction: Direction): void => {
   const frameIndex = runtime.strips.frameOffsetAt(stripIndex)
   const replaced = runtime.strips.at(stripIndex)
   const strip = createReplacementStrip(runtime, replaced.length)
-  console.log('DEBUG local peer replace', JSON.stringify([strip.values, frameIndex, frameIndex + replaced.length]))
   const mutation = runtime.peer.replace(
     strip.values,
     frameIndex,
     frameIndex + replaced.length
   )
-  console.log('DEBUG gossip randomIngest', JSON.stringify(mutation))
   const result = timeOperation(runtime, direction, 'randomIngest', () =>
     applyUpdate(runtime.state, mutation, 'randomIngest peer replacement')
   )
   const acknowledgements = result[1]
   if (acknowledgements?.length)
     void applyUpdate(runtime.peer, acknowledgements, 'randomIngest acknowledgements')
-  const stateValues = runtime.state.values()
-  const peerValues = runtime.peer.values()
-  if (JSON.stringify(stateValues) !== JSON.stringify(peerValues))
-    throw new TypeError(
-      `randomIngest diverged: ${JSON.stringify({ mutation, stateValues, peerValues })}`
-    )
   runtime.strips.replace(stripIndex, strip)
 }
 
