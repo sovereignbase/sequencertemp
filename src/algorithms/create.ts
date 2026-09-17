@@ -1,9 +1,7 @@
-import { findVisibleIndexOfStrip } from '../auxiliary/findVisibleIndexOfStrip.js'
 import { getRandom53bitNumber } from '../auxiliary/getRandom53bitNumber.js'
 import { insertAfter } from '../auxiliary/insertAfter.js'
 import { insertBefore } from '../auxiliary/insertBefore.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
-import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Sequence } from '../class.js'
 import type { Snapshot, Strip } from '../types/type.js'
 
@@ -18,94 +16,134 @@ export function create<T>(this: Sequence<T>, trustedSnapshot?: unknown): void {
   const unsafeIDs: Set<number> = new Set()
   const compactableIDs = new Set(this.frontierTable.getCompactableSessions())
 
+  const jumpSpacing = Array.isArray(projection)
+    ? Math.max(1, Math.round(Math.sqrt(projection.length)))
+    : 1
+  let jumpStart: Strip<T>
+  let jumpCursor: Strip<T>
+  let jumpFrameCount = 0
+  let jumpStripCount = 0
+  let jumpable = true
+
   if (Array.isArray(projection))
-    for (const incoming of projection) {
+    for (let index = 0; index < projection.length; ++index) {
+      const incoming = projection[index]
+      let incomingStrip: Strip<T>
+
       // compact snapshot by not materializing compactable decreasing insertions
-      if (incoming[5] < 0 && compactableIDs.has(incoming[3])) continue
+      if (!(incoming[5] < 0 && compactableIDs.has(incoming[3]))) {
+        void unsafeIDs.add(incoming[0])
+        void unsafeIDs.add(incoming[3])
 
-      void unsafeIDs.add(incoming[0])
-      void unsafeIDs.add(incoming[3])
-
-      const incomingStrip: NonNullable<Strip<T>> = {
-        anchorSession: incoming[0],
-        anchorTime: incoming[1],
-        anchorFrame: incoming[2],
-        insertionSession: incoming[3],
-        insertionTime: incoming[4],
-        insertionDiff: incoming[5],
-        footage: incoming[6],
-      }
-
-      const birth =
-        incomingStrip.anchorSession === 0 &&
-        incomingStrip.anchorTime === 0 &&
-        incomingStrip.anchorFrame === 0
-
-      if (birth && this.structuralStripCount === 0) {
-        insertFirst.call(this, incomingStrip)
-      } else {
-        let containingStrip: NonNullable<Strip<T>>
-        let targetFramePosition: number
-
-        if (birth) {
-          containingStrip = this.head!
-          targetFramePosition = 1
-        } else {
-          const origin = this.containmentTable.get(incoming)
-          if (!origin) continue
-
-          containingStrip = origin
-          targetFramePosition = incomingStrip.anchorFrame
-
-          while (true) {
-            const containingStripLength = Math.abs(
-              containingStrip.fragmentDiff ?? containingStrip.insertionDiff
-            )
-
-            if (
-              targetFramePosition <= containingStripLength ||
-              (incomingStrip.insertionDiff > 0 &&
-                targetFramePosition === containingStripLength + 1 &&
-                containingStrip.rightFragment !== containingStrip.rightStep &&
-                containingStrip.rightStep?.anchorSession ===
-                  incomingStrip.anchorSession &&
-                containingStrip.rightStep.anchorTime ===
-                  incomingStrip.anchorTime &&
-                containingStrip.rightStep.anchorFrame ===
-                  incomingStrip.anchorFrame)
-            )
-              break
-
-            const rightFragment = containingStrip.rightFragment
-            if (!rightFragment) break
-
-            targetFramePosition -= containingStripLength
-            containingStrip = rightFragment
-          }
+        incomingStrip = {
+          anchorSession: incoming[0],
+          anchorTime: incoming[1],
+          anchorFrame: incoming[2],
+          insertionSession: incoming[3],
+          insertionTime: incoming[4],
+          insertionDiff: incoming[5],
+          footage: incoming[6],
         }
 
-        findVisibleIndexOfStrip.call(this, containingStrip)
+        const birth =
+          incomingStrip.anchorSession === 0 &&
+          incomingStrip.anchorTime === 0 &&
+          incomingStrip.anchorFrame === 0
 
-        const previousStructuralStripCount = this.structuralStripCount
+        if (birth && this.structuralStripCount === 0) {
+          insertFirst.call(this, incomingStrip)
+        } else {
+          let containingStrip: NonNullable<Strip<T>>
+          let targetFramePosition: number
 
-        if (targetFramePosition === 1)
-          insertBefore.call(this, incomingStrip, containingStrip)
-        else
-          insertAfter.call(
-            this,
-            incomingStrip,
-            containingStrip,
-            targetFramePosition
-          )
+          if (birth) {
+            containingStrip = this.head!
+            targetFramePosition = 1
+          } else {
+            const origin = this.containmentTable.get(incoming)
+            if (!origin) continue
 
-        patchJumps.call(
-          this,
-          incomingStrip.insertionDiff,
-          this.structuralStripCount - previousStructuralStripCount
-        )
+            containingStrip = origin
+            targetFramePosition = incomingStrip.anchorFrame
+
+            while (true) {
+              const containingStripLength = Math.abs(
+                containingStrip.fragmentDiff ?? containingStrip.insertionDiff
+              )
+
+              if (
+                targetFramePosition <= containingStripLength ||
+                (incomingStrip.insertionDiff > 0 &&
+                  targetFramePosition === containingStripLength + 1 &&
+                  containingStrip.rightFragment !== containingStrip.rightStep &&
+                  containingStrip.rightStep?.anchorSession ===
+                    incomingStrip.anchorSession &&
+                  containingStrip.rightStep.anchorTime ===
+                    incomingStrip.anchorTime &&
+                  containingStrip.rightStep.anchorFrame ===
+                    incomingStrip.anchorFrame)
+              )
+                break
+
+              const rightFragment = containingStrip.rightFragment
+              if (!rightFragment) break
+
+              targetFramePosition -= containingStripLength
+              containingStrip = rightFragment
+            }
+          }
+
+          if (targetFramePosition === 1)
+            insertBefore.call(this, incomingStrip, containingStrip)
+          else
+            insertAfter.call(
+              this,
+              incomingStrip,
+              containingStrip,
+              targetFramePosition
+            )
+        }
+
+        this.containmentTable.set(incomingStrip)
       }
 
-      this.containmentTable.set(incomingStrip)
+      if (!jumpCursor) {
+        jumpStart = this.head
+        jumpCursor = this.head
+      }
+
+      const finalizedThrough =
+        index + 1 === projection.length ? this.tail : incomingStrip
+
+      while (
+        jumpCursor &&
+        finalizedThrough &&
+        jumpCursor !== finalizedThrough
+      ) {
+        const diff = jumpCursor.fragmentDiff ?? jumpCursor.insertionDiff
+        jumpFrameCount += diff
+        ++jumpStripCount
+        if (diff < 0) jumpable = false
+
+        jumpCursor = jumpCursor.rightStep
+
+        if (jumpStripCount === jumpSpacing) {
+          if (jumpable) {
+            jumpStart!.rightJump = jumpCursor
+            jumpStart!.rightJumpFrameCount = jumpFrameCount
+            jumpStart!.rightJumpStripCount = jumpStripCount
+
+            jumpCursor!.leftJump = jumpStart
+            jumpCursor!.leftJumpFrameCount = jumpFrameCount
+            jumpCursor!.leftJumpStripCount = jumpStripCount
+          }
+
+          jumpStart = jumpCursor
+          jumpFrameCount = 0
+          jumpStripCount = 0
+          jumpable = true
+        }
+      }
     }
 
   const getSafeSessionID = () => {
