@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Projection } from '../../../src/class.js'
-import type { Gossip, Snapshot } from '../../../src/types/type.js'
+import type { Gossip, Sequence } from '../../../src/types/type.js'
 
 const operations = [
   ['replace', 714732407, 1247215733, 1],
@@ -34,7 +34,7 @@ const project = (sequence: Projection<string>): Array<string | undefined> =>
   )
 
 const deliver = (
-  retained: Snapshot<string>,
+  retained: Sequence<string>,
   mutations: Array<Gossip<string>>
 ): Projection<string> => {
   const receiver = new Projection<string>(10_000, retained)
@@ -44,7 +44,7 @@ const deliver = (
 
 describe('hostile three-peer delivery', () => {
   it('converges from an empty snapshot in chronological and mixed order', () => {
-    const retained = new Projection<string>(1).snapshot()
+    const retained = new Projection<string>(1).sequence()
     for (const increaseOrder of sessionOrders)
       for (const decreaseOrder of sessionOrders) {
         const replicas = [

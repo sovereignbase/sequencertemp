@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Projection } from '../../../src/class.js'
-import type { Gossip, Snapshot } from '../../../src/types/type.js'
+import type { Gossip, Sequence } from '../../../src/types/type.js'
 
 const operations = [
   ['insert', 180133792, 1109629188, 4],
@@ -24,7 +24,7 @@ const project = (sequence: Projection<string>): Array<string | undefined> =>
   )
 
 const deliver = (
-  retained: Snapshot<string>,
+  retained: Sequence<string>,
   gossip: Array<Gossip<string>>
 ): Projection<string> => {
   const receiver = new Projection<string>(10_000, retained)
@@ -39,7 +39,7 @@ describe('concurrent replacement delivery', () => {
       Array.from({ length: 5 }, (_, index) => `base-${index}`),
       0
     )
-    const retained = base.snapshot()
+    const retained = base.sequence()
     const replicas = [0, 1, 2].map(
       (index) => new Projection<string>(100 + index, retained)
     )

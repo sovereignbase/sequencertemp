@@ -7,7 +7,7 @@ describe('snapshot jump preoptimization', () => {
     for (let value = 0; value < 16; ++value)
       source.insert([value], source.projectionFrameCount)
 
-    const snapshot = source.snapshot()
+    const snapshot = source.sequence()
     const recreated = new Projection<number>(2, snapshot)
     const spacing = Math.round(Math.sqrt(snapshot[1].length))
 

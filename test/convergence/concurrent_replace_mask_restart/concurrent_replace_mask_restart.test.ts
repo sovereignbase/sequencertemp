@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Projection } from '../../../src/class.js'
-import type { Gossip, Snapshot } from '../../../src/types/type.js'
+import type { Gossip, Sequence } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
 describe('concurrent replace Mask restart', () => {
@@ -15,7 +15,7 @@ describe('concurrent replace Mask restart', () => {
       primary.replace(['replacement-0', 'replacement-1'], 0, 1),
       primary.insert(['final-head'], 0),
     ]
-    const empty: Snapshot<string> = [[], []]
+    const empty: Sequence<string> = [[], []]
     const ordered = deliver(empty, mutations)
     const restarted = deliver(empty, mutations, 3)
 

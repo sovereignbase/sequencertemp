@@ -7,7 +7,7 @@ describe('overlapping mask gate', () => {
   it('keeps a head zero-reservation gate stable across signed mask debt', () => {
     const seed = new Projection<string>(1)
     seed.insert(['base-0', 'base-1'], 0)
-    const snapshot = seed.snapshot()
+    const snapshot = seed.sequence()
     const replicas = [0, 1, 2].map(
       (index) => new Projection<string>(100 + index, snapshot)
     )

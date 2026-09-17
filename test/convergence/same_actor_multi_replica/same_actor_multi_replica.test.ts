@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Projection } from '../../../src/class.js'
-import type { Gossip, Snapshot } from '../../../src/types/type.js'
+import type { Gossip, Sequence } from '../../../src/types/type.js'
 
 const project = <T>(sequence: Projection<T>): Array<T | undefined> =>
   Array.from({ length: sequence.projectionFrameCount }, (_, index) =>
@@ -34,7 +34,7 @@ describe('same actor in multiple replicas', () => {
   it('keeps per-instance Clocks independent across concurrent tabs', () => {
     const seed = new Projection<string>(1)
     seed.insert(['a', 'b', 'c', 'd'], 0)
-    const snapshot: Snapshot<string> = seed.snapshot()
+    const snapshot: Sequence<string> = seed.sequence()
 
     const left = new Projection<string>(42, snapshot)
     const right = new Projection<string>(42, snapshot)

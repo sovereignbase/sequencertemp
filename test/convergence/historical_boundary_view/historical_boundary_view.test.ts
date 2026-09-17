@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Projection } from '../../../src/class.js'
-import type { Snapshot } from '../../../src/types/type.js'
+import type { Sequence } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
 describe('historical boundary view', () => {
@@ -14,7 +14,7 @@ describe('historical boundary view', () => {
       source.insert(['fourth'], 0),
       source.insert(['fifth'], 0),
     ]
-    const empty: Snapshot<string> = [[], []]
+    const empty: Sequence<string> = [[], []]
     const ordered = deliver(empty, mutations)
     const hostile = deliver(empty, [
       mutations[0],

@@ -1,6 +1,6 @@
 import { expect } from 'vitest'
 import { Projection } from '../../src/class.js'
-import type { Gossip, Snapshot } from '../../src/types/type.js'
+import type { Gossip, Sequence } from '../../src/types/type.js'
 
 export type Replica<T> = Projection<T>
 
@@ -13,7 +13,7 @@ export function create_seed<T>(values: Array<T>): Projection<T> {
 }
 
 export function deliver<T>(
-  base: Snapshot<T>,
+  base: Sequence<T>,
   mutations: Array<Gossip<T>>,
   restartAt?: number
 ): Projection<T> {
@@ -23,7 +23,7 @@ export function deliver<T>(
     sequence.apply(mutations[index])
 
     if (index + 1 === restartAt) {
-      sequence = new Projection<T>(actor++, sequence.snapshot())
+      sequence = new Projection<T>(actor++, sequence.sequence())
       for (let replay = 0; replay <= index; ++replay)
         sequence.apply(mutations[replay])
     }

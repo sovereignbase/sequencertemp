@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Projection } from '../../../src/class.js'
-import type { Gossip, Snapshot } from '../../../src/types/type.js'
+import type { Gossip, Sequence } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
 describe('concurrent root subtree', () => {
@@ -15,7 +15,7 @@ describe('concurrent root subtree', () => {
       concurrent.insert(['concurrent-4'], 0),
       primary.insert(['primary-5'], 0),
     ]
-    const empty: Snapshot<string> = [[], []]
+    const empty: Sequence<string> = [[], []]
     const ordered = deliver(empty, mutations)
     const hostile = deliver(empty, [
       mutations[1],

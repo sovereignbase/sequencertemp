@@ -7,7 +7,7 @@ describe('signed mask jump', () => {
   it('walks mask debt before using a positive-distance jump', () => {
     const seed = new Projection<string>(1)
     seed.insert(['base'], 0)
-    const snapshot = seed.snapshot()
+    const snapshot = seed.sequence()
     const first = new Projection<string>(100, snapshot)
     const second = new Projection<string>(101, snapshot)
     const mutations: Array<Gossip<string>> = [

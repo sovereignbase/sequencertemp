@@ -9,7 +9,7 @@ import {
 describe('concurrent Mask and insert', () => {
   it('keeps the concurrent insertion outside the origin Mask', () => {
     const base = create_seed(['a', 'b', 'c'])
-    const retained = base.snapshot()
+    const retained = base.sequence()
     const deleting = new Projection<string>(31, retained)
     const inserting = new Projection<string>(32, retained)
     const deletion = deleting.remove(1, 1)

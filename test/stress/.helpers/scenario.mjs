@@ -23,7 +23,7 @@ const deliver = (base, mutations, restart_index, label) => {
   for (let index = 0; index < mutations.length; ++index) {
     state.apply(mutations[index])
     if (index + 1 === restart_index) {
-      state = new Projection(target_actor++, state.snapshot())
+      state = new Projection(target_actor++, state.sequence())
       for (let replay = 0; replay <= index; ++replay)
         state.apply(mutations[replay])
     }
@@ -42,7 +42,7 @@ try {
       0
     )
   }
-  const retained = base.snapshot()
+  const retained = base.sequence()
   const replicas = Array.from(
     { length: scenario.replica_count },
     (_, index) => new Projection(100 + index, retained)

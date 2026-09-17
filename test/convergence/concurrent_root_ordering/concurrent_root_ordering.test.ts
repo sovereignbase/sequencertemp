@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Projection } from '../../../src/class.js'
-import type { Gossip, Snapshot } from '../../../src/types/type.js'
+import type { Gossip, Sequence } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
 describe('concurrent root ordering', () => {
@@ -16,7 +16,7 @@ describe('concurrent root ordering', () => {
       mutations.push(state.insert([value], 0))
     }
 
-    const empty: Snapshot<string> = [[], []]
+    const empty: Sequence<string> = [[], []]
     const forward = deliver<string>(empty, mutations)
     const reverse = deliver<string>(empty, [...mutations].reverse())
     expect_converged(forward, reverse)

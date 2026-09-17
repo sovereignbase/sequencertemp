@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Projection } from '../../../src/class.js'
-import type { Gossip, Snapshot } from '../../../src/types/type.js'
+import type { Gossip, Sequence } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
 describe('concurrent root snapshot', () => {
@@ -16,9 +16,9 @@ describe('concurrent root snapshot', () => {
       primary.insert(['primary-4'], 0),
       primary.insert(['primary-5'], 0),
     ]
-    const empty: Snapshot<string> = [[], []]
+    const empty: Sequence<string> = [[], []]
     const ordered = deliver(empty, mutations)
-    const recreated = new Projection<string>(103, ordered.snapshot())
+    const recreated = new Projection<string>(103, ordered.sequence())
 
     expect_converged(ordered, recreated)
     expect(new Set(ordered.values())).toEqual(

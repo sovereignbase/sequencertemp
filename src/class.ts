@@ -37,8 +37,8 @@ export class Projection<T> {
   public readonly increaseClock: [id: number, time: number] = [0, 0]
   public readonly decreaseClock: [id: number, time: number] = [0, 0]
   //
-  apply(data: unknown): Result<T> | undefined {
-    return apply.call(this, data) as Result<T> | undefined
+  apply(gossip: unknown): Result<T> | undefined {
+    return apply.call(this, gossip) as Result<T> | undefined
   }
   //
   constructor(
@@ -61,8 +61,8 @@ export class Projection<T> {
     return this.projectionFrameCount
   }
   //
-  merge(data: unknown): Result<T> | undefined {
-    return merge.call(this, data) as Result<T> | undefined
+  merge(sequence: unknown): Result<T> | undefined {
+    return merge.call(this, sequence) as Result<T> | undefined
   }
   /**
    *
