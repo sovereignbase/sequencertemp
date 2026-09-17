@@ -83,21 +83,19 @@ export type Insertion<T> = Readonly<
     /** `insertionSession` of the anchoring insertion. */
     anchorSession: number,
 
-    /** `insertionStart` of the anchoring insertion */
+    /** `insertionStart` of the anchoring insertion. */
     anchorStart: number,
 
-    /** Frame offset from `anchorStart` anchoring insertion, from its `insertionTime` towards `insertionEnd`, i.e. `insertionTime + |insertionDiff|`. */
-    anchorFrame: number,
+    /** Difference from the anchoring insertion's `insertionStart` towards its `insertionEnd`, identifying the exact anchor point as `anchorStart + anchorDiff`. */
+    anchorDiff: number,
 
-    /** Session identifier that issued this insertion. */
+    /** Number identifying the Session that sequenced this insertion. */
     insertionSession: number,
 
-    /** Logical time at which this insertion begins. */
+    /** Numerical point identifying this Insertion within a Session's logical time space. */
     insertionStart: number,
 
-    /**
-     * Signed Frame length of this insertion and its effect on the Projection.
-     */
+    /** Signed Frame length of this insertion and its effect on the Projection. */
     insertionDiff: number,
 
     /** Optional Footage carried by a positive insertion. */
