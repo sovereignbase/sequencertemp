@@ -90,10 +90,32 @@ First, the anchor boundary is materialized.
 - If the anchor lies inside the anchoring Strip, the Strip is split at the anchor position. The existing Strip becomes the left fragment ending at the anchor, while the new right fragment contains the Frames after the anchor.
 - The incoming Strip is then inserted between these two sides of the boundary.
 
-If the Strip on the right is anchored to the same stable `(anchorSession, anchorStart, anchorDiff)`, the insertions are competitors. The competitor chain is traversed according to the overlap ordering rules, and `subtreeEnd()` is used when the insertion must be placed after an existing competitor's causal subtree.
+If the Strip on the right is anchored to the same `(anchorSession, anchorStart, anchorDiff)`, the insertions overlap. The competitor chain is traversed according to the overlap ordering rules, and `subtreeEnd()` is used when the insertion must be placed after an existing competitor's causal subtree.
 
-Otherwise, the happy path is simply:
+## Overlap handling
 
-`resolve anchor boundary → split if necessary → insert after anchor`
+Two insertions are competitors when they resolve to the same anchor:
 
-The structural position is fully determined by the chosen anchor and the overlap handling rules.
+`(anchorSession, anchorStart, anchorDiff)`
+
+Competitors are ordered deterministically using the following rules:
+
+1. **Positive insertions come before negative insertions.**
+
+2. **Between insertions with the same sign, the greater `insertionSession` comes first.**
+
+3. **Within the same Session, an insertion that starts after the previous insertion's reserved logical range comes after it.**
+
+   In other words, the existing competitor comes first when:
+
+   `incoming.insertionStart >= existing.insertionStart + |existing.insertionDiff| + 1`
+
+These rules define the competitor order independently of arrival order.
+
+When an incoming Strip belongs after an existing competitor, it is not inserted directly after that Strip. It is inserted after the competitor's entire causal subtree, resolved by `subtreeEnd()`.
+
+So structurally the rule is:
+
+`competitor ordering → preserve causal subtree → insert at resolved boundary`
+
+The resulting order is deterministic across replicas even when competing insertions are received in different orders.

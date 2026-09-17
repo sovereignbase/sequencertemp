@@ -1,64 +1,69 @@
 /**
- * Materialized Structural Order node derived from one insertion or one of its
+ * Runtime-inferred Sequence Strip representing one Insertion or one of its
  * fragments.
  *
- * A Strip preserves the stable insertion coordinates while carrying the
- * mutable links and lengths required by the current materialization.
+ * @remarks
+ * A Strip groups multiple Frames belonging to the same Insertion, allowing
+ * more than one Footage Frame to be inserted and traversed as a single
+ * structural unit.
+ *
+ * The insertion coordinates are immutable and remain unchanged when a Strip is
+ * fragmented. Runtime fields describe the current materialization of that
+ * Insertion within Sequence.
  */
 export type Strip<T> =
   | {
-      /** Actor or session identifier of the insertion containing the anchor. */
+      /** `insertionSession` of the anchoring insertion. */
       readonly anchorSession: number
 
-      /** Logical time identifying the insertion containing the anchor. */
-      readonly anchorTime: number
+      /** `insertionStart` of the anchoring insertion. */
+      readonly anchorStart: number
 
-      /** Stable Frame offset marking the boundary within the original anchor insertion. */
-      readonly anchorFrame: number
+      /** Difference from the anchoring insertion's `insertionStart` towards its `insertionEnd`, identifying the exact anchor point as `anchorStart + anchorDiff`. */
+      readonly anchorDiff: number
 
-      /** Actor or session identifier that issued this insertion. */
+      /** Number identifying the Session that sequenced this insertion. */
       readonly insertionSession: number
 
-      /** Logical time of this insertion's zero-reservation. */
-      readonly insertionTime: number
+      /** Numerical point identifying this Insertion within a Session's logical time space. */
+      readonly insertionStart: number
 
-      /** Signed number of Frames added to or removed from the Projection. */
+      /** Signed Frame length of the original Insertion and its effect on the Projection. */
       readonly insertionDiff: number
 
-      /** Optional Footage carried by an increasing insertion. */
+      /** Optional Footage carried by a positive Insertion. */
       readonly footage?: ReadonlyArray<T | undefined>
 
-      /** Next smaller concurrent insertion competing for the same boundary. */
-      rightCompetitor?: Strip<T>
+      /** Next lexicographically smaller concurrent Insertion competing for the same anchor point. */
+      rightOverlap?: Strip<T>
 
-      /** Next fragment belonging to the same original insertion. */
+      /** Next fragment belonging to the same original Insertion. */
       rightFragment?: Strip<T>
 
       /** Signed Projection effect represented by this fragment. */
       fragmentDiff?: number
-
-      /** Immediately preceding Strip in Structural Order. */
+      /** Immediately preceding Strip in Sequence. */
       leftStep?: Strip<T>
 
-      /** Strip reachable through the nearest left jump. */
+      /** Strip reachable through a possible left jump. */
       leftJump?: Strip<T>
 
       /** Number of Projection Frames crossed by the left jump. */
       leftJumpFrameCount?: number
 
-      /** Number of Structural Order Strips crossed by the left jump. */
+      /** Number of Sequence Strips crossed by the left jump. */
       leftJumpStripCount?: number
 
-      /** Immediately following Strip in Structural Order. */
+      /** Immediately following Strip in Sequence. */
       rightStep?: Strip<T>
 
-      /** Strip reachable through the nearest right jump. */
+      /** Strip reachable through a possible right jump. */
       rightJump?: Strip<T>
 
       /** Number of Projection Frames crossed by the right jump. */
       rightJumpFrameCount?: number
 
-      /** Number of Structural Order Strips crossed by the right jump. */
+      /** Number of Sequence Strips crossed by the right jump. */
       rightJumpStripCount?: number
     }
   | undefined
