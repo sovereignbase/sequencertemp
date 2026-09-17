@@ -13,8 +13,11 @@ import { replace } from './algorithms/replace.js'
 import { snapshot } from './algorithms/snapshot.js'
 
 export class Sequence<T> {
+  /** Strip containing the very left-most position of the projection (0) */
   public head: Strip<T> | undefined
+  /** Strip containing the currently projected position of the projection */
   public gate: Strip<T> | undefined
+  /** Strip containing the very right-most position of the projection (projectionFrameCount - 1) */
   public tail: Strip<T> | undefined
   //
   public rightJumpToPatch?: Strip<T>
