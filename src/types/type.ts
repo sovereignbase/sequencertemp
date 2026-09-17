@@ -109,14 +109,15 @@ export type Insertion<T> = Readonly<
 >
 
 /**
- * Flat acknowledgement frontier.
+ * Describes one Actor's acknowledgement frontier.
  *
+ * @remarks
  * The first word identifies the acknowledging Actor, followed by repeating
- * `(sessionID, sessionTime)` pairs:
- * `[actorID, sessionID, sessionTime, sessionID, sessionTime, ...]`.
+ * `(sessionID, sessionEnd)` pairs:
+ * `[actorID, sessionID, sessionEnd, sessionID, sessionEnd, ...]`.
  *
  * Each `sessionID` uniquely identifies the removals issued during one
- * Sequence session, while `sessionTime` records the greatest logical time
+ * sequencing session, while `sessionEnd` records the greatest logical time
  * observed for that session by the acknowledging Actor.
  */
 export type Acknowledgement = ReadonlyArray<number>
@@ -124,6 +125,7 @@ export type Acknowledgement = ReadonlyArray<number>
 /**
  * Replication unit containing either an insertion or an acknowledgement.
  *
+ * @remarks
  * An insertion is emitted as a result of a local update.
  *
  * An acknowledgement is emitted in response to merging a decreasing insertion.
@@ -138,17 +140,19 @@ export type Sequence<T> = Readonly<
     /** Latest known acknowledgement frontiers. */
     frontiers: ReadonlyArray<Acknowledgement>,
 
-    /** Insertions required to reconstruct Structural Order and the Projection. */
-    projection: ReadonlyArray<Insertion<T>>,
+    /** Insertions required to reconstruct Sequence and derive the Projection. */
+    insertions: ReadonlyArray<Insertion<T>>,
   ]
 >
+
 /**
  * Consumer-facing Projection splice.
  *
- * Replaces the half-open range `[startAt, endAt)` with optional `values`.
+ * @remarks
+ * Replaces the inclusive range `[startAt, endWith]` with optional `values`.
  */
 export type Splice<T> = Readonly<
-  [startAt: number, endAt: number, values?: ReadonlyArray<T | undefined>]
+  [startAt: number, endWith: number, values?: ReadonlyArray<T | undefined>]
 >
 
 /**
@@ -159,6 +163,7 @@ export type Change<T> = ReadonlyArray<Splice<T>>
 /**
  * Result of a mutating Projection operation.
  *
+ * @remarks
  * `change` describes the visible Projection mutations.
  *
  * `gossip` contains replication data when the operation emitted any.
