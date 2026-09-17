@@ -20,10 +20,11 @@ export class Sequence<T> {
   public rightJumpToPatch?: Strip<T>
   public leftJumpToPatch?: Strip<T>
   //
+  /**Strucural amount of strips in the sequence. */
   public structuralStripCount: number = 0
-  /** Number of frames in the projection */
+  /** Amount of frames in the projection. */
   public projectionFrameCount: number = 0
-  /** Projection position of the strip projected at gate */
+  /** Zero-based projection position of the strip currently projected at gate. */
   public projectedPosition: number = 0
   //
   public readonly containmentTable: ContainmentTable<T> = new ContainmentTable()
@@ -85,7 +86,7 @@ export class Sequence<T> {
   }
   /**
    *
-   * @param at Position where the value you want is.
+   * @param at Projection position where the value you want is.
    * @returns
    */
   value(at: number): T | undefined {
@@ -93,8 +94,8 @@ export class Sequence<T> {
   }
   /**
    *
-   * @param startAt First position you want included in the result or first position.
-   * @param endWith Last position you want included in the result or last position.
+   * @param startAt First projection position you want included in the result or first position.
+   * @param endWith Last projection position you want included in the result or last position.
    * @returns
    */
   values(startAt?: number, endWith?: number): Array<T> {
