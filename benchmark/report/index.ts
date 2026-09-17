@@ -165,7 +165,7 @@ const makeMarkdown = (report: BenchmarkReport): string => {
     '',
     '## Memory and storage efficiency',
     '',
-    '| Run | direction | Replica | visible Strips | retained insertions | Frames | estimated memory bytes | memory B/Strip | memory B/Frame | snapshot bytes | snapshot B/Strip | snapshot B/Frame | process RSS |',
+    '| Run | direction | Replica | visible Strips | retained insertions | Frames | estimated memory bytes | memory B/Strip | memory B/Frame | sequence bytes | sequence B/Strip | sequence B/Frame | process RSS |',
     '| ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
   )
   for (const run of report.runs)
@@ -183,7 +183,7 @@ const makeMarkdown = (report: BenchmarkReport): string => {
             observed.memory.bytes.toLocaleString('en-US'),
             decimal(observed.memory.bytesPerStrip),
             decimal(observed.memory.bytesPerFrame),
-            observed.storage.snapshotBytes.toLocaleString('en-US'),
+            observed.storage.sequenceBytes.toLocaleString('en-US'),
             decimal(observed.storage.bytesPerStrip),
             decimal(observed.storage.bytesPerFrame),
             checkpoint.processMemory.rssBytes.toLocaleString('en-US'),

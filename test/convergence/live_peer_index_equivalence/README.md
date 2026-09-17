@@ -2,7 +2,7 @@
 
 Two live Sequences use different Actor IDs. Every local Gossip reaches the
 other peer immediately, and every acknowledgement returned by `apply` travels
-back to the author. No snapshot is exchanged and neither live instance is
+back to the author. No sequence is exchanged and neither live instance is
 recreated.
 
 The workload alternates whole-Strip inserts, replacements, and removals at the
@@ -23,5 +23,5 @@ The final middle replacement must be read identically as:
 13 13 14 14 12 12 10 10
 ```
 
-Snapshot equality is intentionally irrelevant to this regression. The target
+Sequence equality is intentionally irrelevant to this regression. The target
 is the Projection exposed by the two continuously running replicas.

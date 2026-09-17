@@ -10,11 +10,7 @@ export const operation_names = [
   'randomIngest',
 ] as const
 
-export const management_names = [
-  'values',
-  'snapshot',
-  'create',
-] as const
+export const management_names = ['values', 'sequence', 'create'] as const
 
 export type Direction = 'up' | 'down'
 export type ReplicaName = 'A'
@@ -59,14 +55,14 @@ export type MemoryResult = {
   bytes: number
   bytesPerStrip: number | null
   bytesPerFrame: number | null
-  measurement: 'estimated-snapshot-words-plus-js-footage-slots'
-  snapshotMetadataWordBytes: number
+  measurement: 'estimated-sequence-words-plus-js-footage-slots'
+  sequenceMetadataWordBytes: number
   javascriptFootageSlotBytes: number
 }
 
 export type StorageResult = {
   serialization: 'node:v8.serialize'
-  snapshotBytes: number
+  sequenceBytes: number
   bytesPerStrip: number | null
   bytesPerFrame: number | null
 }

@@ -142,9 +142,9 @@ export async function runBenchmark(
       average:
         'Operation averages are calculated directly from count and total measured nanoseconds; checkpoint averages are never averaged together.',
       memory:
-        'Per-Replica retained bytes after restart are estimated as four bytes per snapshot metadata word plus eight bytes per JavaScript Footage array slot. Process RSS is shared and reported at checkpoint scope.',
+        'Per-Replica retained bytes after restart are estimated as four bytes per Sequence metadata word plus eight bytes per JavaScript Footage array slot. Process RSS is shared and reported at checkpoint scope.',
       storage:
-        'Persistent representation size is the byte length of node:v8.serialize over the automatically collected public snapshot.',
+        'Persistent representation size is the byte length of node:v8.serialize over the automatically collected public Sequence.',
     },
     runs,
     aggregates: aggregateRuns(runs),

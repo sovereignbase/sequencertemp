@@ -6,7 +6,7 @@ Both editors start from:
 a -> b -> c
 ```
 
-They edit the same Snapshot independently:
+They edit the same Sequence independently:
 
 ```text
 Actor 31: remove Projection range [1, 2)  -> masks origin "b"

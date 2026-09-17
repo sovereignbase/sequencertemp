@@ -11,13 +11,7 @@
   "config": {
     "runs": 3,
     "maximumStripCount": 1000,
-    "checkpoints": [
-      0,
-      1,
-      10,
-      100,
-      1000
-    ],
+    "checkpoints": [0, 1, 10, 100, 1000],
     "minimumStripFrameLength": 1,
     "maximumStripFrameLength": 100,
     "warmupCycles": 64,
@@ -30,8 +24,8 @@
     "stripCount": "Scale is the number of visible logical Strips maintained by the benchmark model. Every mutation targets a complete Strip boundary; retained Mask structures are reported separately.",
     "ingest": "The workload has two peers editing the same document. Every local Gossip is applied by the receiver and every acknowledgement returned by apply is gossiped back to the sender. randomIngest times only the measured peer applying the remote replacement Gossip.",
     "average": "Operation averages are calculated directly from count and total measured nanoseconds; checkpoint averages are never averaged together.",
-    "memory": "Per-Replica retained bytes after restart are estimated as four bytes per snapshot metadata word plus eight bytes per JavaScript Footage array slot. Process RSS is shared and reported at checkpoint scope.",
-    "storage": "Persistent representation size is the byte length of node:v8.serialize over the automatically collected public snapshot."
+    "memory": "Per-Replica retained bytes after restart are estimated as four bytes per sequence metadata word plus eight bytes per JavaScript Footage array slot. Process RSS is shared and reported at checkpoint scope.",
+    "storage": "Persistent representation size is the byte length of node:v8.serialize over the automatically collected public sequence."
   },
   "runs": [
     {
@@ -146,7 +140,7 @@
                   "minimumNanoseconds": 188400,
                   "maximumNanoseconds": 188400
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 183100,
                   "averageNanoseconds": 183100,
@@ -167,13 +161,13 @@
                 "bytes": 544,
                 "bytesPerStrip": 544,
                 "bytesPerFrame": 68,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 192,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 192,
                 "javascriptFootageSlotBytes": 352
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 577,
+                "sequenceBytes": 577,
                 "bytesPerStrip": 577,
                 "bytesPerFrame": 72.125
               },
@@ -286,7 +280,7 @@
                   "minimumNanoseconds": 263000,
                   "maximumNanoseconds": 263000
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 259200,
                   "averageNanoseconds": 259200,
@@ -307,13 +301,13 @@
                 "bytes": 11640,
                 "bytesPerStrip": 1164,
                 "bytesPerFrame": 28.390243902439025,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 1944,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 1944,
                 "javascriptFootageSlotBytes": 9696
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 7271,
+                "sequenceBytes": 7271,
                 "bytesPerStrip": 727.1,
                 "bytesPerFrame": 17.734146341463415
               },
@@ -426,7 +420,7 @@
                   "minimumNanoseconds": 940800,
                   "maximumNanoseconds": 940800
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 1062000,
                   "averageNanoseconds": 1062000,
@@ -447,13 +441,13 @@
                 "bytes": 170032,
                 "bytesPerStrip": 1700.32,
                 "bytesPerFrame": 34.993208479110926,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 18312,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 18312,
                 "javascriptFootageSlotBytes": 151720
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 100207,
+                "sequenceBytes": 100207,
                 "bytesPerStrip": 1002.07,
                 "bytesPerFrame": 20.62296768882486
               },
@@ -566,7 +560,7 @@
                   "minimumNanoseconds": 9523700,
                   "maximumNanoseconds": 9523700
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 8892400,
                   "averageNanoseconds": 8892400,
@@ -587,13 +581,13 @@
                 "bytes": 1769368,
                 "bytesPerStrip": 1769.368,
                 "bytesPerFrame": 34.80130600684473,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 179328,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 179328,
                 "javascriptFootageSlotBytes": 1590040
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 1042904,
+                "sequenceBytes": 1042904,
                 "bytesPerStrip": 1042.904,
                 "bytesPerFrame": 20.51264702411392
               },
@@ -706,7 +700,7 @@
                   "minimumNanoseconds": 8026500,
                   "maximumNanoseconds": 8026500
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 34572300,
                   "averageNanoseconds": 34572300,
@@ -727,13 +721,13 @@
                 "bytes": 3017120,
                 "bytesPerStrip": 30171.2,
                 "bytesPerFrame": 615.990200081666,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 335208,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 335208,
                 "javascriptFootageSlotBytes": 2681912
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 1833923,
+                "sequenceBytes": 1833923,
                 "bytesPerStrip": 18339.23,
                 "bytesPerFrame": 374.42282564311967
               },
@@ -846,7 +840,7 @@
                   "minimumNanoseconds": 2866400,
                   "maximumNanoseconds": 2866400
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 18544100,
                   "averageNanoseconds": 18544100,
@@ -867,13 +861,13 @@
                 "bytes": 3131696,
                 "bytesPerStrip": 313169.6,
                 "bytesPerFrame": 7888.403022670025,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 350376,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 350376,
                 "javascriptFootageSlotBytes": 2781320
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 1908396,
+                "sequenceBytes": 1908396,
                 "bytesPerStrip": 190839.6,
                 "bytesPerFrame": 4807.0428211586905
               },
@@ -986,7 +980,7 @@
                   "minimumNanoseconds": 6979500,
                   "maximumNanoseconds": 6979500
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 22739200,
                   "averageNanoseconds": 22739200,
@@ -1007,13 +1001,13 @@
                 "bytes": 3142592,
                 "bytesPerStrip": 3142592,
                 "bytesPerFrame": 41901.22666666667,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 351888,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 351888,
                 "javascriptFootageSlotBytes": 2790704
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 1915624,
+                "sequenceBytes": 1915624,
                 "bytesPerStrip": 1915624,
                 "bytesPerFrame": 25541.653333333332
               },
@@ -1126,7 +1120,7 @@
                   "minimumNanoseconds": 4400,
                   "maximumNanoseconds": 4400
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 31357000,
                   "averageNanoseconds": 31357000,
@@ -1147,13 +1141,13 @@
                 "bytes": 3143712,
                 "bytesPerStrip": null,
                 "bytesPerFrame": null,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 352008,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 352008,
                 "javascriptFootageSlotBytes": 2791704
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 1916288,
+                "sequenceBytes": 1916288,
                 "bytesPerStrip": null,
                 "bytesPerFrame": null
               },
@@ -1590,7 +1584,7 @@
                   "minimumNanoseconds": 27200,
                   "maximumNanoseconds": 27200
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 43000,
                   "averageNanoseconds": 43000,
@@ -1611,13 +1605,13 @@
                 "bytes": 2064,
                 "bytesPerStrip": 2064,
                 "bytesPerFrame": 54.31578947368421,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 192,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 192,
                 "javascriptFootageSlotBytes": 1872
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 973,
+                "sequenceBytes": 973,
                 "bytesPerStrip": 973,
                 "bytesPerFrame": 25.605263157894736
               },
@@ -1730,7 +1724,7 @@
                   "minimumNanoseconds": 53300,
                   "maximumNanoseconds": 53300
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 110900,
                   "averageNanoseconds": 110900,
@@ -1751,13 +1745,13 @@
                 "bytes": 20136,
                 "bytesPerStrip": 2013.6,
                 "bytesPerFrame": 32.52988691437803,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 1800,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 1800,
                 "javascriptFootageSlotBytes": 18336
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 9126,
+                "sequenceBytes": 9126,
                 "bytesPerStrip": 912.6,
                 "bytesPerFrame": 14.743134087237479
               },
@@ -1870,7 +1864,7 @@
                   "minimumNanoseconds": 848600,
                   "maximumNanoseconds": 848600
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 1601400,
                   "averageNanoseconds": 1601400,
@@ -1891,13 +1885,13 @@
                 "bytes": 192808,
                 "bytesPerStrip": 1928.08,
                 "bytesPerFrame": 36.35143288084465,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 17952,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 17952,
                 "javascriptFootageSlotBytes": 174856
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 107112,
+                "sequenceBytes": 107112,
                 "bytesPerStrip": 1071.12,
                 "bytesPerFrame": 20.194570135746606
               },
@@ -2010,7 +2004,7 @@
                   "minimumNanoseconds": 6169900,
                   "maximumNanoseconds": 6169900
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 10571800,
                   "averageNanoseconds": 10571800,
@@ -2031,13 +2025,13 @@
                 "bytes": 1815200,
                 "bytesPerStrip": 1815.2,
                 "bytesPerFrame": 35.46143627412675,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 181632,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 181632,
                 "javascriptFootageSlotBytes": 1633568
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 1063315,
+                "sequenceBytes": 1063315,
                 "bytesPerStrip": 1063.315,
                 "bytesPerFrame": 20.77273970461827
               },
@@ -2150,7 +2144,7 @@
                   "minimumNanoseconds": 4411800,
                   "maximumNanoseconds": 4411800
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 22297800,
                   "averageNanoseconds": 22297800,
@@ -2171,13 +2165,13 @@
                 "bytes": 3067016,
                 "bytesPerStrip": 30670.16,
                 "bytesPerFrame": 637.3682460515378,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 341088,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 341088,
                 "javascriptFootageSlotBytes": 2725928
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 1862744,
+                "sequenceBytes": 1862744,
                 "bytesPerStrip": 18627.44,
                 "bytesPerFrame": 387.1039068994181
               },
@@ -2290,7 +2284,7 @@
                   "minimumNanoseconds": 2319000,
                   "maximumNanoseconds": 2319000
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 22158000,
                   "averageNanoseconds": 22158000,
@@ -2311,13 +2305,13 @@
                 "bytes": 3190632,
                 "bytesPerStrip": 319063.2,
                 "bytesPerFrame": 5707.749552772809,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 356208,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 356208,
                 "javascriptFootageSlotBytes": 2834424
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 1940513,
+                "sequenceBytes": 1940513,
                 "bytesPerStrip": 194051.3,
                 "bytesPerFrame": 3471.4007155635063
               },
@@ -2430,7 +2424,7 @@
                   "minimumNanoseconds": 6119600,
                   "maximumNanoseconds": 6119600
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 33345900,
                   "averageNanoseconds": 33345900,
@@ -2451,13 +2445,13 @@
                 "bytes": 3205512,
                 "bytesPerStrip": 3205512,
                 "bytesPerFrame": 43317.72972972973,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 357768,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 357768,
                 "javascriptFootageSlotBytes": 2847744
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 1949324,
+                "sequenceBytes": 1949324,
                 "bytesPerStrip": 1949324,
                 "bytesPerFrame": 26342.216216216217
               },
@@ -2570,7 +2564,7 @@
                   "minimumNanoseconds": 2400,
                   "maximumNanoseconds": 2400
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 19704500,
                   "averageNanoseconds": 19704500,
@@ -2591,13 +2585,13 @@
                 "bytes": 3206888,
                 "bytesPerStrip": null,
                 "bytesPerFrame": null,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 357888,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 357888,
                 "javascriptFootageSlotBytes": 2849000
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 1950085,
+                "sequenceBytes": 1950085,
                 "bytesPerStrip": null,
                 "bytesPerFrame": null
               },
@@ -3034,7 +3028,7 @@
                   "minimumNanoseconds": 4700,
                   "maximumNanoseconds": 4700
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 19800,
                   "averageNanoseconds": 19800,
@@ -3055,13 +3049,13 @@
                 "bytes": 2400,
                 "bytesPerStrip": 2400,
                 "bytesPerFrame": 42.10526315789474,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 192,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 192,
                 "javascriptFootageSlotBytes": 2208
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 1057,
+                "sequenceBytes": 1057,
                 "bytesPerStrip": 1057,
                 "bytesPerFrame": 18.54385964912281
               },
@@ -3174,7 +3168,7 @@
                   "minimumNanoseconds": 36200,
                   "maximumNanoseconds": 36200
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 80500,
                   "averageNanoseconds": 80500,
@@ -3195,13 +3189,13 @@
                 "bytes": 21360,
                 "bytesPerStrip": 2136,
                 "bytesPerFrame": 36.02023608768971,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 1704,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 1704,
                 "javascriptFootageSlotBytes": 19656
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 9226,
+                "sequenceBytes": 9226,
                 "bytesPerStrip": 922.6,
                 "bytesPerFrame": 15.558178752107926
               },
@@ -3314,7 +3308,7 @@
                   "minimumNanoseconds": 330300,
                   "maximumNanoseconds": 330300
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 633600,
                   "averageNanoseconds": 633600,
@@ -3335,13 +3329,13 @@
                 "bytes": 191528,
                 "bytesPerStrip": 1915.28,
                 "bytesPerFrame": 35.501019462465244,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 18000,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 18000,
                 "javascriptFootageSlotBytes": 173528
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 106455,
+                "sequenceBytes": 106455,
                 "bytesPerStrip": 1064.55,
                 "bytesPerFrame": 19.7321594068582
               },
@@ -3454,7 +3448,7 @@
                   "minimumNanoseconds": 8449900,
                   "maximumNanoseconds": 8449900
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 15350200,
                   "averageNanoseconds": 15350200,
@@ -3475,13 +3469,13 @@
                 "bytes": 1796032,
                 "bytesPerStrip": 1796.032,
                 "bytesPerFrame": 35.5066326631477,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 181104,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 181104,
                 "javascriptFootageSlotBytes": 1614928
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 1054796,
+                "sequenceBytes": 1054796,
                 "bytesPerStrip": 1054.796,
                 "bytesPerFrame": 20.85277662455766
               },
@@ -3594,7 +3588,7 @@
                   "minimumNanoseconds": 3604700,
                   "maximumNanoseconds": 3604700
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 20842500,
                   "averageNanoseconds": 20842500,
@@ -3615,13 +3609,13 @@
                 "bytes": 3021896,
                 "bytesPerStrip": 30218.96,
                 "bytesPerFrame": 618.227495908347,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 337128,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 337128,
                 "javascriptFootageSlotBytes": 2684768
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 1837809,
+                "sequenceBytes": 1837809,
                 "bytesPerStrip": 18378.09,
                 "bytesPerFrame": 375.9838379705401
               },
@@ -3734,7 +3728,7 @@
                   "minimumNanoseconds": 2804500,
                   "maximumNanoseconds": 2804500
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 17903100,
                   "averageNanoseconds": 17903100,
@@ -3755,13 +3749,13 @@
                 "bytes": 3149648,
                 "bytesPerStrip": 314964.8,
                 "bytesPerFrame": 7463.620853080569,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 352272,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 352272,
                 "javascriptFootageSlotBytes": 2797376
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 1917180,
+                "sequenceBytes": 1917180,
                 "bytesPerStrip": 191718,
                 "bytesPerFrame": 4543.080568720379
               },
@@ -3874,7 +3868,7 @@
                   "minimumNanoseconds": 3444900,
                   "maximumNanoseconds": 3444900
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 26963200,
                   "averageNanoseconds": 26963200,
@@ -3895,13 +3889,13 @@
                 "bytes": 3159832,
                 "bytesPerStrip": 3159832,
                 "bytesPerFrame": 185872.4705882353,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 353784,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 353784,
                 "javascriptFootageSlotBytes": 2806048
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 1924136,
+                "sequenceBytes": 1924136,
                 "bytesPerStrip": 1924136,
                 "bytesPerFrame": 113184.4705882353
               },
@@ -4014,7 +4008,7 @@
                   "minimumNanoseconds": 2500,
                   "maximumNanoseconds": 2500
                 },
-                "snapshot": {
+                "sequence": {
                   "count": 1,
                   "totalNanoseconds": 31290500,
                   "averageNanoseconds": 31290500,
@@ -4035,13 +4029,13 @@
                 "bytes": 3160672,
                 "bytesPerStrip": null,
                 "bytesPerFrame": null,
-                "measurement": "estimated-snapshot-words-plus-js-footage-slots",
-                "snapshotMetadataWordBytes": 353904,
+                "measurement": "estimated-sequence-words-plus-js-footage-slots",
+                "sequenceMetadataWordBytes": 353904,
                 "javascriptFootageSlotBytes": 2806768
               },
               "storage": {
                 "serialization": "node:v8.serialize",
-                "snapshotBytes": 1924694,
+                "sequenceBytes": 1924694,
                 "bytesPerStrip": null,
                 "bytesPerFrame": null
               },

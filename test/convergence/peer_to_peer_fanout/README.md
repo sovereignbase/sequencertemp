@@ -17,7 +17,7 @@ B --child--> A
 
 C accepts the child into its pending store, remains visibly empty, and then
 materializes both `A:parent` and `B:child` when the delayed parent arrives.
-The child is never redelivered and no snapshot is exchanged. All three peers
+The child is never redelivered and no sequence is exchanged. All three peers
 must end as `[A:parent, B:child]`.
 
 The first phase creates one independent root Insert per editor. Every receiver

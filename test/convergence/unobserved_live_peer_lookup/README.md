@@ -13,5 +13,5 @@ first projection read then checks every position and must return:
 ```
 
 The last Frame is especially important: a stale gate used to walk beyond the
-structural tail at `value(7)`. Snapshot reconstruction is not involved; the
+structural tail at `value(7)`. Sequence reconstruction is not involved; the
 guarantee applies directly to the continuously running live replicas.

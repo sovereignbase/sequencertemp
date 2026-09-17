@@ -6,7 +6,7 @@ The browser starts from:
 base
 ```
 
-Two actors edit its retained Snapshot independently:
+Two actors edit its retained Sequence independently:
 
 ```text
 Actor 2: base -> left

@@ -236,7 +236,7 @@ const runScaleDownStep = (runtime: Runtime, config: BenchmarkConfig): void => {
   if (runtime.strips.count > 0) randomIngest(runtime, 'down')
 }
 
-const snapshotMetric = <T>(operation: () => T): [MetricResult, T] => {
+const managementMetric = <T>(operation: () => T): [MetricResult, T] => {
   const accumulator = new MetricAccumulator()
   const timed = measure(operation)
   accumulator.add(timed.nanoseconds)
@@ -263,53 +263,53 @@ const observeReplica = (
         `Replica ${runtime.name} peers diverged at projection position ${index}.`
       )
 
-  const [valuesMetric] = snapshotMetric(() => runtime.state.values())
-  const [snapshotResult, checkpointSnapshot] = snapshotMetric(() =>
-    runtime.state.snapshot()
+  const [valuesMetric] = managementMetric(() => runtime.state.values())
+  const [sequenceResult, checkpointSequence] = managementMetric(() =>
+    runtime.state.sequence()
   )
-  const snapshotBytes = serialize(checkpointSnapshot).byteLength
+  const sequenceBytes = serialize(checkpointSequence).byteLength
 
-  const [createMetric] = snapshotMetric(() =>
-    createReplica(runtime.actorId, checkpointSnapshot)
+  const [createMetric] = managementMetric(() =>
+    createReplica(runtime.actorId, checkpointSequence)
   )
 
   const stripCount = runtime.strips.count
   const frameCount = runtime.strips.frameCount
-  const snapshotMetadataWordBytes =
-    (checkpointSnapshot[0].reduce(
+  const sequenceMetadataWordBytes =
+    (checkpointSequence[0].reduce(
       (words, acknowledgement) => words + acknowledgement.length,
       0
     ) +
-      checkpointSnapshot[1].length * 6) *
+      checkpointSequence[1].length * 6) *
     4
   const javascriptFootageSlotBytes =
-    checkpointSnapshot[1].reduce(
+    checkpointSequence[1].reduce(
       (slots, insertion) => slots + (insertion[6]?.length ?? 0),
       0
     ) * 8
   const estimatedMemoryBytes =
-    snapshotMetadataWordBytes + javascriptFootageSlotBytes
+    sequenceMetadataWordBytes + javascriptFootageSlotBytes
 
   const checkpoint: ReplicaCheckpoint = {
     operations: runtime.metrics.snapshot(),
     management: {
       values: valuesMetric,
-      snapshot: snapshotResult,
+      sequence: sequenceResult,
       create: createMetric,
     },
     memory: {
       bytes: estimatedMemoryBytes,
       bytesPerStrip: ratio(estimatedMemoryBytes, stripCount),
       bytesPerFrame: ratio(estimatedMemoryBytes, frameCount),
-      measurement: 'estimated-snapshot-words-plus-js-footage-slots',
-      snapshotMetadataWordBytes,
+      measurement: 'estimated-sequence-words-plus-js-footage-slots',
+      sequenceMetadataWordBytes,
       javascriptFootageSlotBytes,
     },
     storage: {
       serialization: 'node:v8.serialize',
-      snapshotBytes,
-      bytesPerStrip: ratio(snapshotBytes, stripCount),
-      bytesPerFrame: ratio(snapshotBytes, frameCount),
+      sequenceBytes,
+      bytesPerStrip: ratio(sequenceBytes, stripCount),
+      bytesPerFrame: ratio(sequenceBytes, frameCount),
     },
     strips: {
       stripCount,
@@ -317,7 +317,7 @@ const observeReplica = (
       averageStripLength: ratio(frameCount, stripCount),
       minimumStripLength: runtime.strips.minimumLength,
       maximumStripLength: runtime.strips.maximumLength,
-      retainedDeltaCount: checkpointSnapshot[1].length,
+      retainedDeltaCount: checkpointSequence[1].length,
     },
   }
 
@@ -325,7 +325,7 @@ const observeReplica = (
   for (const selectedScope of [scope, 'fullLifecycle'] as const)
     runtime.space[selectedScope].add(
       estimatedMemoryBytes,
-      snapshotBytes,
+      sequenceBytes,
       stripCount,
       frameCount
     )
@@ -427,7 +427,7 @@ const printCheckpoint = (checkpoint: CheckpointResult): void => {
         'estimated memory bytes': observed.memory.bytes,
         'memory B/Strip': observed.memory.bytesPerStrip?.toFixed(3) ?? '—',
         'memory B/Frame': observed.memory.bytesPerFrame?.toFixed(3) ?? '—',
-        'snapshot bytes': observed.storage.snapshotBytes,
+        'sequence bytes': observed.storage.sequenceBytes,
         'process RSS bytes': checkpoint.processMemory.rssBytes,
       }
     })
@@ -445,7 +445,7 @@ const makeRuntime = (
   actorId,
   peerActorId,
   state,
-  peer: createReplica(peerActorId, state.snapshot()),
+  peer: createReplica(peerActorId, state.sequence()),
   strips: new StripIndex(),
   random: new Random(workloadSeed),
   nextStripId: 1,
@@ -476,7 +476,7 @@ async function runOneLifecycle(
   config: BenchmarkConfig,
   reportProgress: boolean
 ): Promise<RunResult> {
-  const [initializationA, stateA] = snapshotMetric(() => createReplica(1))
+  const [initializationA, stateA] = managementMetric(() => createReplica(1))
   const workloadSeed = deriveSeed(runSeed, 'shared-replica-workload')
   const runtime = makeRuntime('A', stateA, workloadSeed, 1, 2)
   const checkpoints: Array<CheckpointResult> = []
@@ -525,7 +525,7 @@ export async function warmUp(config: BenchmarkConfig): Promise<void> {
   )
 
   // Warm only the continuously measured operation paths. Running a hidden
-  // lifecycle here also performs checkpoint snapshots, restarts,
+  // lifecycle here also performs checkpoint sequences, restarts,
   // serialization, and forced garbage collection, which is not warmup work.
   for (let cycle = 0; cycle < config.warmupCycles; cycle++)
     runScaleUpStep(runtime, config)

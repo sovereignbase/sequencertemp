@@ -45,21 +45,21 @@ At each checkpoint the benchmark validates the public Frame count and measures:
 
 ```text
 values
-snapshot
-create(snapshot)
+sequence
+create(sequence)
 ```
 
-Snapshot construction is measured with a temporary Projection; the two active
+Sequence construction is measured with a temporary Projection; the two active
 peers continue their uninterrupted gossip session across checkpoints. There is
 no separate recovery or acknowledgement phase: acknowledgements travel as
 part of the ordinary two-way gossip after every update.
 
-The report includes visible Strip and Frame counts, retained snapshot insertion
-count, serialized snapshot size, an estimated retained-state size, and shared
+The report includes visible Strip and Frame counts, retained Sequence insertion
+count, serialized Sequence size, an estimated retained-state size, and shared
 process RSS. The retained-state estimate is:
 
 ```text
-4 bytes × snapshot frontier and insertion metadata words
+4 bytes × Sequence frontier and insertion metadata words
 +
 8 bytes × JavaScript Footage slots
 ```
@@ -75,7 +75,7 @@ calculation, and logging are excluded. Latency is calculated as total measured
 nanoseconds divided by call count.
 
 Warmup exercises only the continuous operation paths. It does not run hidden
-checkpoints, snapshots, restarts, serialization, or forced garbage collection.
+checkpoints, Sequences, restarts, serialization, or forced garbage collection.
 
 ## Running
 

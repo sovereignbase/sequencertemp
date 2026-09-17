@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test'
 
 type SequencerApi = {
-  create<T>(actor: number, snapshot?: unknown): unknown
+  create<T>(actor: number, sequence?: unknown): unknown
   insert<T>(state: unknown, at: number, values: Array<T>): unknown
   ingest(state: unknown, gossip: unknown): unknown
-  snapshot(state: unknown): unknown
+  sequence(state: unknown): unknown
   values<T>(state: unknown): Array<T>
 }
 
@@ -26,7 +26,7 @@ test('converges after opposite Gossip staging orders in a browser', async ({
     const api = (window as unknown as SequencerWindow).sequencer
     const base = api.create<string>(1)
     void api.insert(base, 0, ['base'])
-    const retained = api.snapshot(base)
+    const retained = api.sequence(base)
     const left = api.create<string>(2, retained)
     const right = api.create<string>(3, retained)
     const left_result = api.insert(left, 1, ['left'])

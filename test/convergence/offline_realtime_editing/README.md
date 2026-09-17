@@ -1,6 +1,6 @@
 # Three online and three offline editors
 
-Every editor starts from a Snapshot containing:
+Every editor starts from a Sequence containing:
 
 ```text
 document
@@ -8,7 +8,7 @@ document
 
 ## Online causal chain
 
-Three online editors hand the latest Snapshot forward:
+Three online editors hand the latest Sequence forward:
 
 ```text
 Actor 90: document -> online-1

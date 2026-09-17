@@ -3,7 +3,7 @@ import { Projection } from '../../../src/class.js'
 import type { Gossip, Sequence } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
-describe('concurrent root snapshot', () => {
+describe('concurrent root sequence', () => {
   it('recreates three concurrent root subtrees in deterministic order', () => {
     const primary = new Projection<string>(100)
     const second = new Projection<string>(101)

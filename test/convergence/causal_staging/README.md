@@ -20,5 +20,5 @@ parent -> child
 ```
 
 The receiver must equal the authoring replica exactly without child redelivery
-or snapshot exchange. Packet order does not change causal order, and an
+or sequence exchange. Packet order does not change causal order, and an
 unresolved child is never partially materialized.

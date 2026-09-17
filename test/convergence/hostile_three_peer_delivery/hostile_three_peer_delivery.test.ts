@@ -43,7 +43,7 @@ const deliver = (
 }
 
 describe('hostile three-peer delivery', () => {
-  it('converges from an empty snapshot in chronological and mixed order', () => {
+  it('converges from an empty sequence in chronological and mixed order', () => {
     const retained = new Projection<string>(1).sequence()
     for (const increaseOrder of sessionOrders)
       for (const decreaseOrder of sessionOrders) {

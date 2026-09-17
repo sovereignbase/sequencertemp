@@ -34,10 +34,10 @@ describe('same actor in multiple replicas', () => {
   it('keeps per-instance Clocks independent across concurrent tabs', () => {
     const seed = new Projection<string>(1)
     seed.insert(['a', 'b', 'c', 'd'], 0)
-    const snapshot: Sequence<string> = seed.sequence()
+    const sequence: Sequence<string> = seed.sequence()
 
-    const left = new Projection<string>(42, snapshot)
-    const right = new Projection<string>(42, snapshot)
+    const left = new Projection<string>(42, sequence)
+    const right = new Projection<string>(42, sequence)
 
     expect(left.increaseClock[0]).not.toBe(right.increaseClock[0])
     expect(left.decreaseClock[0]).not.toBe(right.decreaseClock[0])
@@ -60,7 +60,7 @@ describe('same actor in multiple replicas', () => {
     gossip(right, left, rightHead)
     gossip(left, right, leftTail)
 
-    const replay = new Projection<string>(42, snapshot)
+    const replay = new Projection<string>(42, sequence)
     for (const update of [
       rightHead,
       leftTail,

@@ -20,11 +20,11 @@ Actor 42:
 ```
 
 One receiver gets author order. Another gets a seeded shuffle, is recreated
-from `snapshot(receiver)` halfway through accepted packets, and is finally sent
+from `sequence(receiver)` halfway through accepted packets, and is finally sent
 every old packet again:
 
 ```text
-hostile packets -> create(snapshot) -> stale redelivery
+hostile packets -> create(sequence) -> stale redelivery
 ```
 
 The expected relationship is exact equality:
@@ -32,7 +32,7 @@ The expected relationship is exact equality:
 ```text
 ordered Projection
   == restarted Projection
-  == create(snapshot(restarted)) Projection
+  == create(sequence(restarted)) Projection
 ```
 
 Stale packets must be idempotent, and create-time compaction must not change the

@@ -1,6 +1,6 @@
 # Same actor in multiple replicas
 
-Two tabs belonging to the same actor open the same Snapshot. Each Projection
+Two tabs belonging to the same actor open the same Sequence. Each Projection
 instance owns distinct insertion and Mask sessions even though their actor ID
 is identical.
 

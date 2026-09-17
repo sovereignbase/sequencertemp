@@ -1,6 +1,6 @@
 # Concurrent root ordering
 
-Four editors start from the same empty Snapshot and insert independently:
+Four editors start from the same empty Sequence and insert independently:
 
 ```text
 Actor 11: insert "first"  at root

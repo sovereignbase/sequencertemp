@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { Projection } from '../../../src/class.js'
 
-describe('snapshot jump preoptimization', () => {
+describe('sequence jump preoptimization', () => {
   it('creates valid square-root-spaced jumps during reconstruction', () => {
     const source = new Projection<number>(1)
     for (let value = 0; value < 16; ++value)
       source.insert([value], source.projectionFrameCount)
 
-    const snapshot = source.sequence()
-    const recreated = new Projection<number>(2, snapshot)
-    const spacing = Math.round(Math.sqrt(snapshot[1].length))
+    const sequence = source.sequence()
+    const recreated = new Projection<number>(2, sequence)
+    const spacing = Math.round(Math.sqrt(sequence[1].length))
 
     let jump = recreated.head
     let jumpCount = 0

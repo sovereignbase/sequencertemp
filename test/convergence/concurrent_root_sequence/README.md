@@ -1,4 +1,4 @@
-# Concurrent root snapshot
+# Concurrent root sequence
 
 Three replicas independently insert at the empty Projection root while one of
 them also builds a head-insertion subtree:
