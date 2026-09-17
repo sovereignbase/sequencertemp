@@ -6,7 +6,7 @@ describe('local replace gate', () => {
     const sequence = new Sequence<string>(100)
 
     sequence.insert(['a', 'b', 'c'], 0)
-    sequence.replace(['x', 'y'], 0, 2)
+    sequence.replace(['x', 'y'], 0, 1)
     sequence.insert(['z'], 1)
 
     expect(sequence.values()).toEqual(['x', 'z', 'y', 'c'])

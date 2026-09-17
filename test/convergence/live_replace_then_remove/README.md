@@ -7,5 +7,5 @@ masked.
 
 After those edits, removing one logical strip must have the same result on the
 local author and on the peer applying its delta. Both live instances must have
-the same `visibleFrameCount` and resolve identical footage at every visible
-index.
+the same `projectionFrameCount` and resolve identical footage at every
+projection position.

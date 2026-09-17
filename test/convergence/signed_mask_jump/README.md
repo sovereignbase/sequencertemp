@@ -8,4 +8,4 @@ available again after the debt reaches the visible range.
 
 Concurrent Session ordering determines which eligible positive Frames pay the
 debt. Ordered, hostile, and restarted delivery must nevertheless expose the
-same three Frames at the same visible indexes.
+same three Frames at the same projection positions.

@@ -13,8 +13,8 @@ integrating the same operations through different public methods.
 After every gossip round the guarantee is checked directly on the live peers:
 
 ```text
-left.visibleFrameCount === right.visibleFrameCount
-left.find(index) === right.find(index) for every visible index
+left.projectionFrameCount === right.projectionFrameCount
+left.value(position) === right.value(position) for every projection position
 ```
 
 The final middle replacement must be read identically as:

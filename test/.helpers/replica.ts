@@ -36,10 +36,10 @@ export function expect_converged<T>(
   expected: Sequence<T>,
   actual: Sequence<T>
 ): void {
-  expect(actual.visibleFrameCount).toBe(expected.visibleFrameCount)
+  expect(actual.projectionFrameCount).toBe(expected.projectionFrameCount)
 
-  for (let index = 0; index < expected.visibleFrameCount; ++index)
-    expect(actual.find(index)).toEqual(expected.find(index))
+  for (let position = 0; position < expected.projectionFrameCount; ++position)
+    expect(actual.value(position)).toEqual(expected.value(position))
 }
 
 export function shuffle_mutations<T>(

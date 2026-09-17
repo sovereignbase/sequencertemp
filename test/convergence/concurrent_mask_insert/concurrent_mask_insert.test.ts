@@ -12,7 +12,7 @@ describe('concurrent Mask and insert', () => {
     const retained = base.snapshot()
     const deleting = new Sequence<string>(31, retained)
     const inserting = new Sequence<string>(32, retained)
-    const deletion = deleting.remove(1, 2)
+    const deletion = deleting.remove(1, 1)
     const insertion = inserting.insert(['beside'], 2)
 
     const mask_first = deliver(retained, [deletion, insertion])

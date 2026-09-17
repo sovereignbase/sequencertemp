@@ -20,7 +20,7 @@ describe('concurrent root restart', () => {
     const restarted = deliver(empty, mutations, 3)
 
     expect_converged(ordered, restarted)
-    expect(ordered.visibleFrameCount).toBe(7)
+    expect(ordered.projectionFrameCount).toBe(7)
     expect(new Set(ordered.values())).toEqual(
       new Set([
         'concurrent',

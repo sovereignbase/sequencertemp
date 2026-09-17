@@ -11,6 +11,6 @@ order:
 Mask -> replacement insertion
 ```
 
-The pending receiver and an ordered receiver must expose one visible Frame at
-index zero containing `replacement`. This guarantees that stack-based pending
+The pending receiver and an ordered receiver must expose one projected Frame at
+position zero containing `replacement`. This guarantees that stack-based pending
 processing cannot reverse the two entries and lose their replace relationship.

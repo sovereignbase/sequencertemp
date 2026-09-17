@@ -6,5 +6,5 @@ their local projections.
 
 The greatest concurrent mask owns every duplicated masked Frame, so one Frame
 is never masked twice. Chronological, reverse, and deterministic mixed Gossip
-delivery must therefore expose the same `visibleFrameCount` and return the same
-Footage from every visible index.
+delivery must therefore expose the same `projectionFrameCount` and return the
+same Footage from every projection position.

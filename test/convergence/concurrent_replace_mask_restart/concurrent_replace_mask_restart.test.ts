@@ -12,7 +12,7 @@ describe('concurrent replace Mask restart', () => {
       primary.insert(['branch-0', 'branch-1', 'branch-2', 'branch-3'], 0),
       concurrent.insert(['concurrent'], 0),
       primary.insert(['replaced-head'], 0),
-      primary.replace(['replacement-0', 'replacement-1'], 0, 2),
+      primary.replace(['replacement-0', 'replacement-1'], 0, 1),
       primary.insert(['final-head'], 0),
     ]
     const empty: Snapshot<string> = [[], []]

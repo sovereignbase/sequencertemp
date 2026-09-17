@@ -17,7 +17,7 @@ describe('local and applied fragment coordinates', () => {
     const receiver = new Sequence<number>(101)
 
     gossip(author, receiver, author.insert([1, 1], 0))
-    gossip(author, receiver, author.replace([2, 2], 0, 2))
+    gossip(author, receiver, author.replace([2, 2], 0, 1))
     gossip(author, receiver, author.insert([3, 3], 0))
 
     expect(author.values()).toEqual([3, 3, 2, 2])

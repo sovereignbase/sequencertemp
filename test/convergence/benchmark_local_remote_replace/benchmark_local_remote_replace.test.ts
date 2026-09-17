@@ -9,8 +9,8 @@ import {
 } from '../../../benchmark/support.js'
 
 const project = (sequence: Sequence<number>): Array<number | undefined> =>
-  Array.from({ length: sequence.visibleFrameCount }, (_, index) =>
-    sequence.find(index)
+  Array.from({ length: sequence.projectionFrameCount }, (_, index) =>
+    sequence.value(index)
   )
 
 describe('benchmark local/remote replacement equivalence', () => {
@@ -38,7 +38,7 @@ describe('benchmark local/remote replacement equivalence', () => {
     ) => {
       const acknowledgements = receiver.apply(update)?.[1]
       if (acknowledgements) author.apply(acknowledgements)
-      expect(receiver.visibleFrameCount).toBe(author.visibleFrameCount)
+      expect(receiver.projectionFrameCount).toBe(author.projectionFrameCount)
     }
 
     const createStrip = (length?: number) => {
@@ -54,7 +54,7 @@ describe('benchmark local/remote replacement equivalence', () => {
       gossip(state, peer, state.insert(inserted.values, insertionFrame))
       strips.insert(insertionIndex, inserted)
 
-      void state.find(random.integer(strips.frameCount))
+      void state.value(random.integer(strips.frameCount))
 
       const replacementIndex = random.integer(strips.count)
       const replacementFrame = strips.frameOffsetAt(replacementIndex)
@@ -66,7 +66,7 @@ describe('benchmark local/remote replacement equivalence', () => {
         state.replace(
           replacement.values,
           replacementFrame,
-          replacementFrame + replaced.length
+          replacementFrame + replaced.length - 1
         )
       )
       strips.replace(replacementIndex, replacement)
@@ -77,7 +77,7 @@ describe('benchmark local/remote replacement equivalence', () => {
       gossip(
         state,
         peer,
-        state.remove(removalFrame, removalFrame + removed.length)
+        state.remove(removalFrame, removalFrame + removed.length - 1)
       )
       strips.remove(removalIndex)
 
@@ -100,7 +100,7 @@ describe('benchmark local/remote replacement equivalence', () => {
         peer.replace(
           ingested.values,
           ingestFrame,
-          ingestFrame + ingested.length
+          ingestFrame + ingested.length - 1
         )
       )
       strips.replace(ingestIndex, ingested)

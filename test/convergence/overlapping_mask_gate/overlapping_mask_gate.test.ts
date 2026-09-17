@@ -12,12 +12,12 @@ describe('overlapping mask gate', () => {
       (index) => new Sequence<string>(100 + index, snapshot)
     )
     const mutations: Array<Gossip<string>> = [
-      replicas[2].remove(0, 2),
+      replicas[2].remove(0, 1),
       replicas[0].insert(['middle-0', 'middle-1'], 1),
       replicas[2].insert(['tail-0', 'tail-1', 'tail-2'], 0),
-      replicas[1].replace(['replacement-0', 'replacement-1'], 0, 2),
-      replicas[1].remove(0, 2),
-      replicas[2].remove(2, 3),
+      replicas[1].replace(['replacement-0', 'replacement-1'], 0, 1),
+      replicas[1].remove(0, 1),
+      replicas[2].remove(2, 2),
     ]
     const ordered = deliver(snapshot, mutations)
     const hostile = deliver(snapshot, [
@@ -30,6 +30,6 @@ describe('overlapping mask gate', () => {
     ])
 
     expect_converged(ordered, hostile)
-    expect(hostile.visibleIndex).toBe(0)
+    expect(hostile.projectedPosition).toBe(0)
   })
 })

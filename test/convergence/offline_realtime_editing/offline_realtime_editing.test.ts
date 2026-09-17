@@ -37,25 +37,25 @@ const build_insert_scenario = (): SixEditorMutations => {
 
   const online_1 = new Sequence<string>(90, base)
   const online_root = accepted(
-    online_1.insert(['online-1'], online_1.visibleFrameCount)
+    online_1.insert(['online-1'], online_1.projectionFrameCount)
   )
   const online_2 = new Sequence<string>(91, online_1.snapshot())
   const online_middle = accepted(
-    online_2.insert(['online-2'], online_2.visibleFrameCount)
+    online_2.insert(['online-2'], online_2.projectionFrameCount)
   )
   const online_3 = new Sequence<string>(92, online_2.snapshot())
   const online_tail = accepted(
-    online_3.insert(['online-3'], online_3.visibleFrameCount)
+    online_3.insert(['online-3'], online_3.projectionFrameCount)
   )
 
   const offline = ([80, 70, 60] as const).map((actor, branch_index) => {
     const editor = new Sequence<string>(actor, base)
     const branch = branch_index + 1
     const root = accepted(
-      editor.insert([`offline-${branch}-1`], editor.visibleFrameCount)
+      editor.insert([`offline-${branch}-1`], editor.projectionFrameCount)
     )
     const tail = accepted(
-      editor.insert([`offline-${branch}-2`], editor.visibleFrameCount)
+      editor.insert([`offline-${branch}-2`], editor.projectionFrameCount)
     )
     return [root, tail]
   }) as SixEditorMutations['offline']
@@ -75,49 +75,53 @@ const build_lifecycle_scenario = (): SixEditorMutations => {
 
   const online_1 = new Sequence<string>(90, base)
   const online: Array<Gossip<string>> = [
-    accepted(online_1.insert(['online-1'], online_1.visibleFrameCount)),
-    accepted(online_1.insert(['online-trash'], online_1.visibleFrameCount)),
+    accepted(online_1.insert(['online-1'], online_1.projectionFrameCount)),
+    accepted(online_1.insert(['online-trash'], online_1.projectionFrameCount)),
   ]
-  online.push(accepted(online_1.remove(online_1.visibleFrameCount - 1)))
+  online.push(accepted(online_1.remove(online_1.projectionFrameCount - 1)))
 
   const online_2 = new Sequence<string>(91, online_1.snapshot())
   online.push(
-    accepted(online_2.insert(['online-old'], online_2.visibleFrameCount))
+    accepted(online_2.insert(['online-old'], online_2.projectionFrameCount))
   )
   online.push(
-    accepted(online_2.replace(['online-2'], online_2.visibleFrameCount - 1))
+    accepted(online_2.replace(['online-2'], online_2.projectionFrameCount - 1))
   )
 
   const online_3 = new Sequence<string>(92, online_2.snapshot())
   online.push(
-    accepted(online_3.insert(['online-3'], online_3.visibleFrameCount))
+    accepted(online_3.insert(['online-3'], online_3.projectionFrameCount))
   )
 
   const offline_1 = new Sequence<string>(80, base)
   const branch_1 = [
-    accepted(offline_1.insert(['offline-1-1'], offline_1.visibleFrameCount)),
-    accepted(offline_1.insert(['offline-trash'], offline_1.visibleFrameCount)),
-    accepted(offline_1.remove(offline_1.visibleFrameCount - 1)),
-    accepted(offline_1.insert(['offline-1-2'], offline_1.visibleFrameCount)),
+    accepted(offline_1.insert(['offline-1-1'], offline_1.projectionFrameCount)),
+    accepted(
+      offline_1.insert(['offline-trash'], offline_1.projectionFrameCount)
+    ),
+    accepted(offline_1.remove(offline_1.projectionFrameCount - 1)),
+    accepted(offline_1.insert(['offline-1-2'], offline_1.projectionFrameCount)),
   ]
 
   const offline_2 = new Sequence<string>(70, base)
   const branch_2 = [
-    accepted(offline_2.insert(['offline-2-1'], offline_2.visibleFrameCount)),
-    accepted(offline_2.insert(['offline-old'], offline_2.visibleFrameCount)),
+    accepted(offline_2.insert(['offline-2-1'], offline_2.projectionFrameCount)),
+    accepted(offline_2.insert(['offline-old'], offline_2.projectionFrameCount)),
     accepted(
-      offline_2.replace(['offline-2-2'], offline_2.visibleFrameCount - 1)
+      offline_2.replace(['offline-2-2'], offline_2.projectionFrameCount - 1)
     ),
   ]
 
   const offline_3 = new Sequence<string>(60, base)
   const branch_3 = [
-    accepted(offline_3.insert(['offline-3-1'], offline_3.visibleFrameCount)),
-    accepted(offline_3.insert(['offline-trash'], offline_3.visibleFrameCount)),
-    accepted(offline_3.remove(offline_3.visibleFrameCount - 1)),
-    accepted(offline_3.insert(['offline-old'], offline_3.visibleFrameCount)),
+    accepted(offline_3.insert(['offline-3-1'], offline_3.projectionFrameCount)),
     accepted(
-      offline_3.replace(['offline-3-2'], offline_3.visibleFrameCount - 1)
+      offline_3.insert(['offline-trash'], offline_3.projectionFrameCount)
+    ),
+    accepted(offline_3.remove(offline_3.projectionFrameCount - 1)),
+    accepted(offline_3.insert(['offline-old'], offline_3.projectionFrameCount)),
+    accepted(
+      offline_3.replace(['offline-3-2'], offline_3.projectionFrameCount - 1)
     ),
   ]
 

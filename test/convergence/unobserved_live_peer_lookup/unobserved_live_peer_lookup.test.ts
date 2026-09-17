@@ -17,40 +17,40 @@ describe('unobserved live peer lookup', () => {
     const peer = new Sequence<number>(2)
 
     gossip(state, peer, state.insert([1, 1], 0))
-    gossip(state, peer, state.replace([2, 2], 0, 2))
-    gossip(state, peer, state.remove(0, 2))
+    gossip(state, peer, state.replace([2, 2], 0, 1))
+    gossip(state, peer, state.remove(0, 1))
     gossip(state, peer, state.insert([3, 3], 0))
-    gossip(peer, state, peer.replace([4, 4], 0, 2))
+    gossip(peer, state, peer.replace([4, 4], 0, 1))
 
     gossip(state, peer, state.insert([5, 5], 0))
-    gossip(state, peer, state.replace([6, 6], 0, 2))
-    gossip(state, peer, state.remove(0, 2))
+    gossip(state, peer, state.replace([6, 6], 0, 1))
+    gossip(state, peer, state.remove(0, 1))
     gossip(state, peer, state.insert([7, 7], 2))
-    gossip(peer, state, peer.replace([8, 8], 0, 2))
+    gossip(peer, state, peer.replace([8, 8], 0, 1))
 
     gossip(state, peer, state.insert([9, 9], 4))
-    gossip(state, peer, state.replace([10, 10], 2, 4))
-    gossip(state, peer, state.remove(4, 6))
+    gossip(state, peer, state.replace([10, 10], 2, 3))
+    gossip(state, peer, state.remove(4, 5))
     gossip(state, peer, state.insert([11, 11], 2))
-    gossip(peer, state, peer.replace([12, 12], 2, 4))
+    gossip(peer, state, peer.replace([12, 12], 2, 3))
 
     gossip(state, peer, state.insert([13, 13], 0))
-    gossip(state, peer, state.replace([14, 14], 2, 4))
-    gossip(state, peer, state.remove(4, 6))
+    gossip(state, peer, state.replace([14, 14], 2, 3))
+    gossip(state, peer, state.remove(4, 5))
     gossip(state, peer, state.insert([15, 15], 0))
-    const finalReplacement = peer.replace([16, 16], 2, 4)
+    const finalReplacement = peer.replace([16, 16], 2, 3)
     gossip(peer, state, finalReplacement)
 
-    expect(peer.visibleFrameCount).toBe(state.visibleFrameCount)
-    expect(state.visibleFrameCount).toBe(8)
+    expect(peer.projectionFrameCount).toBe(state.projectionFrameCount)
+    expect(state.projectionFrameCount).toBe(8)
 
     const stateValues = Array.from(
-      { length: state.visibleFrameCount },
-      (_, index) => state.find(index)
+      { length: state.projectionFrameCount },
+      (_, index) => state.value(index)
     )
     const peerValues = Array.from(
-      { length: peer.visibleFrameCount },
-      (_, index) => peer.find(index)
+      { length: peer.projectionFrameCount },
+      (_, index) => peer.value(index)
     )
 
     expect(peerValues).toEqual(stateValues)

@@ -17,14 +17,16 @@ type Runtime = {
 }
 
 const expectLivePeers = (runtime: Runtime): void => {
-  expect(runtime.peer.visibleFrameCount).toBe(runtime.state.visibleFrameCount)
+  expect(runtime.peer.projectionFrameCount).toBe(
+    runtime.state.projectionFrameCount
+  )
   expect(
-    Array.from({ length: runtime.peer.visibleFrameCount }, (_, index) =>
-      runtime.peer.find(index)
+    Array.from({ length: runtime.peer.projectionFrameCount }, (_, index) =>
+      runtime.peer.value(index)
     )
   ).toEqual(
-    Array.from({ length: runtime.state.visibleFrameCount }, (_, index) =>
-      runtime.state.find(index)
+    Array.from({ length: runtime.state.projectionFrameCount }, (_, index) =>
+      runtime.state.value(index)
     )
   )
 }
@@ -64,13 +66,13 @@ const removeAt = (runtime: Runtime, stripIndex: number): void => {
     runtime,
     runtime.state,
     runtime.peer,
-    runtime.state.remove(frameIndex, frameIndex + strip.length)
+    runtime.state.remove(frameIndex, frameIndex + strip.length - 1)
   )
   runtime.strips.remove(stripIndex)
 }
 
 const primaryWorkload = (runtime: Runtime): void => {
-  runtime.state.find(runtime.random.integer(runtime.strips.frameCount))
+  runtime.state.value(runtime.random.integer(runtime.strips.frameCount))
 
   let stripIndex = runtime.random.integer(runtime.strips.count)
   let frameIndex = runtime.strips.frameOffsetAt(stripIndex)
@@ -80,7 +82,7 @@ const primaryWorkload = (runtime: Runtime): void => {
     runtime,
     runtime.state,
     runtime.peer,
-    runtime.state.replace(values, frameIndex, frameIndex + strip.length)
+    runtime.state.replace(values, frameIndex, frameIndex + strip.length - 1)
   )
   runtime.strips.replace(stripIndex, { id: values[0], length: values.length })
 
@@ -97,13 +99,13 @@ const peerReplacement = (runtime: Runtime): void => {
     runtime,
     runtime.peer,
     runtime.state,
-    runtime.peer.replace(values, frameIndex, frameIndex + strip.length)
+    runtime.peer.replace(values, frameIndex, frameIndex + strip.length - 1)
   )
   runtime.strips.replace(stripIndex, { id: values[0], length: values.length })
 }
 
 describe('live scale-down gossip', () => {
-  it('keeps every visible index converged while shrinking', () => {
+  it('keeps every projection position converged while shrinking', () => {
     const state = new Sequence<number>(3)
     const peer = new Sequence<number>(4)
     state.decreaseClock[0] = 3952081492

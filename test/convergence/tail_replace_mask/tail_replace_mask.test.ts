@@ -11,7 +11,7 @@ describe('tail replace Mask', () => {
       primary.insert(['root'], 0),
       primary.insert(['branch-0', 'branch-1', 'branch-2', 'branch-3'], 0),
       concurrent.insert(['concurrent'], 0),
-      primary.replace(['replacement'], 4, 5),
+      primary.replace(['replacement'], 4, 4),
       primary.insert(['head-4'], 0),
       primary.insert(['head-5'], 0),
     ]

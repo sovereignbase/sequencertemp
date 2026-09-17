@@ -127,7 +127,7 @@ const removeAt = (
   const frameIndex = runtime.strips.frameOffsetAt(stripIndex)
   const strip = runtime.strips.at(stripIndex)
   const mutation = timeOperation(runtime, direction, operationName, () =>
-    runtime.state.remove(frameIndex, frameIndex + strip.length)
+    runtime.state.remove(frameIndex, frameIndex + strip.length - 1)
   )
   gossip(runtime.state, runtime.peer, mutation, operationName)
   runtime.strips.remove(stripIndex)
@@ -136,10 +136,10 @@ const removeAt = (
 const randomFind = (runtime: Runtime, direction: Direction): void => {
   const frameIndex = runtime.random.integer(runtime.strips.frameCount)
   const value = timeOperation(runtime, direction, 'randomFind', () =>
-    runtime.state.find(frameIndex)
+    runtime.state.value(frameIndex)
   )
   if (value === undefined)
-    throw new TypeError('Random find did not resolve a visible Frame.')
+    throw new TypeError('Random lookup did not resolve a projected Frame.')
 }
 
 const randomReplace = (
@@ -157,7 +157,7 @@ const randomReplace = (
     runtime.state.replace(
       strip.values,
       frameIndex,
-      frameIndex + replaced.length
+      frameIndex + replaced.length - 1
     )
   )
   gossip(runtime.state, runtime.peer, mutation, 'randomReplace')
@@ -172,7 +172,7 @@ const randomIngest = (runtime: Runtime, direction: Direction): void => {
   const mutation = runtime.peer.replace(
     strip.values,
     frameIndex,
-    frameIndex + replaced.length
+    frameIndex + replaced.length - 1
   )
   const result = timeOperation(runtime, direction, 'randomIngest', () =>
     applyUpdate(runtime.state, mutation, 'randomIngest peer replacement')
@@ -248,19 +248,19 @@ const observeReplica = (
   runtime: Runtime,
   direction: Direction
 ): ReplicaCheckpoint => {
-  const publicFrameCount = runtime.state.visibleFrameCount
+  const publicFrameCount = runtime.state.projectionFrameCount
   if (publicFrameCount !== runtime.strips.frameCount)
     throw new TypeError(
       `Replica ${runtime.name} model has ${runtime.strips.frameCount} Frames but Sequencer reports ${publicFrameCount}.`
     )
 
-  if (runtime.peer.visibleFrameCount !== publicFrameCount)
+  if (runtime.peer.projectionFrameCount !== publicFrameCount)
     throw new TypeError(`Replica ${runtime.name} peers did not converge.`)
 
   for (let index = 0; index < publicFrameCount; ++index)
-    if (runtime.peer.find(index) !== runtime.state.find(index))
+    if (runtime.peer.value(index) !== runtime.state.value(index))
       throw new TypeError(
-        `Replica ${runtime.name} peers diverged at visible Frame ${index}.`
+        `Replica ${runtime.name} peers diverged at projection position ${index}.`
       )
 
   const [valuesMetric] = snapshotMetric(() => runtime.state.values())
@@ -417,7 +417,7 @@ const printCheckpoint = (checkpoint: CheckpointResult): void => {
       const observed = checkpoint.replicas[replica]
       return {
         replica,
-        'visible Strips': observed.strips.stripCount,
+        'projected Strips': observed.strips.stripCount,
         'retained insertions': observed.strips.retainedDeltaCount,
         Frames: observed.strips.frameCount,
         'avg Strip Frames':

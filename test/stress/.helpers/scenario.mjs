@@ -8,7 +8,13 @@ const finish = (ok, message) => {
   finished = true
   parentPort.postMessage({ ok, message })
 }
-const signature = (state) => JSON.stringify(state.values())
+const signature = (state) =>
+  JSON.stringify([
+    state.projectionFrameCount,
+    Array.from({ length: state.projectionFrameCount }, (_, position) =>
+      state.value(position)
+    ),
+  ])
 
 let target_actor = 10_000
 let operation_index = -1
@@ -51,14 +57,14 @@ try {
     const operation = scenario.operations[operation_index]
     const replica_index = operation.replica_selector % scenario.replica_count
     const replica = replicas[replica_index]
-    const projection_length = replica.visibleFrameCount
+    const projection_length = replica.projectionFrameCount
     let mutation
     if (operation.kind === 'remove') {
       if (projection_length === 0) continue
       const start = operation.index_selector % projection_length
       mutation = replica.remove(
         start,
-        Math.min(projection_length, start + operation.frame_count)
+        Math.min(projection_length - 1, start + operation.frame_count - 1)
       )
     } else {
       const frames = Array.from(
@@ -69,7 +75,11 @@ try {
         if (projection_length === 0) continue
         const start = operation.index_selector % projection_length
         const count = Math.min(operation.frame_count, projection_length - start)
-        mutation = replica.replace(frames.slice(0, count), start, start + count)
+        mutation = replica.replace(
+          frames.slice(0, count),
+          start,
+          start + count - 1
+        )
       } else {
         const index = operation.index_selector % (projection_length + 1)
         mutation = replica.insert(frames, index)

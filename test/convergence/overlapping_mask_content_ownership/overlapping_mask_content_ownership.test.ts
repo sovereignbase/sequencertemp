@@ -25,8 +25,8 @@ const deliveryKeys = [
 ]
 
 const project = (sequence: Sequence<string>): Array<string | undefined> =>
-  Array.from({ length: sequence.visibleFrameCount }, (_, index) =>
-    sequence.find(index)
+  Array.from({ length: sequence.projectionFrameCount }, (_, index) =>
+    sequence.value(index)
   )
 
 const deliver = (
@@ -64,13 +64,16 @@ describe('overlapping mask content ownership', () => {
       ([kind, replicaSelector, indexSelector, frameCount], operationIndex) => {
         const replicaIndex = replicaSelector % replicas.length
         const replica = replicas[replicaIndex]
-        const length = replica.visibleFrameCount
+        const length = replica.projectionFrameCount
 
         if (kind === 'remove') {
           if (length !== 0) {
             const start = indexSelector % length
             gossip.push(
-              replica.remove(start, Math.min(length, start + frameCount))
+              replica.remove(
+                start,
+                Math.min(length - 1, start + frameCount - 1)
+              )
             )
           }
           return
@@ -86,7 +89,7 @@ describe('overlapping mask content ownership', () => {
             const start = indexSelector % length
             const count = Math.min(frameCount, length - start)
             gossip.push(
-              replica.replace(frames.slice(0, count), start, start + count)
+              replica.replace(frames.slice(0, count), start, start + count - 1)
             )
           }
           return
@@ -111,7 +114,9 @@ describe('overlapping mask content ownership', () => {
     )
 
     for (const receiver of [reverse, mixed]) {
-      expect(receiver.visibleFrameCount).toBe(chronological.visibleFrameCount)
+      expect(receiver.projectionFrameCount).toBe(
+        chronological.projectionFrameCount
+      )
       expect(project(receiver)).toEqual(project(chronological))
     }
   })

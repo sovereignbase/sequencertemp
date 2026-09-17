@@ -5,7 +5,7 @@ describe('snapshot jump preoptimization', () => {
   it('creates valid square-root-spaced jumps during reconstruction', () => {
     const source = new Sequence<number>(1)
     for (let value = 0; value < 16; ++value)
-      source.insert([value], source.visibleFrameCount)
+      source.insert([value], source.projectionFrameCount)
 
     const snapshot = source.snapshot()
     const recreated = new Sequence<number>(2, snapshot)

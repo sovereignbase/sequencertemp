@@ -9,5 +9,5 @@ increase and decrease Session IDs, so the guarantee is not dependent on
 randomly generated clocks.
 
 The delivery order changes whether a mask or its concurrent insertion is seen
-first. It must not change `visibleFrameCount`, and every visible index must
+first. It must not change `projectionFrameCount`, and every projection position must
 resolve to the same footage on both receivers.
