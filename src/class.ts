@@ -14,15 +14,15 @@ import { snapshot } from './algorithms/snapshot.js'
 
 export class Sequence<T> {
   public head: Strip<T> | undefined
-  public gate: Strip<T> | undefined
+  public projected: Strip<T> | undefined
   public tail: Strip<T> | undefined
   //
   public rightJumpToPatch?: Strip<T>
   public leftJumpToPatch?: Strip<T>
   //
   public structuralStripCount: number = 0
-  public visibleFrameCount: number = 0
-  public visibleIndex: number = 0
+  public projectedFrameCount: number = 0
+  public projectedIndex: number = 0
   //
   public readonly containmentTable: ContainmentTable<T> = new ContainmentTable()
   public readonly frontierTable: FrontierTable = new FrontierTable()
@@ -64,7 +64,7 @@ export class Sequence<T> {
   }
   //
   length(): number {
-    return this.visibleFrameCount
+    return this.projectedFrameCount
   }
   //
   merge(data: unknown): Result<T> | undefined {

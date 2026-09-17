@@ -4,8 +4,8 @@ import { Sequence } from '../class.js'
 
 export function findValue<T>(this: Sequence<T>, at: number): T | undefined {
   const targetFramePosition = findFrameByVisibleIndex.call(this, at)
-  const strip = this.gate!
-  const anchorFrame = findAnchorFrame(strip, targetFramePosition)
+  const projectedStrip = this.projected!
+  const projectedFrame = findAnchorFrame(projectedStrip, targetFramePosition)
 
-  return strip.footage?.[anchorFrame - 1]
+  return projectedStrip.footage?.[projectedFrame - 1]
 }
