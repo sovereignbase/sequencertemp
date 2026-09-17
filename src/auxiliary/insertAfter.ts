@@ -78,12 +78,12 @@ export function insertAfter<T>(
     if (largerCompetitor) largerCompetitor.rightCompetitor = incomingStrip
     else if (boundaryStrip) boundaryStrip.rightCompetitor = incomingStrip
 
-    if (smallerCompetitor) {
-      rightStep = smallerCompetitor
-      leftStep = smallerCompetitor.leftStep!
-    } else if (largerCompetitor) {
+    if (largerCompetitor) {
       leftStep = subtreeEnd(largerCompetitor)
       rightStep = leftStep.rightStep
+    } else if (smallerCompetitor) {
+      rightStep = smallerCompetitor
+      leftStep = smallerCompetitor.leftStep!
     }
 
     if (largerCompetitor && this.leftJumpToPatch && this.rightJumpToPatch) {

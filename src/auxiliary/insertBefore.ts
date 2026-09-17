@@ -111,9 +111,11 @@ export function insertBefore<T>(
     if (largerCompetitor) largerCompetitor.rightCompetitor = incomingStrip
     else competitorAnchor!.rightCompetitor = incomingStrip
 
-    if (smallerCompetitor) {
+    if (largerCompetitor) {
+      leftStep = subtreeEnd(largerCompetitor)
+      rightStep = leftStep.rightStep
+    } else if (smallerCompetitor) {
       if (
-        !largerCompetitor &&
         birth &&
         smallerCompetitor === containingStrip.rightFragment
       ) {
@@ -123,9 +125,6 @@ export function insertBefore<T>(
         rightStep = smallerCompetitor
         leftStep = smallerCompetitor.leftStep!
       }
-    } else if (largerCompetitor) {
-      leftStep = subtreeEnd(largerCompetitor)
-      rightStep = leftStep.rightStep
     }
   }
 

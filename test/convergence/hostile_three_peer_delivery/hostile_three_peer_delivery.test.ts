@@ -15,8 +15,8 @@ const operations = [
 ] as const
 
 const deliveryKeys = [
-  702303704, -1097475808, -180650997, 1330791140, -1039610715,
-  2111140307, 1841741144,
+  702303704, -1097475808, -180650997, 1330791140, -1039610715, 2111140307,
+  1841741144,
 ]
 
 const sessionOrders = [
@@ -93,9 +93,7 @@ describe('hostile three-peer delivery', () => {
               return
             }
 
-            mutations.push(
-              replica.insert(frames, indexSelector % (length + 1))
-            )
+            mutations.push(replica.insert(frames, indexSelector % (length + 1)))
           }
         )
 
@@ -115,7 +113,10 @@ describe('hostile three-peer delivery', () => {
         )
 
         expect(mixed.visibleFrameCount).toBe(chronological.visibleFrameCount)
-        expect(project(mixed)).toEqual(project(chronological))
+        expect(
+          project(mixed),
+          `increase ${increaseOrder.join(',')} decrease ${decreaseOrder.join(',')}`
+        ).toEqual(project(chronological))
       }
   })
 })
