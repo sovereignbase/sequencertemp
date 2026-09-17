@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Sequence } from '../../../src/class.js'
+import { Projection } from '../../../src/class.js'
 import type { Gossip, Snapshot } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
@@ -12,7 +12,7 @@ describe('concurrent root ordering', () => {
       [13, 'third'],
       [14, 'fourth'],
     ] as const) {
-      const state = new Sequence<string>(actor)
+      const state = new Projection<string>(actor)
       mutations.push(state.insert([value], 0))
     }
 

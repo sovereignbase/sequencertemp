@@ -25,7 +25,7 @@
     "outputPath": "benchmark/results/lifecycle.json"
   },
   "methodology": {
-    "implementation": "TypeScript Sequence class public API",
+    "implementation": "TypeScript Projection class public API",
     "timer": "process.hrtime.bigint",
     "stripCount": "Scale is the number of visible logical Strips maintained by the benchmark model. Every mutation targets a complete Strip boundary; retained Mask structures are reported separately.",
     "ingest": "The workload has two peers editing the same document. Every local Gossip is applied by the receiver and every acknowledgement returned by apply is gossiped back to the sender. randomIngest times only the measured peer applying the remote replacement Gossip.",

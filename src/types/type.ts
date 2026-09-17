@@ -128,7 +128,7 @@ export type Acknowledgement = ReadonlyArray<number>
 export type Gossip<T> = ReadonlyArray<Acknowledgement | Insertion<T>>
 
 /**
- * Serializable state required to reconstruct a Sequence.
+ * Serializable state required to reconstruct a Projection.
  */
 export type Snapshot<T> = Readonly<
   [
@@ -154,7 +154,7 @@ export type Splice<T> = Readonly<
 export type Change<T> = ReadonlyArray<Splice<T>>
 
 /**
- * Result of a mutating Sequence operation.
+ * Result of a mutating Projection operation.
  *
  * `change` describes the visible Projection mutations.
  *

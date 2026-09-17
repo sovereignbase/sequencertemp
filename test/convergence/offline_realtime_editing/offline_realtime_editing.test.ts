@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Sequence } from '../../../src/class.js'
+import { Projection } from '../../../src/class.js'
 import type { Gossip, Snapshot } from '../../../src/types/type.js'
 import {
   deliver,
@@ -31,25 +31,25 @@ const expected_projection = [
 ]
 
 const build_insert_scenario = (): SixEditorMutations => {
-  const base_state = new Sequence<string>(1)
+  const base_state = new Projection<string>(1)
   accepted(base_state.insert(['document'], 0))
   const base = base_state.snapshot()
 
-  const online_1 = new Sequence<string>(90, base)
+  const online_1 = new Projection<string>(90, base)
   const online_root = accepted(
     online_1.insert(['online-1'], online_1.projectionFrameCount)
   )
-  const online_2 = new Sequence<string>(91, online_1.snapshot())
+  const online_2 = new Projection<string>(91, online_1.snapshot())
   const online_middle = accepted(
     online_2.insert(['online-2'], online_2.projectionFrameCount)
   )
-  const online_3 = new Sequence<string>(92, online_2.snapshot())
+  const online_3 = new Projection<string>(92, online_2.snapshot())
   const online_tail = accepted(
     online_3.insert(['online-3'], online_3.projectionFrameCount)
   )
 
   const offline = ([80, 70, 60] as const).map((actor, branch_index) => {
-    const editor = new Sequence<string>(actor, base)
+    const editor = new Projection<string>(actor, base)
     const branch = branch_index + 1
     const root = accepted(
       editor.insert([`offline-${branch}-1`], editor.projectionFrameCount)
@@ -69,18 +69,18 @@ const build_insert_scenario = (): SixEditorMutations => {
 }
 
 const build_lifecycle_scenario = (): SixEditorMutations => {
-  const base_state = new Sequence<string>(2)
+  const base_state = new Projection<string>(2)
   accepted(base_state.insert(['document'], 0))
   const base = base_state.snapshot()
 
-  const online_1 = new Sequence<string>(90, base)
+  const online_1 = new Projection<string>(90, base)
   const online: Array<Gossip<string>> = [
     accepted(online_1.insert(['online-1'], online_1.projectionFrameCount)),
     accepted(online_1.insert(['online-trash'], online_1.projectionFrameCount)),
   ]
   online.push(accepted(online_1.remove(online_1.projectionFrameCount - 1)))
 
-  const online_2 = new Sequence<string>(91, online_1.snapshot())
+  const online_2 = new Projection<string>(91, online_1.snapshot())
   online.push(
     accepted(online_2.insert(['online-old'], online_2.projectionFrameCount))
   )
@@ -88,12 +88,12 @@ const build_lifecycle_scenario = (): SixEditorMutations => {
     accepted(online_2.replace(['online-2'], online_2.projectionFrameCount - 1))
   )
 
-  const online_3 = new Sequence<string>(92, online_2.snapshot())
+  const online_3 = new Projection<string>(92, online_2.snapshot())
   online.push(
     accepted(online_3.insert(['online-3'], online_3.projectionFrameCount))
   )
 
-  const offline_1 = new Sequence<string>(80, base)
+  const offline_1 = new Projection<string>(80, base)
   const branch_1 = [
     accepted(offline_1.insert(['offline-1-1'], offline_1.projectionFrameCount)),
     accepted(
@@ -103,7 +103,7 @@ const build_lifecycle_scenario = (): SixEditorMutations => {
     accepted(offline_1.insert(['offline-1-2'], offline_1.projectionFrameCount)),
   ]
 
-  const offline_2 = new Sequence<string>(70, base)
+  const offline_2 = new Projection<string>(70, base)
   const branch_2 = [
     accepted(offline_2.insert(['offline-2-1'], offline_2.projectionFrameCount)),
     accepted(offline_2.insert(['offline-old'], offline_2.projectionFrameCount)),
@@ -112,7 +112,7 @@ const build_lifecycle_scenario = (): SixEditorMutations => {
     ),
   ]
 
-  const offline_3 = new Sequence<string>(60, base)
+  const offline_3 = new Projection<string>(60, base)
   const branch_3 = [
     accepted(offline_3.insert(['offline-3-1'], offline_3.projectionFrameCount)),
     accepted(

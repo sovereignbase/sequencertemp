@@ -1,5 +1,5 @@
 import { serialize } from 'node:v8'
-import { Sequence } from '../../dist/class.js'
+import { Projection } from '../../dist/class.js'
 import type { Gossip, Result } from '../../dist/class.js'
 import {
   deriveSeed,
@@ -31,8 +31,8 @@ type Runtime = {
   name: ReplicaName
   actorId: number
   peerActorId: number
-  state: Sequence<number>
-  peer: Sequence<number>
+  state: Projection<number>
+  peer: Projection<number>
   strips: StripIndex
   random: Random
   nextStripId: number
@@ -42,8 +42,8 @@ type Runtime = {
 
 let resultSink: unknown
 
-const createReplica = (actorId: number, data?: unknown): Sequence<number> =>
-  new Sequence<number>(actorId, data)
+const createReplica = (actorId: number, data?: unknown): Projection<number> =>
+  new Projection<number>(actorId, data)
 
 const ratio = (bytes: number, units: number): number | null =>
   units === 0 ? null : bytes / units
@@ -81,7 +81,7 @@ const createReplacementStrip = (
 }
 
 const applyUpdate = (
-  receiver: Sequence<number>,
+  receiver: Projection<number>,
   update: Gossip<number>,
   operation: string
 ): Result<number> => {
@@ -91,8 +91,8 @@ const applyUpdate = (
 }
 
 const gossip = (
-  sender: Sequence<number>,
-  receiver: Sequence<number>,
+  sender: Projection<number>,
+  receiver: Projection<number>,
   update: Gossip<number>,
   operation: string
 ): void => {
@@ -436,7 +436,7 @@ const printCheckpoint = (checkpoint: CheckpointResult): void => {
 
 const makeRuntime = (
   name: ReplicaName,
-  state: Sequence<number>,
+  state: Projection<number>,
   workloadSeed: number,
   actorId: number,
   peerActorId: number
@@ -512,7 +512,7 @@ async function runOneLifecycle(
   }
 }
 
-/** Warms the package, Sequence methods, JIT paths, arrays, and timer code. */
+/** Warms the package, Projection methods, JIT paths, arrays, and timer code. */
 export async function warmUp(config: BenchmarkConfig): Promise<void> {
   if (config.warmupCycles === 0) return
   const state = createReplica(3)

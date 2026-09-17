@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Sequence } from '../../../src/class.js'
+import { Projection } from '../../../src/class.js'
 import type { Gossip, Snapshot } from '../../../src/types/type.js'
 
 const operations = [
@@ -18,7 +18,7 @@ const deliveryKeys = [
   -2147483620, -26,
 ]
 
-const project = (sequence: Sequence<string>): Array<string | undefined> =>
+const project = (sequence: Projection<string>): Array<string | undefined> =>
   Array.from({ length: sequence.projectionFrameCount }, (_, index) =>
     sequence.value(index)
   )
@@ -26,22 +26,22 @@ const project = (sequence: Sequence<string>): Array<string | undefined> =>
 const deliver = (
   retained: Snapshot<string>,
   gossip: Array<Gossip<string>>
-): Sequence<string> => {
-  const receiver = new Sequence<string>(10_000, retained)
+): Projection<string> => {
+  const receiver = new Projection<string>(10_000, retained)
   for (const update of gossip) receiver.apply(update)
   return receiver
 }
 
 describe('concurrent replacement delivery', () => {
   it('converges in chronological and deterministic mixed order', () => {
-    const base = new Sequence<string>(1)
+    const base = new Projection<string>(1)
     base.insert(
       Array.from({ length: 5 }, (_, index) => `base-${index}`),
       0
     )
     const retained = base.snapshot()
     const replicas = [0, 1, 2].map(
-      (index) => new Sequence<string>(100 + index, retained)
+      (index) => new Projection<string>(100 + index, retained)
     )
     const gossip: Array<Gossip<string>> = []
 

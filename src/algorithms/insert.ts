@@ -4,11 +4,11 @@ import { insertAfter } from '../auxiliary/insertAfter.js'
 import { insertBefore } from '../auxiliary/insertBefore.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
-import type { Sequence } from '../class.js'
+import type { Projection } from '../class.js'
 import type { Gossip, Strip } from '../types/type.js'
 
 export function insert<T>(
-  this: Sequence<T>,
+  this: Projection<T>,
   values: Array<T>,
   at: number
 ): Gossip<T> {

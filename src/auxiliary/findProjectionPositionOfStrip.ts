@@ -1,8 +1,8 @@
-import type { Sequence } from '../class.js'
+import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
 export function findProjectionPositionOfStrip<T>(
-  this: Sequence<T>,
+  this: Projection<T>,
   strip: NonNullable<Strip<T>>,
   gateDiff = 0
 ): number {

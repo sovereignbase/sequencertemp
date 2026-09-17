@@ -1,15 +1,15 @@
-import type { Sequence } from '../class.js'
+import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
 /**
- * Covers insertion of all Strips into an empty Sequence,
- * A.K.A. a Sequence with a structural Strip count of 0.
+ * Covers insertion of all Strips into an empty Projection,
+ * A.K.A. a Projection with a structural Strip count of 0.
  *
- * @param this Sequence receiving the Strip.
+ * @param this Projection receiving the Strip.
  * @param strip Strip to insert.
  */
 export function insertFirst<T>(
-  this: Sequence<T>,
+  this: Projection<T>,
   strip: Exclude<Strip<T>, undefined>
 ): void {
   strip.leftStep = undefined

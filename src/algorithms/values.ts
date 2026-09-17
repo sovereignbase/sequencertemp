@@ -1,10 +1,10 @@
 import { findFrameByProjectionPosition } from '../auxiliary/findFrameByProjectionPosition.js'
 import { findFrame } from '../auxiliary/findFrame.js'
-import type { Sequence } from '../class.js'
+import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
 export function values<T>(
-  this: Sequence<T>,
+  this: Projection<T>,
   startAt: number = 0,
   endWith: number = this.projectionFrameCount - 1
 ): Array<T | undefined> {

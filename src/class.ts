@@ -12,7 +12,7 @@ import { remove } from './algorithms/remove.js'
 import { replace } from './algorithms/replace.js'
 import { snapshot } from './algorithms/snapshot.js'
 
-export class Sequence<T> {
+export class Projection<T> {
   /** Strip containing the very left-most position of the projection (0) */
   public head: Strip<T> | undefined
   /** Strip containing the currently projected position of the projection */

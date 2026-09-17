@@ -1,7 +1,7 @@
-import type { Sequence } from '../class.js'
+import type { Projection } from '../class.js'
 
 export function patchJumps<T>(
-  this: Sequence<T>,
+  this: Projection<T>,
   _frameDiff: number,
   _stripDiff: number
 ): void {

@@ -1,13 +1,13 @@
 import { expect } from 'vitest'
-import { Sequence } from '../../src/class.js'
+import { Projection } from '../../src/class.js'
 import type { Gossip, Snapshot } from '../../src/types/type.js'
 
-export type Replica<T> = Sequence<T>
+export type Replica<T> = Projection<T>
 
 let actor = 10_000
 
-export function create_seed<T>(values: Array<T>): Sequence<T> {
-  const sequence = new Sequence<T>(actor++)
+export function create_seed<T>(values: Array<T>): Projection<T> {
+  const sequence = new Projection<T>(actor++)
   sequence.insert(values, 0)
   return sequence
 }
@@ -16,14 +16,14 @@ export function deliver<T>(
   base: Snapshot<T>,
   mutations: Array<Gossip<T>>,
   restartAt?: number
-): Sequence<T> {
-  let sequence = new Sequence<T>(actor++, base)
+): Projection<T> {
+  let sequence = new Projection<T>(actor++, base)
 
   for (let index = 0; index < mutations.length; ++index) {
     sequence.apply(mutations[index])
 
     if (index + 1 === restartAt) {
-      sequence = new Sequence<T>(actor++, sequence.snapshot())
+      sequence = new Projection<T>(actor++, sequence.snapshot())
       for (let replay = 0; replay <= index; ++replay)
         sequence.apply(mutations[replay])
     }
@@ -33,8 +33,8 @@ export function deliver<T>(
 }
 
 export function expect_converged<T>(
-  expected: Sequence<T>,
-  actual: Sequence<T>
+  expected: Projection<T>,
+  actual: Projection<T>
 ): void {
   expect(actual.projectionFrameCount).toBe(expected.projectionFrameCount)
 

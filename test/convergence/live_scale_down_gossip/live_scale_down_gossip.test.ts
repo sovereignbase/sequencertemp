@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Sequence } from '../../../src/class.js'
+import { Projection } from '../../../src/class.js'
 import type { Gossip } from '../../../src/types/type.js'
 import {
   deriveSeed,
@@ -9,8 +9,8 @@ import {
 } from '../../../benchmark/support.js'
 
 type Runtime = {
-  state: Sequence<number>
-  peer: Sequence<number>
+  state: Projection<number>
+  peer: Projection<number>
   strips: StripIndex
   random: Random
   nextId: number
@@ -33,8 +33,8 @@ const expectLivePeers = (runtime: Runtime): void => {
 
 const gossip = (
   runtime: Runtime,
-  author: Sequence<number>,
-  receiver: Sequence<number>,
+  author: Projection<number>,
+  receiver: Projection<number>,
   delta: Gossip<number>
 ): void => {
   const acknowledgements = receiver.apply(delta)?.[1]
@@ -106,8 +106,8 @@ const peerReplacement = (runtime: Runtime): void => {
 
 describe('live scale-down gossip', () => {
   it('keeps every projection position converged while shrinking', () => {
-    const state = new Sequence<number>(3)
-    const peer = new Sequence<number>(4)
+    const state = new Projection<number>(3)
+    const peer = new Projection<number>(4)
     state.decreaseClock[0] = 3952081492
     peer.decreaseClock[0] = 1468193293
 

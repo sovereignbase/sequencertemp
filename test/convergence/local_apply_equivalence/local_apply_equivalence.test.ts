@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { Sequence } from '../../../src/class.js'
+import { Projection } from '../../../src/class.js'
 import type { Gossip } from '../../../src/types/type.js'
 
 const gossip = <T>(
-  author: Sequence<T>,
-  receiver: Sequence<T>,
+  author: Projection<T>,
+  receiver: Projection<T>,
   delta: Gossip<T>
 ): void => {
   const acknowledgements = receiver.apply(delta)?.[1]
@@ -13,8 +13,8 @@ const gossip = <T>(
 
 describe('local and applied fragment coordinates', () => {
   it('places a boundary insertion identically at its author and receiver', () => {
-    const author = new Sequence<number>(100)
-    const receiver = new Sequence<number>(101)
+    const author = new Projection<number>(100)
+    const receiver = new Projection<number>(101)
 
     gossip(author, receiver, author.insert([1, 1], 0))
     gossip(author, receiver, author.replace([2, 2], 0, 1))

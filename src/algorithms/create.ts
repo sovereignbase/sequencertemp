@@ -2,10 +2,10 @@ import { getRandom53bitNumber } from '../auxiliary/getRandom53bitNumber.js'
 import { insertAfter } from '../auxiliary/insertAfter.js'
 import { insertBefore } from '../auxiliary/insertBefore.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
-import type { Sequence } from '../class.js'
+import type { Projection } from '../class.js'
 import type { Snapshot, Strip } from '../types/type.js'
 
-export function create<T>(this: Sequence<T>, trustedSnapshot?: unknown): void {
+export function create<T>(this: Projection<T>, trustedSnapshot?: unknown): void {
   const [frontiers, projection] = (trustedSnapshot as Snapshot<T>) ?? []
 
   if (Array.isArray(frontiers)) {

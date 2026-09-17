@@ -28,13 +28,13 @@ randomInsert
 randomIngest
 ```
 
-The benchmark calls `Sequence.insert`, `Sequence.remove`, and
-`Sequence.replace` directly. Their Gossip updates are immediately sent to the other
+The benchmark calls `Projection.insert`, `Projection.remove`, and
+`Projection.replace` directly. Their Gossip updates are immediately sent to the other
 peer with `apply`. If `apply` returns acknowledgements, those acknowledgements
 are immediately gossiped back to the sender with another `apply` call.
 
 For `randomIngest`, the peer performs an equal-length replacement outside the
-timed region. The measured Sequence then applies the remote Gossip inside the
+timed region. The measured Projection then applies the remote Gossip inside the
 timed region, after which any acknowledgements are sent back outside it. The
 final scale-down step has no `randomIngest` sample because no visible Strip
 remains to replace.
@@ -49,7 +49,7 @@ snapshot
 create(snapshot)
 ```
 
-Snapshot construction is measured with a temporary Sequence; the two active
+Snapshot construction is measured with a temporary Projection; the two active
 peers continue their uninterrupted gossip session across checkpoints. There is
 no separate recovery or acknowledgement phase: acknowledgements travel as
 part of the ordinary two-way gossip after every update.

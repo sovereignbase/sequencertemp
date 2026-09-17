@@ -1,10 +1,10 @@
 import { apply } from './apply.js'
 import { isSnapshot } from '../auxiliary/isSnapshot.js'
-import type { Sequence } from '../class.js'
+import type { Projection } from '../class.js'
 import type { Result } from '../types/type.js'
 
 export function merge<T>(
-  this: Sequence<T>,
+  this: Projection<T>,
   data: unknown
 ): Result<T> | undefined {
   if (!isSnapshot<T>(data)) return

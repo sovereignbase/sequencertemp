@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { Sequence } from '../../../src/class.js'
+import { Projection } from '../../../src/class.js'
 import type { Snapshot } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
 describe('historical boundary view', () => {
   it('orders same-actor insertions by the view in which they were authored', () => {
-    const source = new Sequence<string>(100)
+    const source = new Projection<string>(100)
     const mutations = [
       source.insert(['root'], 0),
       source.insert(['first'], 0),

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Sequence } from '../../../src/class.js'
+import { Projection } from '../../../src/class.js'
 import type { Gossip } from '../../../src/types/type.js'
 import {
   deriveSeed,
@@ -8,15 +8,15 @@ import {
   StripIndex,
 } from '../../../benchmark/support.js'
 
-const project = (sequence: Sequence<number>): Array<number | undefined> =>
+const project = (sequence: Projection<number>): Array<number | undefined> =>
   Array.from({ length: sequence.projectionFrameCount }, (_, index) =>
     sequence.value(index)
   )
 
 describe('benchmark local/remote replacement equivalence', () => {
   it('converges after every immediately delivered Gossip update', () => {
-    const state = new Sequence<number>(1)
-    const peer = new Sequence<number>(2)
+    const state = new Projection<number>(1)
+    const peer = new Projection<number>(2)
     state.increaseClock[0] = 1_001
     state.decreaseClock[0] = 2_001
     peer.increaseClock[0] = 1_002
@@ -32,8 +32,8 @@ describe('benchmark local/remote replacement equivalence', () => {
     let nextStripId = 1
 
     const gossip = (
-      author: Sequence<number>,
-      receiver: Sequence<number>,
+      author: Projection<number>,
+      receiver: Projection<number>,
       update: Gossip<number>
     ) => {
       const acknowledgements = receiver.apply(update)?.[1]

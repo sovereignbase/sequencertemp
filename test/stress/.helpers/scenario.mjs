@@ -1,6 +1,6 @@
 /** Executes one generated convergence scenario inside an interruptible Worker. */
 import { parentPort, workerData as scenario } from 'node:worker_threads'
-import { Sequence } from '../../../dist/class.js'
+import { Projection } from '../../../dist/class.js'
 
 let finished = false
 const finish = (ok, message) => {
@@ -19,11 +19,11 @@ const signature = (state) =>
 let target_actor = 10_000
 let operation_index = -1
 const deliver = (base, mutations, restart_index, label) => {
-  let state = new Sequence(target_actor++, base)
+  let state = new Projection(target_actor++, base)
   for (let index = 0; index < mutations.length; ++index) {
     state.apply(mutations[index])
     if (index + 1 === restart_index) {
-      state = new Sequence(target_actor++, state.snapshot())
+      state = new Projection(target_actor++, state.snapshot())
       for (let replay = 0; replay <= index; ++replay)
         state.apply(mutations[replay])
     }
@@ -32,7 +32,7 @@ const deliver = (base, mutations, restart_index, label) => {
 }
 
 try {
-  const base = new Sequence(1)
+  const base = new Projection(1)
   if (scenario.base_frame_count > 0) {
     base.insert(
       Array.from(
@@ -45,7 +45,7 @@ try {
   const retained = base.snapshot()
   const replicas = Array.from(
     { length: scenario.replica_count },
-    (_, index) => new Sequence(100 + index, retained)
+    (_, index) => new Projection(100 + index, retained)
   )
   const mutations = []
 

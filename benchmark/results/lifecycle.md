@@ -389,4 +389,4 @@ Checkpoint values are cumulative full-lifecycle averages at that point and are n
 - The workload has two peers editing the same document. Every local Gossip is applied by the receiver and every acknowledgement returned by apply is gossiped back to the sender. randomIngest times only the measured peer applying the remote replacement Gossip.
 - Per-Replica retained bytes after restart are estimated as four bytes per snapshot metadata word plus eight bytes per JavaScript Footage array slot. Process RSS is shared and reported at checkpoint scope.
 - Persistent representation size is the byte length of node:v8.serialize over the automatically collected public snapshot.
-- Every checkpoint measures temporary Sequence creation without replacing the two active gossip peers.
+- Every checkpoint measures temporary Projection creation without replacing the two active gossip peers.

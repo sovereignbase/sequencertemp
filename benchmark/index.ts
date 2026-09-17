@@ -133,7 +133,7 @@ export async function runBenchmark(
     },
     config,
     methodology: {
-      implementation: 'TypeScript Sequence class public API',
+      implementation: 'TypeScript Projection class public API',
       timer: 'process.hrtime.bigint',
       stripCount:
         'Scale is the number of visible logical Strips maintained by the benchmark model. Every mutation targets a complete Strip boundary; retained Mask structures are reported separately.',

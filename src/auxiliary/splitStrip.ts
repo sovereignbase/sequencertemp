@@ -1,4 +1,4 @@
-import type { Sequence } from '../class.js'
+import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
 /**
@@ -7,13 +7,13 @@ import type { Strip } from '../types/type.js'
  * The existing Strip becomes the left fragment while the newly created Strip
  * becomes its right fragment. The total Projection effect remains unchanged.
  *
- * @param this Sequence containing the Strip.
+ * @param this Projection containing the Strip.
  * @param strip Strip to split.
  * @param framePosition Number of Frames retained by the left fragment.
  * @returns Newly created right fragment.
  */
 export function splitStrip<T>(
-  this: Sequence<T>,
+  this: Projection<T>,
   strip: NonNullable<Strip<T>>,
   framePosition: number
 ): NonNullable<Strip<T>> {

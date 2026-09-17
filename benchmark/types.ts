@@ -151,7 +151,7 @@ export type BenchmarkReport = {
   }
   config: BenchmarkConfig
   methodology: {
-    implementation: 'TypeScript Sequence class public API'
+    implementation: 'TypeScript Projection class public API'
     timer: 'process.hrtime.bigint'
     stripCount: string
     ingest: string

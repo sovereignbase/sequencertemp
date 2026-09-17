@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { Sequence } from '../../../src/class.js'
+import { Projection } from '../../../src/class.js'
 import type { Gossip, Snapshot } from '../../../src/types/type.js'
 
-const project = <T>(sequence: Sequence<T>): Array<T | undefined> =>
+const project = <T>(sequence: Projection<T>): Array<T | undefined> =>
   Array.from({ length: sequence.projectionFrameCount }, (_, index) =>
     sequence.value(index)
   )
 
 const expectConverged = <T>(
-  expected: Sequence<T>,
-  replicas: Array<Sequence<T>>
+  expected: Projection<T>,
+  replicas: Array<Projection<T>>
 ): void => {
   for (const replica of replicas) {
     expect(replica.projectionFrameCount).toBe(expected.projectionFrameCount)
@@ -18,8 +18,8 @@ const expectConverged = <T>(
 }
 
 const gossip = <T>(
-  author: Sequence<T>,
-  receiver: Sequence<T>,
+  author: Projection<T>,
+  receiver: Projection<T>,
   update: Gossip<T>
 ): void => {
   const acknowledgements = receiver.apply(update)?.[1]
@@ -32,12 +32,12 @@ const gossip = <T>(
 
 describe('same actor in multiple replicas', () => {
   it('keeps per-instance Clocks independent across concurrent tabs', () => {
-    const seed = new Sequence<string>(1)
+    const seed = new Projection<string>(1)
     seed.insert(['a', 'b', 'c', 'd'], 0)
     const snapshot: Snapshot<string> = seed.snapshot()
 
-    const left = new Sequence<string>(42, snapshot)
-    const right = new Sequence<string>(42, snapshot)
+    const left = new Projection<string>(42, snapshot)
+    const right = new Projection<string>(42, snapshot)
 
     expect(left.increaseClock[0]).not.toBe(right.increaseClock[0])
     expect(left.decreaseClock[0]).not.toBe(right.decreaseClock[0])
@@ -60,7 +60,7 @@ describe('same actor in multiple replicas', () => {
     gossip(right, left, rightHead)
     gossip(left, right, leftTail)
 
-    const replay = new Sequence<string>(42, snapshot)
+    const replay = new Projection<string>(42, snapshot)
     for (const update of [
       rightHead,
       leftTail,

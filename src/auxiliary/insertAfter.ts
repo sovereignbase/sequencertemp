@@ -1,4 +1,4 @@
-import type { Sequence } from '../class.js'
+import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 import { splitStrip } from './splitStrip.js'
 import { subtreeEnd } from './subtreeEnd.js'
@@ -8,13 +8,13 @@ import { subtreeEnd } from './subtreeEnd.js'
  * A.K.A. not using a `zero-reservation`, such as tail inserts and
  * insertions within an existing Strip.
  *
- * @param this Sequence receiving the Strip.
+ * @param this Projection receiving the Strip.
  * @param incomingStrip Strip to insert.
  * @param containingStrip Strip containing the target Frame position.
  * @param targetFramePosition Target Frame position within the containing Strip.
  */
 export function insertAfter<T>(
-  this: Sequence<T>,
+  this: Projection<T>,
   incomingStrip: NonNullable<Strip<T>>,
   containingStrip: NonNullable<Strip<T>>,
   targetFramePosition: number

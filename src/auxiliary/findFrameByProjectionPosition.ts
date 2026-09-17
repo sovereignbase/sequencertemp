@@ -1,8 +1,8 @@
-import type { Sequence } from '../class.js'
+import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
 export function findFrameByProjectionPosition<T>(
-  this: Sequence<T>,
+  this: Projection<T>,
   index: number
 ): number {
   let cursorStrip: NonNullable<Strip<T>> = this.gate!

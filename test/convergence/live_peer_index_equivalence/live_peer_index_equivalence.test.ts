@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { Sequence } from '../../../src/class.js'
+import { Projection } from '../../../src/class.js'
 import type { Gossip } from '../../../src/types/type.js'
 
 const expect_same_projection = <T>(
-  left: Sequence<T>,
-  right: Sequence<T>
+  left: Projection<T>,
+  right: Projection<T>
 ): void => {
   expect(right.projectionFrameCount).toBe(left.projectionFrameCount)
 
@@ -13,8 +13,8 @@ const expect_same_projection = <T>(
 }
 
 const gossip = <T>(
-  author: Sequence<T>,
-  receiver: Sequence<T>,
+  author: Projection<T>,
+  receiver: Projection<T>,
   delta: Gossip<T>
 ): void => {
   const acknowledgements = receiver.apply(delta)?.[1]
@@ -24,8 +24,8 @@ const gossip = <T>(
 
 describe('live peer projection-position equivalence through signed jumps', () => {
   it('returns the same Footage from every projection position', () => {
-    const state = new Sequence<number>(1)
-    const peer = new Sequence<number>(2)
+    const state = new Projection<number>(1)
+    const peer = new Projection<number>(2)
 
     gossip(state, peer, state.insert([1, 1], 0))
     gossip(state, peer, state.replace([2, 2], 0, 1))

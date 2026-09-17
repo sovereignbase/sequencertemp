@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { Sequence } from '../../../src/class.js'
+import { Projection } from '../../../src/class.js'
 import type { Gossip } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
 describe('overlapping mask gate', () => {
   it('keeps a head zero-reservation gate stable across signed mask debt', () => {
-    const seed = new Sequence<string>(1)
+    const seed = new Projection<string>(1)
     seed.insert(['base-0', 'base-1'], 0)
     const snapshot = seed.snapshot()
     const replicas = [0, 1, 2].map(
-      (index) => new Sequence<string>(100 + index, snapshot)
+      (index) => new Projection<string>(100 + index, snapshot)
     )
     const mutations: Array<Gossip<string>> = [
       replicas[2].remove(0, 1),

@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { Sequence } from '../../../src/class.js'
+import { Projection } from '../../../src/class.js'
 import type { Gossip } from '../../../src/types/type.js'
 
 const frames = (value: number, length: number): Array<number> =>
   new Array<number>(length).fill(value)
 
 const expectLivePeers = (
-  left: Sequence<number>,
-  right: Sequence<number>
+  left: Projection<number>,
+  right: Projection<number>
 ): void => {
   expect(right.projectionFrameCount).toBe(left.projectionFrameCount)
   expect(
@@ -22,8 +22,8 @@ const expectLivePeers = (
 }
 
 const gossip = (
-  author: Sequence<number>,
-  receiver: Sequence<number>,
+  author: Projection<number>,
+  receiver: Projection<number>,
   delta: Gossip<number>
 ): void => {
   const acknowledgements = receiver.apply(delta)?.[1]
@@ -33,8 +33,8 @@ const gossip = (
 
 describe('live replace then remove', () => {
   it('keeps the local and remotely applied structures equivalent', () => {
-    const primary = new Sequence<number>(3)
-    const peer = new Sequence<number>(4)
+    const primary = new Projection<number>(3)
+    const peer = new Projection<number>(4)
     primary.decreaseClock[0] = 531265640
     peer.decreaseClock[0] = 420094554
 

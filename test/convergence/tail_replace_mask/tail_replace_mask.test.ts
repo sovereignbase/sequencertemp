@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { Sequence } from '../../../src/class.js'
+import { Projection } from '../../../src/class.js'
 import type { Gossip, Snapshot } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
 describe('tail replace Mask', () => {
   it('keeps the replacement paired with its Mask through restart', () => {
-    const primary = new Sequence<string>(100)
-    const concurrent = new Sequence<string>(101)
+    const primary = new Projection<string>(100)
+    const concurrent = new Projection<string>(101)
     const mutations: Array<Gossip<string>> = [
       primary.insert(['root'], 0),
       primary.insert(['branch-0', 'branch-1', 'branch-2', 'branch-3'], 0),

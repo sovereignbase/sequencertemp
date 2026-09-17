@@ -223,7 +223,7 @@ const makeMarkdown = (report: BenchmarkReport): string => {
     '- ' + report.methodology.ingest,
     '- ' + report.methodology.memory,
     '- ' + report.methodology.storage,
-    '- Every checkpoint measures temporary Sequence creation without replacing the two active gossip peers.',
+    '- Every checkpoint measures temporary Projection creation without replacing the two active gossip peers.',
     ''
   )
   return lines.join('\n')

@@ -4,7 +4,7 @@ import { insertBefore } from '../auxiliary/insertBefore.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
 import { isAcknowledgement, isInsertion } from '../auxiliary/isGossip.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
-import type { Sequence } from '../class.js'
+import type { Projection } from '../class.js'
 import type {
   Acknowledgement,
   Change,
@@ -14,7 +14,7 @@ import type {
 } from '../types/type.js'
 
 export function apply<T>(
-  this: Sequence<T>,
+  this: Projection<T>,
   data: unknown
 ): Result<T> | undefined {
   if (!Array.isArray(data)) return

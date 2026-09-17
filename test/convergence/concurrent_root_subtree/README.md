@@ -1,6 +1,6 @@
 # Concurrent root subtree
 
-Two replicas independently build head-insertion chains from an empty Sequence:
+Two replicas independently build head-insertion chains from an empty Projection:
 
 ```text
 Actor 100: primary-5 -> primary-3 -> primary-2 -> primary-root

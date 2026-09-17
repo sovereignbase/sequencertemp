@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Sequence } from '../../../src/class.js'
+import { Projection } from '../../../src/class.js'
 import type { Gossip, Snapshot } from '../../../src/types/type.js'
 
 const operations = [
@@ -28,7 +28,7 @@ const sessionOrders = [
   [2, 1, 0],
 ] as const
 
-const project = (sequence: Sequence<string>): Array<string | undefined> =>
+const project = (sequence: Projection<string>): Array<string | undefined> =>
   Array.from({ length: sequence.projectionFrameCount }, (_, index) =>
     sequence.value(index)
   )
@@ -36,21 +36,21 @@ const project = (sequence: Sequence<string>): Array<string | undefined> =>
 const deliver = (
   retained: Snapshot<string>,
   mutations: Array<Gossip<string>>
-): Sequence<string> => {
-  const receiver = new Sequence<string>(10_000, retained)
+): Projection<string> => {
+  const receiver = new Projection<string>(10_000, retained)
   for (const mutation of mutations) receiver.apply(mutation)
   return receiver
 }
 
 describe('hostile three-peer delivery', () => {
   it('converges from an empty snapshot in chronological and mixed order', () => {
-    const retained = new Sequence<string>(1).snapshot()
+    const retained = new Projection<string>(1).snapshot()
     for (const increaseOrder of sessionOrders)
       for (const decreaseOrder of sessionOrders) {
         const replicas = [
-          new Sequence<string>(100, retained),
-          new Sequence<string>(101, retained),
-          new Sequence<string>(102, retained),
+          new Projection<string>(100, retained),
+          new Projection<string>(101, retained),
+          new Projection<string>(102, retained),
         ]
         replicas.forEach((replica, index) => {
           replica.increaseClock[0] = 1_000 + increaseOrder[index]

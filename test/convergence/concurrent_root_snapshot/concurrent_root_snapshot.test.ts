@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { Sequence } from '../../../src/class.js'
+import { Projection } from '../../../src/class.js'
 import type { Gossip, Snapshot } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
 describe('concurrent root snapshot', () => {
   it('recreates three concurrent root subtrees in deterministic order', () => {
-    const primary = new Sequence<string>(100)
-    const second = new Sequence<string>(101)
-    const third = new Sequence<string>(102)
+    const primary = new Projection<string>(100)
+    const second = new Projection<string>(101)
+    const third = new Projection<string>(102)
     const mutations: Array<Gossip<string>> = [
       primary.insert(['primary-root'], 0),
       primary.insert(['primary-1'], 0),
@@ -18,7 +18,7 @@ describe('concurrent root snapshot', () => {
     ]
     const empty: Snapshot<string> = [[], []]
     const ordered = deliver(empty, mutations)
-    const recreated = new Sequence<string>(103, ordered.snapshot())
+    const recreated = new Projection<string>(103, ordered.snapshot())
 
     expect_converged(ordered, recreated)
     expect(new Set(ordered.values())).toEqual(

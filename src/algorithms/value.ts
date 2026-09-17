@@ -1,8 +1,8 @@
 import { findFrameByProjectionPosition } from '../auxiliary/findFrameByProjectionPosition.js'
 import { findFrame } from '../auxiliary/findFrame.js'
-import { Sequence } from '../class.js'
+import { Projection } from '../class.js'
 
-export function value<T>(this: Sequence<T>, at: number): T | undefined {
+export function value<T>(this: Projection<T>, at: number): T | undefined {
   const framePositionRelativeToItsStrip = findFrameByProjectionPosition.call(
     this,
     at
