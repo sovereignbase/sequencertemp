@@ -2,8 +2,8 @@ import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js
 import { findAnchorFrame } from '../auxiliary/findAnchorFrame.js'
 import { Sequence } from '../class.js'
 
-export function find<T>(this: Sequence<T>, index: number): T | undefined {
-  const targetFramePosition = findFrameByVisibleIndex.call(this, index)
+export function findValue<T>(this: Sequence<T>, at: number): T | undefined {
+  const targetFramePosition = findFrameByVisibleIndex.call(this, at)
   const strip = this.gate!
   const anchorFrame = findAnchorFrame(strip, targetFramePosition)
 

@@ -3,18 +3,18 @@ import { findAnchorFrame } from '../auxiliary/findAnchorFrame.js'
 import type { Sequence } from '../class.js'
 import type { Strip } from '../types/type.js'
 
-export function values<T>(
+export function findValues<T>(
   this: Sequence<T>,
   startAt: number = 0,
-  endAt: number = this.visibleFrameCount
+  endWith: number = this.visibleFrameCount - 1
 ): Array<T | undefined> {
-  const values: Array<T | undefined> = []
+  const values: Array<T> = []
 
-  if (startAt >= endAt || this.visibleFrameCount === 0) return values
+  if (startAt > endWith || this.visibleFrameCount === 0) return values
 
   let framePosition = findFrameByVisibleIndex.call(this, startAt)
   let strip: Strip<T> = this.gate
-  let remaining = endAt - startAt
+  let remaining = endWith - startAt + 1
 
   while (strip && remaining > 0) {
     const stripDiff = strip.fragmentDiff ?? strip.insertionDiff
@@ -27,8 +27,8 @@ export function values<T>(
         Math.min(remaining, stripDiff - framePosition + 1)
       )
 
-      for (let i = 0; i < length; ++i)
-        values.push(strip.footage?.[anchorFrame + i - 1])
+      for (let i = -1; i < length - 1; ++i)
+        void values.push(strip.footage![anchorFrame + i]!)
 
       remaining -= length
     }

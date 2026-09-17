@@ -1,15 +1,15 @@
-import { create } from './algorithms/create.js'
-import { Gossip, Snapshot, Result, Strip } from './types/type.js'
-import { FrontierTable } from './components/FrontierTable/class.js'
+import type { Gossip, Snapshot, Result, Strip } from './types/type.js'
 import { ContainmentTable } from './components/ContainmentTable/class.js'
-import { find } from './algorithms/find.js'
-import { insert } from './algorithms/insert.js'
-import { apply } from './algorithms/apply.js'
+import { FrontierTable } from './components/FrontierTable/class.js'
 import { PendingTable } from './components/PendingTable/class.js'
+import { apply } from './algorithms/apply.js'
+import { create } from './algorithms/create.js'
+import { findValue } from './algorithms/findValue.js'
+import { findValues } from './algorithms/findValues.js'
+import { insert } from './algorithms/insert.js'
 import { merge } from './algorithms/merge.js'
 import { remove } from './algorithms/remove.js'
 import { replace } from './algorithms/replace.js'
-import { values } from './algorithms/values.js'
 import { snapshot } from './algorithms/snapshot.js'
 
 export class Sequence<T> {
@@ -41,9 +41,22 @@ export class Sequence<T> {
   ) {
     void create.call(this, trustedSnapshot)
   }
-  //
-  find(index: number): T | undefined {
-    return find.call(this, index) as T | undefined
+  /**
+   *
+   * @param at Slot number where the value you want to find is at.
+   * @returns
+   */
+  findValue(at: number): T | undefined {
+    return findValue.call(this, at) as T | undefined
+  }
+  /**
+   *
+   * @param startAt First slot you want included in the result or first slot.
+   * @param endWith Last slot you want included in the result or last slot.
+   * @returns
+   */
+  findValues(startAt?: number, endWith?: number): Array<T> {
+    return findValues.call(this, startAt, endWith) as Array<T>
   }
   //
   insert(values: Array<T>, at: number): Gossip<T> {
@@ -70,9 +83,6 @@ export class Sequence<T> {
     return snapshot.call(this) as Snapshot<T>
   }
   //
-  values(startAt?: number, endAt?: number): Array<T> {
-    return values.call(this, startAt, endAt) as Array<T>
-  }
 }
 
 export type * from './types/type.js'
