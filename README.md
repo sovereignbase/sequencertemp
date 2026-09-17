@@ -1,4 +1,7 @@
-# Sequencer
+# Sequencertemp
+
+> [!NOTE]
+> This was a temporary repository used to establish and refine clear invariants for [Sequencer](https://github.com/sovereignbase/sequencer) and is now archived.
 
 Understanding how it works is pretty easy. There are a few key concepts.
 
@@ -19,7 +22,6 @@ The `Projection` is the applied presentation of a Sequence.
 In other words a Sequence is used to derive a Projection.
 
 Users of Sequencer work entirely in Projection positions. The Sequencer translates those positions into commutative descriptions of points in Sequence.
-Jep. Oikea lähtökohta on tämä:
 
 ## Insertion
 
