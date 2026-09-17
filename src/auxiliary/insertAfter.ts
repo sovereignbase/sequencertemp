@@ -115,6 +115,6 @@ export function insertAfter<T>(
 
   ++this.structuralStripCount
 
-  this.visibleFrameCount +=
+  this.projectionFrameCount +=
     incomingStrip.fragmentDiff ?? incomingStrip.insertionDiff
 }

@@ -115,10 +115,7 @@ export function insertBefore<T>(
       leftStep = subtreeEnd(largerCompetitor)
       rightStep = leftStep.rightStep
     } else if (smallerCompetitor) {
-      if (
-        birth &&
-        smallerCompetitor === containingStrip.rightFragment
-      ) {
+      if (birth && smallerCompetitor === containingStrip.rightFragment) {
         leftStep = containingStrip
         rightStep = containingStrip.rightStep
       } else {
@@ -159,6 +156,6 @@ export function insertBefore<T>(
 
   ++this.structuralStripCount
 
-  this.visibleFrameCount +=
+  this.projectionFrameCount +=
     incomingStrip.fragmentDiff ?? incomingStrip.insertionDiff
 }

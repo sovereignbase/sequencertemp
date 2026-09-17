@@ -1,6 +1,6 @@
 import type { Strip } from '../types/type.js'
 
-export function findAnchorFrame<T>(
+export function findFrame<T>(
   strip: NonNullable<Strip<T>>,
   targetFramePosition: number
 ): number {

@@ -1,5 +1,5 @@
-import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js'
-import { findAnchorFrame } from '../auxiliary/findAnchorFrame.js'
+import { findFrameByProjectionPosition } from '../auxiliary/findFrameByProjectionPosition.js'
+import { findFrame } from '../auxiliary/findFrame.js'
 import { insertAfter } from '../auxiliary/insertAfter.js'
 import { insertBefore } from '../auxiliary/insertBefore.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
@@ -10,17 +10,20 @@ export function replace<T>(
   this: Sequence<T>,
   withValues: Array<T>,
   startAt: number = 0,
-  endAt: number = this.visibleFrameCount
+  endWith: number = this.projectionFrameCount - 1
 ): Gossip<T> {
   const insertions = []
 
-  let remaining = endAt - startAt
+  let remaining = endWith - startAt + 1
   let replacementAnchor: Strip<T>
   let replacementLeftJumpToPatch: Strip<T>
   let replacementRightJumpToPatch: Strip<T>
 
   while (remaining > 0) {
-    const targetFramePosition = findFrameByVisibleIndex.call(this, startAt)
+    const targetFramePosition = findFrameByProjectionPosition.call(
+      this,
+      startAt
+    )
     const containingStrip = this.gate!
 
     const containingStripLength = Math.abs(
@@ -35,7 +38,7 @@ export function replace<T>(
     const decreasingStrip: NonNullable<Strip<T>> = {
       anchorSession: containingStrip.insertionSession,
       anchorTime: containingStrip.insertionTime,
-      anchorFrame: findAnchorFrame(containingStrip, targetFramePosition),
+      anchorFrame: findFrame(containingStrip, targetFramePosition),
       insertionSession: this.decreaseClock[0],
       insertionTime: this.decreaseClock[1],
       insertionDiff: -decreasingLength,
@@ -67,7 +70,7 @@ export function replace<T>(
     if (targetFramePosition === 1) {
       if ((this.gate!.fragmentDiff ?? this.gate!.insertionDiff) === 0)
         this.gate = this.gate!.rightFragment
-      this.visibleIndex += decreasingStrip.insertionDiff
+      this.projectedPosition += decreasingStrip.insertionDiff
     }
 
     this.containmentTable.set(decreasingStrip)
@@ -94,20 +97,20 @@ export function replace<T>(
     if (replacementAnchor) {
       containingStrip = replacementAnchor
       targetFramePosition = 1
-    } else if (startAt === this.visibleFrameCount) {
+    } else if (startAt === this.projectionFrameCount) {
       containingStrip = this.tail!
       targetFramePosition = 1
       this.leftJumpToPatch = undefined
       this.rightJumpToPatch = undefined
     } else {
-      targetFramePosition = findFrameByVisibleIndex.call(this, startAt)
+      targetFramePosition = findFrameByProjectionPosition.call(this, startAt)
       containingStrip = this.gate!
     }
 
     const increasingStrip: NonNullable<Strip<T>> = {
       anchorSession: containingStrip.insertionSession,
       anchorTime: containingStrip.insertionTime,
-      anchorFrame: findAnchorFrame(containingStrip, targetFramePosition),
+      anchorFrame: findFrame(containingStrip, targetFramePosition),
       insertionSession: this.increaseClock[0],
       insertionTime: this.increaseClock[1],
       insertionDiff: withValues.length,
@@ -138,11 +141,11 @@ export function replace<T>(
     )
 
     if (replacementAnchor && this.gate !== containingStrip)
-      this.visibleIndex += increasingStrip.insertionDiff
+      this.projectedPosition += increasingStrip.insertionDiff
 
     this.containmentTable.set(increasingStrip)
     this.gate = increasingStrip
-    this.visibleIndex = startAt
+    this.projectedPosition = startAt
     this.increaseClock[1] += withValues.length + 1
 
     insertions.push([

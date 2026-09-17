@@ -1,7 +1,7 @@
 import type { Sequence } from '../class.js'
 import type { Strip } from '../types/type.js'
 
-export function findVisibleIndexOfStrip<T>(
+export function findProjectionPositionOfStrip<T>(
   this: Sequence<T>,
   strip: NonNullable<Strip<T>>,
   gateDiff = 0
@@ -24,7 +24,7 @@ export function findVisibleIndexOfStrip<T>(
   let rightJumpable = true
 
   let knownIndex =
-    gateDiff === 0 && strip === this.gate ? this.visibleIndex : undefined
+    gateDiff === 0 && strip === this.gate ? this.projectedPosition : undefined
 
   const optimalJumpSpacing = Math.round(Math.sqrt(this.structuralStripCount))
 
@@ -46,7 +46,7 @@ export function findVisibleIndexOfStrip<T>(
       ++leftStripDistance
 
       if (gateDiff === 0 && leftCursor === this.gate) {
-        knownIndex = this.visibleIndex + leftDistance
+        knownIndex = this.projectedPosition + leftDistance
       }
 
       if (leftStripDistance === optimalJumpSpacing) {
@@ -69,7 +69,7 @@ export function findVisibleIndexOfStrip<T>(
       ++rightStripDistance
 
       if (gateDiff === 0 && rightCursor === this.gate) {
-        knownIndex = this.visibleIndex - rightDistance
+        knownIndex = this.projectedPosition - rightDistance
       }
 
       if (rightStripDistance === optimalJumpSpacing) {
@@ -165,11 +165,11 @@ export function findVisibleIndexOfStrip<T>(
       if (
         strip !== this.gate &&
         this.gate !== this.head &&
-        (leftDistance < this.visibleIndex ||
-          (leftDistance === this.visibleIndex &&
+        (leftDistance < this.projectedPosition ||
+          (leftDistance === this.projectedPosition &&
             (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) > 0))
       )
-        this.visibleIndex += gateDiff
+        this.projectedPosition += gateDiff
 
       return leftDistance
     }
@@ -177,16 +177,16 @@ export function findVisibleIndexOfStrip<T>(
     // CHECK IF RIGHT IS AT TAIL
     if (rightCursor === this.tail) {
       const rightDiff = rightCursor.fragmentDiff ?? rightCursor.insertionDiff
-      const index = this.visibleFrameCount - rightDiff - rightDistance
+      const index = this.projectionFrameCount - rightDiff - rightDistance
 
       if (
         strip !== this.gate &&
         this.gate !== this.head &&
-        (index < this.visibleIndex ||
-          (index === this.visibleIndex &&
+        (index < this.projectedPosition ||
+          (index === this.projectedPosition &&
             (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) > 0))
       )
-        this.visibleIndex += gateDiff
+        this.projectedPosition += gateDiff
 
       return index
     }

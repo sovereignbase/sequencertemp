@@ -1,18 +1,18 @@
-import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js'
-import { findAnchorFrame } from '../auxiliary/findAnchorFrame.js'
+import { findFrameByProjectionPosition } from '../auxiliary/findFrameByProjectionPosition.js'
+import { findFrame } from '../auxiliary/findFrame.js'
 import type { Sequence } from '../class.js'
 import type { Strip } from '../types/type.js'
 
 export function findValues<T>(
   this: Sequence<T>,
   startAt: number = 0,
-  endWith: number = this.visibleFrameCount - 1
+  endWith: number = this.projectionFrameCount - 1
 ): Array<T | undefined> {
   const values: Array<T> = []
 
-  if (startAt > endWith || this.visibleFrameCount === 0) return values
+  if (startAt > endWith || this.projectionFrameCount === 0) return values
 
-  let framePosition = findFrameByVisibleIndex.call(this, startAt)
+  let framePosition = findFrameByProjectionPosition.call(this, startAt)
   let strip: Strip<T> = this.gate
   let remaining = endWith - startAt + 1
 
@@ -20,7 +20,7 @@ export function findValues<T>(
     const stripDiff = strip.fragmentDiff ?? strip.insertionDiff
 
     if (stripDiff > 0) {
-      const anchorFrame = findAnchorFrame(strip, framePosition)
+      const anchorFrame = findFrame(strip, framePosition)
 
       const length = Math.max(
         0,

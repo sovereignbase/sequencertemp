@@ -1,5 +1,5 @@
-import { findFrameByVisibleIndex } from '../auxiliary/findFrameByVisibleIndex.js'
-import { findAnchorFrame } from '../auxiliary/findAnchorFrame.js'
+import { findFrameByProjectionPosition } from '../auxiliary/findFrameByProjectionPosition.js'
+import { findFrame } from '../auxiliary/findFrame.js'
 import { insertAfter } from '../auxiliary/insertAfter.js'
 import { insertBefore } from '../auxiliary/insertBefore.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
@@ -43,7 +43,7 @@ export function insert<T>(
   let targetFramePosition: number
   let containingStrip: NonNullable<Strip<T>>
 
-  if (at === this.visibleFrameCount) {
+  if (at === this.projectionFrameCount) {
     containingStrip = this.tail!
     targetFramePosition =
       Math.abs(containingStrip.fragmentDiff ?? containingStrip.insertionDiff) +
@@ -51,14 +51,14 @@ export function insert<T>(
     this.leftJumpToPatch = undefined
     this.rightJumpToPatch = undefined
   } else {
-    targetFramePosition = findFrameByVisibleIndex.call(this, at)
+    targetFramePosition = findFrameByProjectionPosition.call(this, at)
     containingStrip = this.gate!
   }
 
   const increasingStrip: NonNullable<Strip<T>> = {
     anchorSession: containingStrip.insertionSession,
     anchorTime: containingStrip.insertionTime,
-    anchorFrame: findAnchorFrame(containingStrip, targetFramePosition),
+    anchorFrame: findFrame(containingStrip, targetFramePosition),
     insertionSession: this.increaseClock[0],
     insertionTime: this.increaseClock[1],
     insertionDiff: values.length,
@@ -85,7 +85,7 @@ export function insert<T>(
 
   this.containmentTable.set(increasingStrip)
   this.gate = increasingStrip
-  this.visibleIndex = at
+  this.projectedPosition = at
   this.increaseClock[1] += values.length + 1
 
   return [

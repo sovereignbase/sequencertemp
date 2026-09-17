@@ -1,22 +1,22 @@
 import type { Sequence } from '../class.js'
 import type { Strip } from '../types/type.js'
 
-export function findFrameByVisibleIndex<T>(
+export function findFrameByProjectionPosition<T>(
   this: Sequence<T>,
   index: number
 ): number {
   let cursorStrip: NonNullable<Strip<T>> = this.gate!
-  let cursorIndex: number = this.visibleIndex
+  let cursorIndex: number = this.projectedPosition
 
   let leftJumpToPatch = this.leftJumpToPatch
   let rightJumpToPatch = this.rightJumpToPatch
 
   const tailDiff = this.tail!.fragmentDiff ?? this.tail!.insertionDiff
-  const tailIndex = this.visibleFrameCount - tailDiff
+  const tailIndex = this.projectionFrameCount - tailDiff
   const tailPredecessorDiff =
     this.tail!.leftStep?.fragmentDiff ?? this.tail!.leftStep?.insertionDiff ?? 0
 
-  const distanceToTravel = Math.abs(this.visibleIndex - index)
+  const distanceToTravel = Math.abs(this.projectedPosition - index)
   const tailDistance = Math.abs(tailIndex - index)
 
   if (
@@ -49,7 +49,7 @@ export function findFrameByVisibleIndex<T>(
       }
 
       this.gate = cursorStrip
-      this.visibleIndex = cursorIndex
+      this.projectedPosition = cursorIndex
 
       this.leftJumpToPatch = leftJumpToPatch
       this.rightJumpToPatch = rightJumpToPatch

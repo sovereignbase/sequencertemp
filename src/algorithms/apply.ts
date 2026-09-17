@@ -1,4 +1,4 @@
-import { findVisibleIndexOfStrip } from '../auxiliary/findVisibleIndexOfStrip.js'
+import { findProjectionPositionOfStrip } from '../auxiliary/findProjectionPositionOfStrip.js'
 import { insertAfter } from '../auxiliary/insertAfter.js'
 import { insertBefore } from '../auxiliary/insertBefore.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
@@ -103,12 +103,12 @@ export function apply<T>(
         }
 
         startAt =
-          findVisibleIndexOfStrip.call(this, containingStrip) +
+          findProjectionPositionOfStrip.call(this, containingStrip) +
           targetFramePosition -
           1
 
         gateAffected ??=
-          this.visibleIndex > startAt ||
+          this.projectedPosition > startAt ||
           (containingStrip === this.gate && targetFramePosition === 1)
 
         const previousStructuralStripCount = this.structuralStripCount
@@ -133,17 +133,16 @@ export function apply<T>(
 
         if (gateRemoved && incomingStrip.insertionDiff > 0) {
           this.gate = incomingStrip
-          this.visibleIndex = startAt
+          this.projectedPosition = startAt
           gateRemoved = false
         } else if (gateAffected)
-          this.visibleIndex += incomingStrip.insertionDiff
+          this.projectedPosition += incomingStrip.insertionDiff
 
         patchJumps.call(
           this,
           incomingStrip.insertionDiff,
           this.structuralStripCount - previousStructuralStripCount
         )
-
       }
 
       this.containmentTable.set(incomingStrip)
