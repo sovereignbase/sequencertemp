@@ -4,8 +4,8 @@ import { FrontierTable } from './components/FrontierTable/class.js'
 import { PendingTable } from './components/PendingTable/class.js'
 import { apply } from './algorithms/apply.js'
 import { create } from './algorithms/create.js'
-import { findValue } from './algorithms/findValue.js'
-import { findValues } from './algorithms/findValues.js'
+import { value } from './algorithms/value.js'
+import { values } from './algorithms/values.js'
 import { insert } from './algorithms/insert.js'
 import { merge } from './algorithms/merge.js'
 import { remove } from './algorithms/remove.js'
@@ -42,23 +42,6 @@ export class Sequence<T> {
     trustedSnapshot?: unknown
   ) {
     void create.call(this, trustedSnapshot)
-  }
-  /**
-   *
-   * @param at Position where the value you want to find is.
-   * @returns
-   */
-  findValue(at: number): T | undefined {
-    return findValue.call(this, at) as T | undefined
-  }
-  /**
-   *
-   * @param startAt First position you want included in the result or first position.
-   * @param endWith Last position you want included in the result or last position.
-   * @returns
-   */
-  findValues(startAt?: number, endWith?: number): Array<T> {
-    return findValues.call(this, startAt, endWith) as Array<T>
   }
   /**
    *
@@ -100,7 +83,23 @@ export class Sequence<T> {
   snapshot(): Snapshot<T> {
     return snapshot.call(this) as Snapshot<T>
   }
-  //
+  /**
+   *
+   * @param at Position where the value you want to find is.
+   * @returns
+   */
+  value(at: number): T | undefined {
+    return value.call(this, at) as T | undefined
+  }
+  /**
+   *
+   * @param startAt First position you want included in the result or first position.
+   * @param endWith Last position you want included in the result or last position.
+   * @returns
+   */
+  values(startAt?: number, endWith?: number): Array<T> {
+    return values.call(this, startAt, endWith) as Array<T>
+  }
 }
 
 export type * from './types/type.js'
