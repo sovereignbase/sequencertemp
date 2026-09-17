@@ -9,18 +9,18 @@ import type { Strip } from '../types/type.js'
  *
  * @param this Projection containing the Strip.
  * @param strip Strip to split.
- * @param framePosition Number of Frames retained by the left fragment.
+ * @param afterFrame Number of Frames retained by the left fragment.
  * @returns Newly created right fragment.
  */
 export function splitStrip<T>(
   this: Projection<T>,
   strip: NonNullable<Strip<T>>,
-  framePosition: number
+  afterFrame: number
 ): NonNullable<Strip<T>> {
   const stripDiff = strip.fragmentDiff ?? strip.insertionDiff
   const direction = stripDiff < 0 ? -1 : 1
 
-  const leftDiff = direction * framePosition
+  const leftDiff = direction * afterFrame
   const rightDiff = stripDiff - leftDiff
 
   const rightStep = strip.rightStep

@@ -1,5 +1,5 @@
 import { findProjectionPositionOfStrip } from '../auxiliary/findProjectionPositionOfStrip.js'
-import { insertAfter } from '../auxiliary/insertAfter.js'
+import { insertAfter } from '../auxiliary/anchorStrip.js'
 import { insertBefore } from '../auxiliary/insertBefore.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
 import { isAcknowledgement, isInsertion } from '../auxiliary/isGossip.js'

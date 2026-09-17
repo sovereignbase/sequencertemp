@@ -1,6 +1,6 @@
 import { findFrameByProjectionPosition } from '../auxiliary/findFrameByProjectionPosition.js'
 import { findFrame } from '../auxiliary/findFrame.js'
-import { insertAfter } from '../auxiliary/insertAfter.js'
+import { insertAfter } from '../auxiliary/anchorStrip.js'
 import { insertBefore } from '../auxiliary/insertBefore.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Projection } from '../class.js'

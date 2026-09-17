@@ -1,59 +1,45 @@
 import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
+import { areCompetitors } from './areCompetitors.js'
 import { splitStrip } from './splitStrip.js'
 import { subtreeEnd } from './subtreeEnd.js'
 
 /**
- * Covers insertion of all Strips NOT anchored to a boundary marker,
- * A.K.A. not using a `zero-reservation`, such as tail inserts and
- * insertions within an existing Strip.
+ * Covers insertion of all Strips,
+ * placing them after a given anchor Frame position
+ * or a position determined by overlap handling rules.
  *
  * @param this Projection receiving the Strip.
- * @param incomingStrip Strip to insert.
- * @param containingStrip Strip containing the target Frame position.
- * @param targetFramePosition Target Frame position within the containing Strip.
+ * @param incomingStrip Strip to anchor.
+ * @param anchoringStrip Strip containing the anchor point.
+ * @param anchorPoint Frame position within the anchoring Strip.
  */
-export function insertAfter<T>(
+export function anchorStrip<T>(
   this: Projection<T>,
   incomingStrip: NonNullable<Strip<T>>,
-  containingStrip: NonNullable<Strip<T>>,
-  targetFramePosition: number
+  anchoringStrip: NonNullable<Strip<T>>,
+  anchorPoint: number
 ): void {
-  const containingStripLength = Math.abs(
-    containingStrip.fragmentDiff ?? containingStrip.insertionDiff
+  const anchoringStripLength = Math.abs(
+    anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
   )
 
-  let leftStep = containingStrip
+  let leftStep = anchoringStrip
   let rightStep: Strip<T>
-  let boundaryStrip: Strip<T>
 
-  if (targetFramePosition <= containingStripLength) {
-    rightStep = splitStrip.call(
-      this,
-      containingStrip,
-      targetFramePosition - 1
-    ) as Strip<T>
-    boundaryStrip = rightStep
+  // Happy path
+  if (anchorPoint === anchoringStripLength) {
+    rightStep = anchoringStrip.rightStep
   } else {
-    rightStep = containingStrip.rightStep
-    boundaryStrip = containingStrip.rightFragment
+    rightStep = splitStrip.call(this, anchoringStrip, anchorPoint) as Strip<T>
   }
-
-  incomingStrip.rightCompetitor = undefined
-
-  const firstCompetitor = boundaryStrip
-    ? boundaryStrip.rightCompetitor
-    : rightStep
-
-  if (
-    firstCompetitor &&
-    firstCompetitor.anchorSession === incomingStrip.anchorSession &&
-    firstCompetitor.anchorTime === incomingStrip.anchorTime &&
-    firstCompetitor.anchorFrame === incomingStrip.anchorFrame
-  ) {
+  let firstCompetitor: Strip<T>
+  if (areCompetitors(incomingStrip, rightStep!)) {
+    firstCompetitor = rightStep
     let largerCompetitor: NonNullable<Strip<T>> | undefined
-    let smallerCompetitor: Strip<T> = firstCompetitor
+    let smallerCompetitor: Strip<T> = rightStep
 
+    // Traverse to next to the first smaller competitor then self
     while (
       smallerCompetitor &&
       ((incomingStrip.insertionDiff < 0 &&
@@ -76,7 +62,7 @@ export function insertAfter<T>(
     incomingStrip.rightCompetitor = smallerCompetitor
 
     if (largerCompetitor) largerCompetitor.rightCompetitor = incomingStrip
-    else if (boundaryStrip) boundaryStrip.rightCompetitor = incomingStrip
+    else if (rightStep) rightStep.rightCompetitor = incomingStrip
 
     if (largerCompetitor) {
       leftStep = subtreeEnd(largerCompetitor)
@@ -94,8 +80,7 @@ export function insertAfter<T>(
     }
   }
 
-  if (!firstCompetitor && boundaryStrip)
-    boundaryStrip.rightCompetitor = incomingStrip
+  if (!firstCompetitor && rightStep) rightStep.rightCompetitor = incomingStrip
 
   incomingStrip.leftStep = leftStep
   incomingStrip.rightStep = rightStep

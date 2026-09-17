@@ -1,6 +1,5 @@
 import { getRandom53bitNumber } from '../auxiliary/getRandom53bitNumber.js'
-import { insertAfter } from '../auxiliary/insertAfter.js'
-import { insertBefore } from '../auxiliary/insertBefore.js'
+import { anchorInsertion } from '../auxiliary/anchorStrip.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
 import type { Projection } from '../class.js'
 import type { Sequence, Strip } from '../types/type.js'
@@ -99,7 +98,7 @@ export function create<T>(
           if (targetFramePosition === 1)
             insertBefore.call(this, incomingStrip, containingStrip)
           else
-            insertAfter.call(
+            anchorInsertion.call(
               this,
               incomingStrip,
               containingStrip,

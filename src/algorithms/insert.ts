@@ -1,11 +1,11 @@
-import { findFrameByProjectionPosition } from '../auxiliary/findFrameByProjectionPosition.js'
-import { findFrame } from '../auxiliary/findFrame.js'
-import { insertAfter } from '../auxiliary/insertAfter.js'
-import { insertBefore } from '../auxiliary/insertBefore.js'
-import { insertFirst } from '../auxiliary/insertFirst.js'
-import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Projection } from '../class.js'
 import type { Gossip, Strip } from '../types/type.js'
+
+import { findFrame } from '../auxiliary/findFrame.js'
+import { findFrameByProjectionPosition } from '../auxiliary/findFrameByProjectionPosition.js'
+import { anchorStrip } from '../auxiliary/anchorStrip.js'
+import { insertFirst } from '../auxiliary/insertFirst.js'
+import { patchJumps } from '../auxiliary/patchJumps.js'
 
 export function insert<T>(
   this: Projection<T>,
@@ -23,8 +23,8 @@ export function insert<T>(
       footage: values,
     }
 
-    insertFirst.call(this, increasingStrip)
-    this.containmentTable.set(increasingStrip)
+    void insertFirst.call(this, increasingStrip)
+    void this.containmentTable.set(increasingStrip)
     this.increaseClock[1] += values.length + 1
 
     return [
@@ -40,25 +40,36 @@ export function insert<T>(
     ]
   }
 
-  let targetFramePosition: number
-  let containingStrip: NonNullable<Strip<T>>
+  let anchorFramePosition: number
+  let anchoringStrip: NonNullable<Strip<T>>
 
+  // Choose an anchor.
   if (at === this.projectionFrameCount) {
-    containingStrip = this.tail!
-    targetFramePosition =
-      Math.abs(containingStrip.fragmentDiff ?? containingStrip.insertionDiff) +
-      1
+    anchoringStrip = this.tail!
+    anchorFramePosition = Math.abs(
+      anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
+    )
     this.leftJumpToPatch = undefined
     this.rightJumpToPatch = undefined
   } else {
-    targetFramePosition = findFrameByProjectionPosition.call(this, at)
-    containingStrip = this.gate!
+    anchorFramePosition = findFrameByProjectionPosition.call(this, at)
+    anchoringStrip = this.gate!
+
+    // Use a boundary marker when at an strip boundary between strips.
+    if (
+      anchoringStrip.rightStep &&
+      anchorFramePosition ==
+        Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff)
+    ) {
+      anchorFramePosition = 0
+      anchoringStrip = anchoringStrip.rightStep
+    }
   }
 
   const increasingStrip: NonNullable<Strip<T>> = {
-    anchorSession: containingStrip.insertionSession,
-    anchorTime: containingStrip.insertionTime,
-    anchorFrame: findFrame(containingStrip, targetFramePosition),
+    anchorSession: anchoringStrip.insertionSession,
+    anchorTime: anchoringStrip.insertionTime,
+    anchorFrame: findFrame(anchoringStrip, anchorFramePosition),
     insertionSession: this.increaseClock[0],
     insertionTime: this.increaseClock[1],
     insertionDiff: values.length,
@@ -67,23 +78,20 @@ export function insert<T>(
 
   const previousStructuralStripCount = this.structuralStripCount
 
-  if (targetFramePosition === 1)
-    insertBefore.call(this, increasingStrip, containingStrip)
-  else
-    insertAfter.call(
-      this,
-      increasingStrip,
-      containingStrip,
-      targetFramePosition
-    )
+  void anchorStrip.call(
+    this,
+    increasingStrip,
+    anchoringStrip,
+    anchorFramePosition
+  )
 
-  patchJumps.call(
+  void patchJumps.call(
     this,
     increasingStrip.insertionDiff,
     this.structuralStripCount - previousStructuralStripCount
   )
 
-  this.containmentTable.set(increasingStrip)
+  void this.containmentTable.set(increasingStrip)
   this.gate = increasingStrip
   this.projectedPosition = at
   this.increaseClock[1] += values.length + 1
