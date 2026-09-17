@@ -47,6 +47,13 @@ export class Projection<T> {
   ) {
     void create.call(this, trustedSequence)
   }
+
+  /**
+   * @param actorID Number identifying an Actor whose acknowledgements are no longer required for safe compaction.
+   */
+  erase(actorID: number): void {
+    void this.frontierTable.erase(actorID)
+  }
   /**
    *
    * @param values Values you want to insert.

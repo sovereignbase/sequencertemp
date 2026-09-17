@@ -64,7 +64,7 @@ export type Strip<T> =
   | undefined
 
 /**
- * Describes one insertion into Structural Order.
+ * Describes one insertion into Sequence.
  *
  * @remarks
  * An insertion always has one of two effects on the Projection:
@@ -75,25 +75,25 @@ export type Strip<T> =
  * while its sign determines its effect on the Projection.
  *
  * Structurally, every insertion grows the Sequence.
- * Its position is described commutatively so that it can be applied
- * idempotently to Structural Order.
+ * Its position is described commutatively so it can be applied
+ * idempotently into Sequence.
  */
 export type Insertion<T> = Readonly<
   [
-    /** Session identifier of the anchoring insertion, i.e. its `insertionSession`. */
+    /** `insertionSession` of the anchoring insertion. */
     anchorSession: number,
 
-    /** Logical time of the Session when the anchoring insertion was made. */
-    anchorTime: number,
+    /** `insertionStart` of the anchoring insertion */
+    anchorStart: number,
 
-    /** Frame offset within the original anchoring insertion, from its `insertionTime` towards `insertionEnd`, i.e. `insertionTime + |insertionDiff|`. */
+    /** Frame offset from `anchorStart` anchoring insertion, from its `insertionTime` towards `insertionEnd`, i.e. `insertionTime + |insertionDiff|`. */
     anchorFrame: number,
 
     /** Session identifier that issued this insertion. */
     insertionSession: number,
 
     /** Logical time at which this insertion begins. */
-    insertionTime: number,
+    insertionStart: number,
 
     /**
      * Signed Frame length of this insertion and its effect on the Projection.
