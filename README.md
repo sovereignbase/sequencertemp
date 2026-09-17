@@ -21,7 +21,7 @@ The `Projection` is the applied presentation of a Sequence.
 
 In other words a Sequence is used to derive a Projection.
 
-Users of Sequencer work entirely in Projection positions. The Sequencer translates those positions into commutative descriptions of points in Sequence.
+Applications using Sequencer work entirely in Projection positions. The Sequencer translates those positions into commutative descriptions of points in Sequence.
 
 ## Insertion
 

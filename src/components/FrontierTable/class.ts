@@ -4,9 +4,14 @@ import type { Acknowledgement } from '../../types/type.js'
 export class FrontierTable {
   private readonly actors: Set<number> = new Set()
   private readonly sessions: Map<number, Map<number, number>> = new Map()
+  private readonly retirees: Set<Number> = new Set()
 
   observeAcknowledgement(frontier: Acknowledgement): void {
     const actorID = frontier[0]
+
+    // Make sure an already retired actor is ignored during the session that retired it.
+    if (this.retirees.has(actorID)) return
+
     void this.actors.add(actorID)
 
     for (let i = 1; i < frontier.length; i += 2) {
@@ -72,9 +77,9 @@ export class FrontierTable {
     return ids
   }
 
-  erase(actorID: number): void {
+  eraseActor(actorID: number): void {
+    void this.retirees.add(actorID)
     void this.actors.delete(actorID)
-
     for (const session of this.sessions.values()) void session.delete(actorID)
   }
 }

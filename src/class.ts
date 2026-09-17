@@ -36,11 +36,19 @@ export class Projection<T> {
   //
   public readonly increaseClock: [id: number, time: number] = [0, 0]
   public readonly decreaseClock: [id: number, time: number] = [0, 0]
-  //
+  /**
+   * Applies gossiped Insertions and Acknowledgments
+   * @param gossip
+   * @returns
+   */
   apply(gossip: unknown): Result<T> | undefined {
     return apply.call(this, gossip) as Result<T> | undefined
   }
-  //
+  /**
+   * Prepares to sequence a projection, optionally hydrating from a trusted sequence stored by the application.
+   * @param actorID
+   * @param trustedSequence
+   */
   constructor(
     public readonly actorID: number,
     trustedSequence?: unknown
@@ -48,12 +56,6 @@ export class Projection<T> {
     void create.call(this, trustedSequence)
   }
 
-  /**
-   * @param actorID Number identifying an Actor whose acknowledgements are no longer required for safe compaction.
-   */
-  erase(actorID: number): void {
-    void this.frontierTable.erase(actorID)
-  }
   /**
    *
    * @param values Values you want to insert.
@@ -63,11 +65,18 @@ export class Projection<T> {
   insert(values: Array<T>, at: number): Gossip<T> {
     return insert.call(this, values, at) as Gossip<T>
   }
-  //
+  /**
+   * returns the length A.K.A amount of entries of this projection.
+   * @returns
+   */
   length(): number {
     return this.projectionFrameCount
   }
-  //
+  /**
+   * Applies relevant acknowledments and non duplicate insertions from a replica of the sequence.
+   * @param sequence
+   * @returns
+   */
   merge(sequence: unknown): Result<T> | undefined {
     return merge.call(this, sequence) as Result<T> | undefined
   }
@@ -89,8 +98,33 @@ export class Projection<T> {
    */
   replace(withValues: Array<T>, startAt?: number, endWith?: number): Gossip<T> {
     return replace.call(this, withValues, startAt, endWith) as Gossip<T>
+  } /**
+   * Retires an Actor from future compaction requirements.
+   *
+   * @remarks
+   * This is a manual per-replica operation. The application is responsible for
+   * deciding which Actors are retired and for propagating that decision to the
+   * relevant replicas.
+   *
+   * Retiring an Actor removes its acknowledgements from the FrontierTable and
+   * keeps the Actor retired for the lifetime of the current session. As a result,
+   * its acknowledgements are excluded from later sequenced state and are not
+   * required when compaction is performed while constructing a later Projection
+   * from that state.
+   *
+   * For example, an Actor managing a document could rotate keys and propagate a
+   * directive telling the relevant replicas which Actors to retire.
+   *
+   * @param actorID Number identifying the Actor whose acknowledgements are no
+   * longer required for safe compaction.
+   */
+  retire(actorID: number): void {
+    void this.frontierTable.eraseActor(actorID)
   }
-  //
+  /**
+   * Sequences state in to a compact serializeable format.
+   * @returns
+   */
   sequence(): Sequence<T> {
     return sequence.call(this) as Sequence<T>
   }
