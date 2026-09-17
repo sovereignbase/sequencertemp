@@ -4,13 +4,13 @@ import { FrontierTable } from './components/FrontierTable/class.js'
 import { PendingTable } from './components/PendingTable/class.js'
 import { apply } from './algorithms/apply.js'
 import { create } from './algorithms/create.js'
-import { value } from './algorithms/value.js'
-import { values } from './algorithms/values.js'
 import { insert } from './algorithms/insert.js'
 import { merge } from './algorithms/merge.js'
 import { remove } from './algorithms/remove.js'
 import { replace } from './algorithms/replace.js'
 import { sequence } from './algorithms/sequence.js'
+import { value } from './algorithms/value.js'
+import { values } from './algorithms/values.js'
 
 export class Projection<T> {
   /** Strip containing the very left-most position of the projection (0) */
