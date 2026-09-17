@@ -55,8 +55,11 @@ export function remove<T>(
       this.structuralStripCount - previousStructuralStripCount
     )
 
-    if (targetFramePosition === 1)
+    if (targetFramePosition === 1) {
+      if ((this.gate!.fragmentDiff ?? this.gate!.insertionDiff) === 0)
+        this.gate = this.gate!.rightFragment
       this.visibleIndex += decreasingStrip.insertionDiff
+    }
 
     this.containmentTable.set(decreasingStrip)
 

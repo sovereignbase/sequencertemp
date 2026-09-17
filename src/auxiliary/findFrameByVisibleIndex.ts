@@ -43,6 +43,11 @@ export function findFrameByVisibleIndex<T>(
     const stripLength = cursorDiff > 0 ? cursorDiff : 0
 
     if (cursorIndex <= index && index < cursorIndex + stripLength) {
+      if (!leftJumpToPatch && !rightJumpToPatch && cursorStrip.rightJump) {
+        leftJumpToPatch = cursorStrip
+        rightJumpToPatch = cursorStrip.rightJump
+      }
+
       this.gate = cursorStrip
       this.visibleIndex = cursorIndex
 

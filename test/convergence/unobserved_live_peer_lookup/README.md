@@ -1,6 +1,6 @@
 # Unobserved live-peer lookup
 
-Two different Actors exchange every Delta and acknowledgement while editing at
+Two different Actors exchange every Gossip and acknowledgement while editing at
 the head, middle, and tail. Unlike the live index-equivalence scenario, neither
 peer calls `find` between edits. Their local gate and jump caches must therefore
 remain correct solely through `insert`, `replace`, `remove`, and `apply`.

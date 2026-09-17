@@ -20,6 +20,8 @@ export function findVisibleIndexOfStrip<T>(
 
   let leftSplitDistance = 0
   let rightSplitDistance = 0
+  let leftJumpable = true
+  let rightJumpable = true
 
   let knownIndex =
     gateDiff === 0 && strip === this.gate ? this.visibleIndex : undefined
@@ -39,6 +41,7 @@ export function findVisibleIndexOfStrip<T>(
 
       const leftDiff = leftCursor.fragmentDiff ?? leftCursor.insertionDiff
       leftDistance += leftDiff
+      if (leftDiff < 0) leftJumpable = false
 
       ++leftStripDistance
 
@@ -60,6 +63,7 @@ export function findVisibleIndexOfStrip<T>(
     if (!rightJumpFound) {
       const rightDiff = rightCursor.fragmentDiff ?? rightCursor.insertionDiff
       rightDistance += rightDiff
+      if (rightDiff < 0) rightJumpable = false
 
       rightCursor = rightCursor.rightStep!
       ++rightStripDistance
@@ -108,7 +112,7 @@ export function findVisibleIndexOfStrip<T>(
       right.leftJumpStripCount = strips
     }
 
-    if (leftCursor !== strip) {
+    if (leftCursor !== strip && leftJumpable) {
       if (leftStripDistance >= optimalJumpSpacing * 2) {
         link(
           leftCursor,
@@ -123,7 +127,7 @@ export function findVisibleIndexOfStrip<T>(
       }
     }
 
-    if (rightCursor !== strip) {
+    if (rightCursor !== strip && rightJumpable) {
       if (rightStripDistance >= optimalJumpSpacing * 2) {
         link(strip, rightSplit!, rightSplitDistance, optimalJumpSpacing)
 

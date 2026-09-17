@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { Sequence } from '../../../src/class.js'
-import type { Delta } from '../../../src/types/type.js'
+import type { Gossip } from '../../../src/types/type.js'
 
 const gossip = <T>(
   author: Sequence<T>,
   receiver: Sequence<T>,
-  delta: Delta<T>
+  delta: Gossip<T>
 ): void => {
   const acknowledgements = receiver.apply(delta)?.[1]
   if (acknowledgements) author.apply(acknowledgements)

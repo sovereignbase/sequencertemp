@@ -1,7 +1,7 @@
 # Peer browser fanout
 
 Three browser pages communicate through a same-origin `BroadcastChannel`; there
-is no central Delta relay or persisted server state. Each page is both editor
+is no central Gossip relay or persisted server state. Each page is both editor
 and peer.
 
 The causal pending regression uses an explicit three-peer route:
@@ -21,7 +21,7 @@ The child is never redelivered and no snapshot is exchanged. All three peers
 must end as `[A:parent, B:child]`.
 
 The first phase creates one independent root Insert per editor. Every receiver
-adds a different artificial delay, so those dependency-free Deltas may be
+adds a different artificial delay, so those dependency-free Gossip updates may be
 ingested in different orders. They must converge without pending.
 
 The second phase schedules Insert, hard replace, and remove on each editor's own
@@ -32,8 +32,8 @@ per-sender causality.
 Expected per peer:
 
 ```text
-8 received peer Deltas
-0 rejected peer Deltas (no pending required)
+8 received peer Gossip updates
+0 rejected peer Gossip updates (no pending required)
 0 rejected local edits
 identical final visible sequence
 ```

@@ -1,6 +1,6 @@
 # Live peer index equivalence through signed jumps
 
-Two live Sequences use different Actor IDs. Every local Delta reaches the
+Two live Sequences use different Actor IDs. Every local Gossip reaches the
 other peer immediately, and every acknowledgement returned by `apply` travels
 back to the author. No snapshot is exchanged and neither live instance is
 recreated.

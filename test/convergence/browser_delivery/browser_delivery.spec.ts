@@ -1,12 +1,18 @@
 import { expect, test } from '@playwright/test'
 
-type SequencerApi = typeof import('../../../src/typescript/index.js')
+type SequencerApi = {
+  create<T>(actor: number, snapshot?: unknown): unknown
+  insert<T>(state: unknown, at: number, values: Array<T>): unknown
+  ingest(state: unknown, gossip: unknown): unknown
+  snapshot(state: unknown): unknown
+  values<T>(state: unknown): Array<T>
+}
 
 type SequencerWindow = Window & {
   sequencer: SequencerApi
 }
 
-test('converges after opposite Delta staging orders in a browser', async ({
+test('converges after opposite Gossip staging orders in a browser', async ({
   page,
 }) => {
   await page.goto('/test/browser/index.html')

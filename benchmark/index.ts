@@ -138,7 +138,7 @@ export async function runBenchmark(
       stripCount:
         'Scale is the number of visible logical Strips maintained by the benchmark model. Every mutation targets a complete Strip boundary; retained Mask structures are reported separately.',
       ingest:
-        'The workload has two peers editing the same document. Every local Delta is applied by the receiver and every acknowledgement returned by apply is gossiped back to the sender. randomIngest times only the measured peer applying the remote replacement Delta.',
+        'The workload has two peers editing the same document. Every local Gossip is applied by the receiver and every acknowledgement returned by apply is gossiped back to the sender. randomIngest times only the measured peer applying the remote replacement Gossip.',
       average:
         'Operation averages are calculated directly from count and total measured nanoseconds; checkpoint averages are never averaged together.',
       memory:

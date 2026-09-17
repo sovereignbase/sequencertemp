@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { Sequence } from '../../../src/class.js'
-import type { Delta, Snapshot } from '../../../src/types/type.js'
+import type { Gossip, Snapshot } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
 describe('concurrent root ordering', () => {
   it('is deterministic independently of delivery order', () => {
-    const mutations: Array<Delta<string>> = []
+    const mutations: Array<Gossip<string>> = []
     for (const [actor, value] of [
       [11, 'first'],
       [12, 'second'],

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Sequence } from '../../../src/class.js'
-import type { Delta, Snapshot } from '../../../src/types/type.js'
+import type { Gossip, Snapshot } from '../../../src/types/type.js'
 import {
   deliver,
   expect_converged,
@@ -11,11 +11,11 @@ import type { Replica } from '../../.helpers/replica.js'
 type SixEditorMutations = {
   base: Snapshot<string>
   base_state: Replica<string>
-  online: Array<Delta<string>>
-  offline: [Array<Delta<string>>, Array<Delta<string>>, Array<Delta<string>>]
+  online: Array<Gossip<string>>
+  offline: [Array<Gossip<string>>, Array<Gossip<string>>, Array<Gossip<string>>]
 }
 
-const accepted = <T>(result: Delta<T>): Delta<T> => result
+const accepted = <T>(result: Gossip<T>): Gossip<T> => result
 
 const expected_projection = [
   'document',
@@ -74,7 +74,7 @@ const build_lifecycle_scenario = (): SixEditorMutations => {
   const base = base_state.snapshot()
 
   const online_1 = new Sequence<string>(90, base)
-  const online: Array<Delta<string>> = [
+  const online: Array<Gossip<string>> = [
     accepted(online_1.insert(['online-1'], online_1.visibleFrameCount)),
     accepted(online_1.insert(['online-trash'], online_1.visibleFrameCount)),
   ]
@@ -132,14 +132,14 @@ const build_lifecycle_scenario = (): SixEditorMutations => {
 const all_mutations = ({
   online,
   offline,
-}: SixEditorMutations): Array<Delta<string>> => [...online, ...offline.flat()]
+}: SixEditorMutations): Array<Gossip<string>> => [...online, ...offline.flat()]
 
 const offline_during_online = ({
   online,
   offline,
-}: SixEditorMutations): Array<Delta<string>> => {
+}: SixEditorMutations): Array<Gossip<string>> => {
   const pending_offline = offline.flatMap((branch) => [...branch].reverse())
-  const interleaved: Array<Delta<string>> = []
+  const interleaved: Array<Gossip<string>> = []
   let offline_index = 0
   for (let online_index = 0; online_index < online.length; ++online_index) {
     interleaved.push(online[online_index])

@@ -21,6 +21,8 @@ export function apply<T>(
 
   const changes = []
   const acknowledgements: Array<Acknowledgement> = []
+  let gateAffected: boolean | undefined
+  let gateRemoved = false
 
   for (const entry of data) {
     if (isAcknowledgement(entry)) {
@@ -105,6 +107,10 @@ export function apply<T>(
           targetFramePosition -
           1
 
+        gateAffected ??=
+          this.visibleIndex > startAt ||
+          (containingStrip === this.gate && targetFramePosition === 1)
+
         const previousStructuralStripCount = this.structuralStripCount
         if (targetFramePosition === 1)
           insertBefore.call(this, incomingStrip, containingStrip)
@@ -116,20 +122,28 @@ export function apply<T>(
             targetFramePosition
           )
 
+        if (
+          incomingStrip.insertionDiff < 0 &&
+          containingStrip === this.gate &&
+          (this.gate.fragmentDiff ?? this.gate.insertionDiff) === 0
+        ) {
+          this.gate = this.gate.rightFragment
+          gateRemoved = true
+        }
+
+        if (gateRemoved && incomingStrip.insertionDiff > 0) {
+          this.gate = incomingStrip
+          this.visibleIndex = startAt
+          gateRemoved = false
+        } else if (gateAffected)
+          this.visibleIndex += incomingStrip.insertionDiff
+
         patchJumps.call(
           this,
           incomingStrip.insertionDiff,
           this.structuralStripCount - previousStructuralStripCount
         )
 
-        if (
-          incomingStrip !== this.gate &&
-          this.gate !== this.head &&
-          (startAt < this.visibleIndex ||
-            (startAt === this.visibleIndex &&
-              (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) > 0))
-        )
-          this.visibleIndex += incomingStrip.insertionDiff
       }
 
       this.containmentTable.set(incomingStrip)

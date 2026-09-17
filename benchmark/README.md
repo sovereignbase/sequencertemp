@@ -29,12 +29,12 @@ randomIngest
 ```
 
 The benchmark calls `Sequence.insert`, `Sequence.remove`, and
-`Sequence.replace` directly. Their Deltas are immediately sent to the other
+`Sequence.replace` directly. Their Gossip updates are immediately sent to the other
 peer with `apply`. If `apply` returns acknowledgements, those acknowledgements
 are immediately gossiped back to the sender with another `apply` call.
 
 For `randomIngest`, the peer performs an equal-length replacement outside the
-timed region. The measured Sequence then applies the remote Delta inside the
+timed region. The measured Sequence then applies the remote Gossip inside the
 timed region, after which any acknowledgements are sent back outside it. The
 final scale-down step has no `randomIngest` sample because no visible Strip
 remains to replace.
@@ -54,12 +54,12 @@ peers continue their uninterrupted gossip session across checkpoints. There is
 no separate recovery or acknowledgement phase: acknowledgements travel as
 part of the ordinary two-way gossip after every update.
 
-The report includes visible Strip and Frame counts, retained snapshot Delta
+The report includes visible Strip and Frame counts, retained snapshot insertion
 count, serialized snapshot size, an estimated retained-state size, and shared
 process RSS. The retained-state estimate is:
 
 ```text
-4 bytes × snapshot frontier and Delta metadata words
+4 bytes × snapshot frontier and insertion metadata words
 +
 8 bytes × JavaScript Footage slots
 ```

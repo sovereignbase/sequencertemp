@@ -2,8 +2,8 @@ import type { Sequence } from '../class.js'
 
 export function patchJumps<T>(
   this: Sequence<T>,
-  frameDiff: number,
-  stripDiff: number
+  _frameDiff: number,
+  _stripDiff: number
 ): void {
   const left = this.leftJumpToPatch
   const right = this.rightJumpToPatch
@@ -14,12 +14,6 @@ export function patchJumps<T>(
   if (!left || !right) return
   if (left.rightJump !== right || right.leftJump !== left) return
 
-  const frameCount = left.rightJumpFrameCount! + frameDiff
-  const stripCount = left.rightJumpStripCount! + stripDiff
-
-  left.rightJumpFrameCount = frameCount
-  left.rightJumpStripCount = stripCount
-
-  right.leftJumpFrameCount = frameCount
-  right.leftJumpStripCount = stripCount
+  left.rightJump = undefined
+  right.leftJump = undefined
 }

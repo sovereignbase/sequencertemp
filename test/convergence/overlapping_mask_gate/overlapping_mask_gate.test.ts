@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Sequence } from '../../../src/class.js'
-import type { Delta } from '../../../src/types/type.js'
+import type { Gossip } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
 describe('overlapping mask gate', () => {
@@ -11,7 +11,7 @@ describe('overlapping mask gate', () => {
     const replicas = [0, 1, 2].map(
       (index) => new Sequence<string>(100 + index, snapshot)
     )
-    const mutations: Array<Delta<string>> = [
+    const mutations: Array<Gossip<string>> = [
       replicas[2].remove(0, 2),
       replicas[0].insert(['middle-0', 'middle-1'], 1),
       replicas[2].insert(['tail-0', 'tail-1', 'tail-2'], 0),

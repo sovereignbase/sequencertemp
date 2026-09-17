@@ -24,6 +24,7 @@ export function splitStrip<T>(
   const rightDiff = stripDiff - leftDiff
 
   const rightStep = strip.rightStep
+  const rightJump = strip.rightJump
 
   const rightFragment: NonNullable<Strip<T>> = {
     anchorSession: strip.anchorSession,
@@ -55,6 +56,12 @@ export function splitStrip<T>(
   strip.fragmentDiff = leftDiff
   strip.rightFragment = rightFragment
   strip.rightStep = rightFragment
+
+  strip.rightJump = undefined
+  strip.rightJumpFrameCount = 0
+  strip.rightJumpStripCount = 0
+
+  if (rightJump) rightJump.leftJump = undefined
 
   if (rightStep) rightStep.leftStep = rightFragment
   else this.tail = rightFragment

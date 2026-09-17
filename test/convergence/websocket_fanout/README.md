@@ -1,7 +1,7 @@
 # Regular WebSocket fanout
 
 Three browser Replicas connect to one deliberately ignorant WebSocket relay.
-The relay stores nothing, parses no Delta, and broadcasts each text frame.
+The relay stores nothing, parses no Gossip, and broadcasts each text frame.
 
 All editors start their own timers. No editor waits for delivery, an ACK, or
 another editor before executing its four assigned operations:
@@ -15,9 +15,9 @@ editor 2: remove at 50, 125, 200, and 275 ms
 Expected:
 
 ```text
-each browser sends 4 local Deltas
-each browser receives 8 peer Deltas
-no local or peer Delta is rejected or left pending
+each browser sends 4 local Gossip updates
+each browser receives 8 peer Gossip updates
+no local or peer Gossip is rejected or left pending
 all visible sequences are equal
 the two Mask-issuing actors use distinct Mask sessions even under identical
 host entropy

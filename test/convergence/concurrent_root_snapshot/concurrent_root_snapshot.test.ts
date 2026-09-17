@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Sequence } from '../../../src/class.js'
-import type { Delta, Snapshot } from '../../../src/types/type.js'
+import type { Gossip, Snapshot } from '../../../src/types/type.js'
 import { deliver, expect_converged } from '../../.helpers/replica.js'
 
 describe('concurrent root snapshot', () => {
@@ -8,7 +8,7 @@ describe('concurrent root snapshot', () => {
     const primary = new Sequence<string>(100)
     const second = new Sequence<string>(101)
     const third = new Sequence<string>(102)
-    const mutations: Array<Delta<string>> = [
+    const mutations: Array<Gossip<string>> = [
       primary.insert(['primary-root'], 0),
       primary.insert(['primary-1'], 0),
       second.insert(['second-root'], 0),

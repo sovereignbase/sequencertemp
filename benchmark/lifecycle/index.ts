@@ -1,6 +1,6 @@
 import { serialize } from 'node:v8'
 import { Sequence } from '../../dist/class.js'
-import type { Delta, Result } from '../../dist/class.js'
+import type { Gossip, Result } from '../../dist/class.js'
 import {
   deriveSeed,
   formatSeed,
@@ -82,7 +82,7 @@ const createReplacementStrip = (
 
 const applyUpdate = (
   receiver: Sequence<number>,
-  update: Delta<number>,
+  update: Gossip<number>,
   operation: string
 ): Result<number> => {
   const result = receiver.apply(update)
@@ -93,7 +93,7 @@ const applyUpdate = (
 const gossip = (
   sender: Sequence<number>,
   receiver: Sequence<number>,
-  update: Delta<number>,
+  update: Gossip<number>,
   operation: string
 ): void => {
   const acknowledgements = applyUpdate(receiver, update, operation)[1]
@@ -418,7 +418,7 @@ const printCheckpoint = (checkpoint: CheckpointResult): void => {
       return {
         replica,
         'visible Strips': observed.strips.stripCount,
-        'retained Deltas': observed.strips.retainedDeltaCount,
+        'retained insertions': observed.strips.retainedDeltaCount,
         Frames: observed.strips.frameCount,
         'avg Strip Frames':
           observed.strips.averageStripLength?.toFixed(3) ?? '—',

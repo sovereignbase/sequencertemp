@@ -1,6 +1,6 @@
 import { describe, it } from 'vitest'
 import { Sequence } from '../../../src/class.js'
-import type { Delta, Snapshot } from '../../../src/types/type.js'
+import type { Gossip, Snapshot } from '../../../src/types/type.js'
 import {
   deliver,
   expect_converged,
@@ -10,7 +10,7 @@ import {
 describe('restart and redelivery', () => {
   it('converges through hostile delivery, create, and stale redelivery', () => {
     const retained: Snapshot<string> = [[], []]
-    const mutations: Array<Delta<string>> = [41, 42, 43, 44, 45].map(
+    const mutations: Array<Gossip<string>> = [41, 42, 43, 44, 45].map(
       (actor) => new Sequence<string>(actor).insert([`actor-${actor}`], 0)
     )
 

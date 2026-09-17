@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Sequence } from '../../../src/class.js'
-import type { Delta } from '../../../src/types/type.js'
+import type { Gossip } from '../../../src/types/type.js'
 import {
   deriveSeed,
   Random,
@@ -33,7 +33,7 @@ const gossip = (
   runtime: Runtime,
   author: Sequence<number>,
   receiver: Sequence<number>,
-  delta: Delta<number>
+  delta: Gossip<number>
 ): void => {
   const acknowledgements = receiver.apply(delta)?.[1]
   if (acknowledgements) author.apply(acknowledgements)

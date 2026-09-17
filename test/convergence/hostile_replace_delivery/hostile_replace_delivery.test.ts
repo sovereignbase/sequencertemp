@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Sequence } from '../../../src/class.js'
-import type { Delta, Snapshot } from '../../../src/types/type.js'
+import type { Gossip, Snapshot } from '../../../src/types/type.js'
 
 const operations = [
   ['replace', 1837749800, 20512115, 1],
@@ -32,7 +32,7 @@ const project = (sequence: Sequence<string>): Array<string | undefined> =>
 
 const deliver = (
   retained: Snapshot<string>,
-  mutations: Array<Delta<string>>
+  mutations: Array<Gossip<string>>
 ): Sequence<string> => {
   const receiver = new Sequence<string>(10_000, retained)
   for (const mutation of mutations) receiver.apply(mutation)
@@ -48,7 +48,7 @@ describe('hostile replace delivery', () => {
       new Sequence<string>(100, retained),
       new Sequence<string>(101, retained),
     ]
-    const mutations: Array<Delta<string>> = []
+    const mutations: Array<Gossip<string>> = []
 
     operations.forEach(
       ([kind, replicaSelector, indexSelector, frameCount], operationIndex) => {

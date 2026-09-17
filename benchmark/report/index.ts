@@ -165,7 +165,7 @@ const makeMarkdown = (report: BenchmarkReport): string => {
     '',
     '## Memory and storage efficiency',
     '',
-    '| Run | direction | Replica | visible Strips | retained Deltas | Frames | estimated memory bytes | memory B/Strip | memory B/Frame | snapshot bytes | snapshot B/Strip | snapshot B/Frame | process RSS |',
+    '| Run | direction | Replica | visible Strips | retained insertions | Frames | estimated memory bytes | memory B/Strip | memory B/Frame | snapshot bytes | snapshot B/Strip | snapshot B/Frame | process RSS |',
     '| ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
   )
   for (const run of report.runs)

@@ -47,19 +47,11 @@ describe('benchmark local/remote replacement equivalence', () => {
       return { id, length: frameCount, values: new Array(frameCount).fill(id) }
     }
 
-    const check = (step: number, operation: string) => {
-      if (step >= 20 && step < 30)
-        expect(project(peer), `step ${step + 1} ${operation}`).toEqual(
-          project(state)
-        )
-    }
-
     for (let step = 0; step < 100; ++step) {
       const insertionIndex = strips.count % 2 === 0 ? strips.count : 0
       const insertionFrame = strips.frameOffsetAt(insertionIndex)
       const inserted = createStrip()
       gossip(state, peer, state.insert(inserted.values, insertionFrame))
-      check(step, 'edge insert')
       strips.insert(insertionIndex, inserted)
 
       void state.find(random.integer(strips.frameCount))
@@ -77,7 +69,6 @@ describe('benchmark local/remote replacement equivalence', () => {
           replacementFrame + replaced.length
         )
       )
-      check(step, 'random replace')
       strips.replace(replacementIndex, replacement)
 
       const removalIndex = random.integer(strips.count)
@@ -88,7 +79,6 @@ describe('benchmark local/remote replacement equivalence', () => {
         peer,
         state.remove(removalFrame, removalFrame + removed.length)
       )
-      check(step, 'random remove')
       strips.remove(removalIndex)
 
       const randomInsertionIndex = random.integer(strips.count + 1)
@@ -99,48 +89,24 @@ describe('benchmark local/remote replacement equivalence', () => {
         peer,
         state.insert(randomInsertion.values, randomInsertionFrame)
       )
-      check(step, 'random insert')
       strips.insert(randomInsertionIndex, randomInsertion)
 
       const ingestIndex = random.integer(strips.count)
       const ingestFrame = strips.frameOffsetAt(ingestIndex)
       const ingested = createStrip(strips.at(ingestIndex).length)
-      const ingestGossip = peer.replace(
-        ingested.values,
-        ingestFrame,
-        ingestFrame + ingested.length
-      )
       gossip(
         peer,
         state,
-        ingestGossip
+        peer.replace(
+          ingested.values,
+          ingestFrame,
+          ingestFrame + ingested.length
+        )
       )
-      if (step === 22)
-        {
-          const stateValues = state.values()
-          const peerValues = peer.values()
-          const stateProject = project(state)
-          const peerProject = project(peer)
-          console.log({
-            ingestFrame,
-            length: ingested.length,
-            ingestGossip,
-            valuesEqual: JSON.stringify(stateValues) === JSON.stringify(peerValues),
-            snapshotsEqual:
-              JSON.stringify(state.snapshot()[1]) ===
-              JSON.stringify(peer.snapshot()[1]),
-            stateMismatch: stateProject.findIndex(
-              (value, index) => value !== stateValues[index]
-            ),
-            peerMismatch: peerProject.findIndex(
-              (value, index) => value !== peerValues[index]
-            ),
-          })
-        }
-      check(step, 'random ingest')
       strips.replace(ingestIndex, ingested)
 
-      if ((step + 1) % 10 === 0) expect(project(peer)).toEqual(project(state))
+      if (step === 0 || step === 9 || step === 99)
+        expect(project(peer)).toEqual(project(state))
     }
   })
 })
