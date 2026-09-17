@@ -34,6 +34,7 @@ export function anchorStrip<T>(
     rightStep = splitStrip.call(this, anchoringStrip, anchorPoint) as Strip<T>
   }
   let firstCompetitor: Strip<T>
+  // This never happens on splits, tho after they are fragments this can happend when anchor point is anchoring strip length
   if (areCompetitors(incomingStrip, rightStep!)) {
     firstCompetitor = rightStep
     let largerCompetitor: NonNullable<Strip<T>> | undefined
