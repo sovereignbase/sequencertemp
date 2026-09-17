@@ -85,7 +85,7 @@ export class Sequence<T> {
   }
   /**
    *
-   * @param at Position where the value you want to find is.
+   * @param at Position where the value you want is.
    * @returns
    */
   value(at: number): T | undefined {
