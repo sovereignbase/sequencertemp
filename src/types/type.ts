@@ -130,7 +130,7 @@ export type Gossip<T> = ReadonlyArray<Acknowledgement | Insertion<T>>
 /**
  * Serializable state required to reconstruct a Projection.
  */
-export type Snapshot<T> = Readonly<
+export type Sequence<T> = Readonly<
   [
     /** Latest known acknowledgement frontiers. */
     frontiers: ReadonlyArray<Acknowledgement>,

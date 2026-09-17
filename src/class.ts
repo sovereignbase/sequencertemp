@@ -1,4 +1,4 @@
-import type { Gossip, Snapshot, Result, Strip } from './types/type.js'
+import type { Gossip, Sequence, Result, Strip } from './types/type.js'
 import { ContainmentTable } from './components/ContainmentTable/class.js'
 import { FrontierTable } from './components/FrontierTable/class.js'
 import { PendingTable } from './components/PendingTable/class.js'
@@ -10,7 +10,7 @@ import { insert } from './algorithms/insert.js'
 import { merge } from './algorithms/merge.js'
 import { remove } from './algorithms/remove.js'
 import { replace } from './algorithms/replace.js'
-import { snapshot } from './algorithms/snapshot.js'
+import { sequence } from './algorithms/sequence.js'
 
 export class Projection<T> {
   /** Strip containing the very left-most position of the projection (0) */
@@ -43,9 +43,9 @@ export class Projection<T> {
   //
   constructor(
     public readonly actorID: number,
-    trustedSnapshot?: unknown
+    trustedSequence?: unknown
   ) {
-    void create.call(this, trustedSnapshot)
+    void create.call(this, trustedSequence)
   }
   /**
    *
@@ -84,8 +84,8 @@ export class Projection<T> {
     return replace.call(this, withValues, startAt, endWith) as Gossip<T>
   }
   //
-  snapshot(): Snapshot<T> {
-    return snapshot.call(this) as Snapshot<T>
+  sequence(): Sequence<T> {
+    return sequence.call(this) as Sequence<T>
   }
   /**
    *

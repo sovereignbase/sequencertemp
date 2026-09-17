@@ -3,10 +3,13 @@ import { insertAfter } from '../auxiliary/insertAfter.js'
 import { insertBefore } from '../auxiliary/insertBefore.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
 import type { Projection } from '../class.js'
-import type { Snapshot, Strip } from '../types/type.js'
+import type { Sequence, Strip } from '../types/type.js'
 
-export function create<T>(this: Projection<T>, trustedSnapshot?: unknown): void {
-  const [frontiers, projection] = (trustedSnapshot as Snapshot<T>) ?? []
+export function create<T>(
+  this: Projection<T>,
+  trustedSequence?: unknown
+): void {
+  const [frontiers, projection] = (trustedSequence as Sequence<T>) ?? []
 
   if (Array.isArray(frontiers)) {
     for (const acknowledgement of frontiers)

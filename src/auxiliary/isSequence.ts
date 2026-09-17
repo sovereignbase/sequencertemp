@@ -1,7 +1,7 @@
 import { isAcknowledgement, isInsertion } from './isGossip.js'
-import type { Snapshot } from '../types/type.js'
+import type { Sequence } from '../types/type.js'
 
-export function isSnapshot<T>(data: unknown): data is Snapshot<T> {
+export function isSequence<T>(data: unknown): data is Sequence<T> {
   if (!Array.isArray(data) || data.length !== 2) return false
 
   const frontiers = data[0]

@@ -1,7 +1,7 @@
 import type { Projection } from '../class.js'
-import type { Insertion, Snapshot, Strip } from '../types/type.js'
+import type { Insertion, Sequence, Strip } from '../types/type.js'
 
-export function snapshot<T>(this: Projection<T>): Snapshot<T> {
+export function sequence<T>(this: Projection<T>): Sequence<T> {
   const projection: Array<Insertion<T>> = []
   const included: Map<number, Set<number>> = new Map()
 
