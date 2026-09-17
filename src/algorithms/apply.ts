@@ -15,16 +15,16 @@ import type {
 
 export function apply<T>(
   this: Projection<T>,
-  data: unknown
+  gossip: unknown
 ): Result<T> | undefined {
-  if (!Array.isArray(data)) return
+  if (!Array.isArray(gossip)) return
 
   const changes = []
   const acknowledgements: Array<Acknowledgement> = []
   let gateAffected: boolean | undefined
   let gateRemoved = false
 
-  for (const entry of data) {
+  for (const entry of gossip) {
     if (isAcknowledgement(entry)) {
       this.frontierTable.observeAcknowledgement(entry)
       continue

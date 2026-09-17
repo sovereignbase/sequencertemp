@@ -5,11 +5,11 @@ import type { Result } from '../types/type.js'
 
 export function merge<T>(
   this: Projection<T>,
-  replica: unknown
+  sequence: unknown
 ): Result<T> | undefined {
-  if (!isSequence<T>(replica)) return
+  if (!isSequence<T>(sequence)) return
 
-  const [frontiers, projection] = replica
+  const [frontiers, projection] = sequence
 
   const result = apply.call(this, projection) as Result<T> | undefined
 
