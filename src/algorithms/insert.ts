@@ -6,6 +6,7 @@ import { findFrameByProjectionPosition } from '../auxiliary/findFrameByProjectio
 import { anchorStrip } from '../auxiliary/anchorStrip.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
+import { selectAnchor } from '../auxiliary/selectAnchor.js'
 
 export function insert<T>(
   this: Projection<T>,
@@ -40,31 +41,10 @@ export function insert<T>(
     ]
   }
 
-  let anchorFramePosition: number
-  let anchoringStrip: NonNullable<Strip<T>>
-
-  // Choose an anchor.
-  if (at === this.projectionFrameCount) {
-    anchoringStrip = this.tail!
-    anchorFramePosition = Math.abs(
-      anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
-    )
-    this.leftJumpToPatch = undefined
-    this.rightJumpToPatch = undefined
-  } else {
-    anchorFramePosition = findFrameByProjectionPosition.call(this, at)
-    anchoringStrip = this.gate!
-
-    // Use a boundary marker when at an strip boundary between strips.
-    if (
-      anchoringStrip.rightStep &&
-      anchorFramePosition ==
-        Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff)
-    ) {
-      anchorFramePosition = 0
-      anchoringStrip = anchoringStrip.rightStep
-    }
-  }
+  const [anchorFramePosition, anchoringStrip] = selectAnchor.call(this, at) as [
+    number,
+    NonNullable<Strip<T>>,
+  ]
 
   const increasingStrip: NonNullable<Strip<T>> = {
     anchorSession: anchoringStrip.insertionSession,
