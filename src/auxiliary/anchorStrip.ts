@@ -6,13 +6,19 @@ import { splitStrip } from './splitStrip.js'
 import { subtreeEnd } from './subtreeEnd.js'
 
 /**
- * Covers insertion of all Strips,
- * placing them after a given anchor Frame position
- * or a position determined by overlap handling rules.
+ * Anchors a Strip into Structural Order.
+ *
+ * Places the incoming Strip immediately after the given anchor Frame,
+ * unless other Strips already compete for the same anchor. In that case,
+ * overlap handling determines the incoming Strip's position among the
+ * competing sibling subtrees.
+ *
+ * If the anchor falls inside the anchoring Strip, the anchoring Strip is
+ * first split so that the insertion point becomes a structural boundary.
  *
  * @param this Projection receiving the Strip.
  * @param incomingStrip Strip to anchor.
- * @param anchoringStrip Strip containing the anchor point.
+ * @param anchoringStrip Strip containing the anchor Frame.
  * @param anchorPoint Frame position within the anchoring Strip.
  */
 export function anchorStrip<T>(
@@ -21,55 +27,84 @@ export function anchorStrip<T>(
   anchoringStrip: NonNullable<Strip<T>>,
   anchorPoint: number
 ): void {
+  // Structural length of the anchoring Strip or its current fragment.
   const anchoringStripLength = Math.abs(
     anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
   )
 
+  // Default insertion point is immediately after the anchoring Strip.
   let leftStep = anchoringStrip
   let rightStep: Strip<T>
 
-  // Happy path
+  // Happy path: the anchor is already at the end of the anchoring Strip.
   if (anchorPoint === anchoringStripLength) {
     rightStep = anchoringStrip.rightStep
   } else {
+    // The anchor is inside the Strip. Split it so that the right fragment
+    // becomes the structural successor of the anchor point.
     rightStep = splitStrip.call(this, anchoringStrip, anchorPoint) as Strip<T>
   }
 
-  // Overlap handling
-  // This never happens on splits, tho after they are fragments this can happend when anchor point is anchoring strip length
+  // Overlap handling.
+  //
+  // A freshly created split cannot itself already have an overlapping
+  // competitor at the new boundary. Once fragments exist, however, anchoring
+  // at the end of a fragment may encounter Strips already using that anchor.
   if (anchorsOverlap(incomingStrip, rightStep!)) {
+    // Closest known competitor that sorts larger than the incoming Strip.
     let largerCompetitor: NonNullable<Strip<T>> | undefined
+
+    // Current competitor being tested as the first possible smaller sibling.
     let smallerCompetitor: Strip<T> = rightStep
 
-    // Sort larger anchor overlaps closer to anchor and smaller ones further.
+    // Competitors form an ordered sibling chain through rightCompetitor.
+    // Larger anchor overlaps stay closer to the anchor and smaller ones
+    // further to the right.
     while (
       smallerCompetitor &&
       competitionIsLarger(incomingStrip, smallerCompetitor)
     ) {
-      // Set competitor as larger.
+      // Current competitor remains on the larger / anchor-facing side.
       largerCompetitor = smallerCompetitor
-      // Set the priorly right competitor of the larger competitor as smaller for next evaluation cycle.
+
+      // Continue with the next competitor further to the right.
       smallerCompetitor = smallerCompetitor.rightCompetitor
     }
 
-    // Set found smaller competitor as the incoming competitors right competitor note this may be undefined
+    // The first smaller competitor becomes the incoming Strip's right competitor.
+    // This may be undefined when the incoming Strip sorts last.
     incomingStrip.rightCompetitor = smallerCompetitor
 
-    // If incoming strip was not the largest of competition set incomingStrip as rightCompetitor for the largest
-    if (largerCompetitor) largerCompetitor.rightCompetitor = incomingStrip
-    else if (rightStep) rightStep.rightCompetitor = incomingStrip
-
     if (largerCompetitor) {
-      // if there was a larger competitor their sub tree end is this left step
+      // Insert the incoming Strip into the competitor chain.
+      //
+      // If a larger competitor exists, incoming follows it.
+      // Otherwise incoming becomes the anchor-facing competitor.
+      largerCompetitor.rightCompetitor = incomingStrip
+
+      // A competitor occupies its whole subtree in Structural Order.
+      // Therefore the incoming competitor must be inserted after the complete
+      // subtree of the first larger competitor.
       leftStep = subtreeEnd(largerCompetitor)
-      rightStep = leftStep.rightStep // right step is the the previous right step of the larger sibling subtree end possibly undefined possibly a competitor
+
+      // Preserve whatever structurally followed that sibling subtree.
+      // This may be another competitor or undefined at the tail.
+      rightStep = leftStep.rightStep
     } else if (smallerCompetitor) {
-      // if there was no largercompetitor but there was a smaller competitor
-      rightStep = smallerCompetitor // set smaller competitor as incoming strip right step
-      leftStep = smallerCompetitor.leftStep! // set smaller competitors left step as incoming strip left step this may be either the anchor or a larger competitors sub tree end
+      // No larger competitor exists, so incoming becomes the first sibling
+      // in this competition and is placed directly before the current
+      // smallest anchor-facing competitor.
+      rightStep = smallerCompetitor
+
+      // The smaller competitor's current predecessor is exactly where the
+      // incoming Strip must attach. This may be the anchor itself or the end
+      // of another sibling subtree.
+      leftStep = smallerCompetitor.leftStep!
     }
 
-    // TODO: for codex document the purpose of this and link the exact invariant testing test README that demonstrates the scneario this hadnles
+    // Inserting after an existing competitor subtree may invalidate a cached
+    // jump span that crosses the structural insertion point. Drop that span;
+    // traversal will recreate an appropriate jump when needed.
     if (largerCompetitor && this.leftJumpToPatch && this.rightJumpToPatch) {
       this.leftJumpToPatch.rightJump = undefined
       this.rightJumpToPatch.leftJump = undefined
@@ -78,16 +113,21 @@ export function anchorStrip<T>(
     }
   }
 
-  // Link between
+  // Link the incoming Strip between the resolved structural neighbours.
   incomingStrip.leftStep = leftStep
   incomingStrip.rightStep = rightStep
 
   leftStep.rightStep = incomingStrip
 
-  if (rightStep) rightStep.leftStep = incomingStrip
-  // no right step means incoming strip is at tail
-  else this.tail = incomingStrip
+  if (rightStep) {
+    rightStep.leftStep = incomingStrip
+  } else {
+    // No right neighbour means the incoming Strip becomes the structural tail.
+    this.tail = incomingStrip
+  }
 
+  // A newly linked Strip starts without traversal jumps. Jumps are rebuilt
+  // opportunistically by traversal according to current structural spacing.
   incomingStrip.leftJump = undefined
   incomingStrip.leftJumpFrameCount = 0
   incomingStrip.leftJumpStripCount = 0
@@ -96,8 +136,10 @@ export function anchorStrip<T>(
   incomingStrip.rightJumpFrameCount = 0
   incomingStrip.rightJumpStripCount = 0
 
+  // Structural Order has gained exactly one Strip.
   ++this.structuralStripCount
 
+  // Projection length changes by the signed effect of this Strip or fragment.
   this.projectionFrameCount +=
     incomingStrip.fragmentDiff ?? incomingStrip.insertionDiff
 }
