@@ -16,10 +16,10 @@ export function insert<T>(
   if (this.structuralStripCount === 0) {
     const increasingStrip: NonNullable<Strip<T>> = {
       anchorSession: 0,
-      anchorTime: 0,
-      anchorFrame: 0,
+      anchorStart: 0,
+      anchorDiff: 0,
       insertionSession: this.increaseClock[0],
-      insertionTime: this.increaseClock[1],
+      insertionStart: this.increaseClock[1],
       insertionDiff: values.length,
       footage: values,
     }
@@ -31,10 +31,10 @@ export function insert<T>(
     return [
       [
         increasingStrip.anchorSession,
-        increasingStrip.anchorTime,
-        increasingStrip.anchorFrame,
+        increasingStrip.anchorStart,
+        increasingStrip.anchorDiff,
         increasingStrip.insertionSession,
-        increasingStrip.insertionTime,
+        increasingStrip.insertionStart,
         increasingStrip.insertionDiff,
         increasingStrip.footage,
       ],
@@ -48,10 +48,10 @@ export function insert<T>(
 
   const increasingStrip: NonNullable<Strip<T>> = {
     anchorSession: anchoringStrip.insertionSession,
-    anchorTime: anchoringStrip.insertionTime,
-    anchorFrame: findFrame(anchoringStrip, anchorFramePosition),
+    anchorStart: anchoringStrip.insertionStart,
+    anchorDiff: findFrame(anchoringStrip, anchorFramePosition),
     insertionSession: this.increaseClock[0],
-    insertionTime: this.increaseClock[1],
+    insertionStart: this.increaseClock[1],
     insertionDiff: values.length,
     footage: values,
   }
@@ -79,10 +79,10 @@ export function insert<T>(
   return [
     [
       increasingStrip.anchorSession,
-      increasingStrip.anchorTime,
-      increasingStrip.anchorFrame,
+      increasingStrip.anchorStart,
+      increasingStrip.anchorDiff,
       increasingStrip.insertionSession,
-      increasingStrip.insertionTime,
+      increasingStrip.insertionStart,
       increasingStrip.insertionDiff,
       increasingStrip.footage,
     ],
