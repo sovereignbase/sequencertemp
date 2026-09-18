@@ -1,7 +1,7 @@
 import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
-import { areCompetitors } from './areCompetitors.js'
-import { competitionIsLarger } from './isSmaller.js'
+import { anchorsOverlap } from './anchorsOverlap.js'
+import { competitionIsLarger } from './competitionIsLarger.js'
 import { splitStrip } from './splitStrip.js'
 import { subtreeEnd } from './subtreeEnd.js'
 
@@ -38,7 +38,7 @@ export function anchorStrip<T>(
 
   // Overlap handling
   // This never happens on splits, tho after they are fragments this can happend when anchor point is anchoring strip length
-  if (areCompetitors(incomingStrip, rightStep!)) {
+  if (anchorsOverlap(incomingStrip, rightStep!)) {
     firstCompetitor = rightStep
     let largerCompetitor: NonNullable<Strip<T>> | undefined
     let smallerCompetitor: Strip<T> = rightStep
