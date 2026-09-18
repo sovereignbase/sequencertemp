@@ -34,12 +34,10 @@ export function anchorStrip<T>(
   } else {
     rightStep = splitStrip.call(this, anchoringStrip, anchorPoint) as Strip<T>
   }
-  let firstCompetitor: Strip<T>
 
   // Overlap handling
   // This never happens on splits, tho after they are fragments this can happend when anchor point is anchoring strip length
   if (anchorsOverlap(incomingStrip, rightStep!)) {
-    firstCompetitor = rightStep
     let largerCompetitor: NonNullable<Strip<T>> | undefined
     let smallerCompetitor: Strip<T> = rightStep
 
@@ -80,15 +78,14 @@ export function anchorStrip<T>(
     }
   }
 
-  // if there never was a competitor
-  if (!firstCompetitor && rightStep) rightStep.rightCompetitor = incomingStrip
-
+  // Link between
   incomingStrip.leftStep = leftStep
   incomingStrip.rightStep = rightStep
 
   leftStep.rightStep = incomingStrip
 
   if (rightStep) rightStep.leftStep = incomingStrip
+  // no right step means incoming strip is at tail
   else this.tail = incomingStrip
 
   incomingStrip.leftJump = undefined
