@@ -43,7 +43,7 @@ export function anchorStrip<T>(
     let largerCompetitor: NonNullable<Strip<T>> | undefined
     let smallerCompetitor: Strip<T> = rightStep
 
-    // Sort larger overlaps closer to anchor and smaller ones further.
+    // Sort larger anchor overlaps closer to anchor and smaller ones further.
     while (
       smallerCompetitor &&
       competitionIsLarger(incomingStrip, smallerCompetitor)
@@ -62,13 +62,16 @@ export function anchorStrip<T>(
     else if (rightStep) rightStep.rightCompetitor = incomingStrip
 
     if (largerCompetitor) {
+      // if there was a larger competitor their sub tree end is this left step
       leftStep = subtreeEnd(largerCompetitor)
-      rightStep = leftStep.rightStep
+      rightStep = leftStep.rightStep // right step is the the previous right step of the larger sibling subtree end possibly undefined possibly a competitor
     } else if (smallerCompetitor) {
-      rightStep = smallerCompetitor
-      leftStep = smallerCompetitor.leftStep!
+      // if there was no largercompetitor but there was a smaller competitor
+      rightStep = smallerCompetitor // set smaller competitor as incoming strip right step
+      leftStep = smallerCompetitor.leftStep! // set smaller competitors left step as incoming strip left step this may be either the anchor or a larger competitors sub tree end
     }
 
+    // TODO: for codex document the purpose of this and link the exact invariant testing test README that demonstrates the scneario this hadnles
     if (largerCompetitor && this.leftJumpToPatch && this.rightJumpToPatch) {
       this.leftJumpToPatch.rightJump = undefined
       this.rightJumpToPatch.leftJump = undefined
@@ -77,6 +80,7 @@ export function anchorStrip<T>(
     }
   }
 
+  // if there never was a competitor
   if (!firstCompetitor && rightStep) rightStep.rightCompetitor = incomingStrip
 
   incomingStrip.leftStep = leftStep

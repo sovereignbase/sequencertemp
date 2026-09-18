@@ -28,9 +28,9 @@ export function subtreeEnd<T>(
     while (
       ancestorStrip.rightFragment !== nextStrip &&
       (ancestorStrip.insertionSession !== nextStrip.anchorSession ||
-        ancestorStrip.insertionTime !== nextStrip.anchorTime ||
-        nextStrip.anchorFrame < ancestorFragmentFrame ||
-        nextStrip.anchorFrame >
+        ancestorStrip.insertionStart !== nextStrip.anchorStart ||
+        nextStrip.anchorDiff < ancestorFragmentFrame ||
+        nextStrip.anchorDiff >
           ancestorFragmentFrame +
             Math.abs(
               ancestorStrip.fragmentDiff ?? ancestorStrip.insertionDiff
