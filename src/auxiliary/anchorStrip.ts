@@ -1,6 +1,7 @@
 import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 import { areCompetitors } from './areCompetitors.js'
+import { competitionIsLarger } from './isSmaller.js'
 import { splitStrip } from './splitStrip.js'
 import { subtreeEnd } from './subtreeEnd.js'
 
@@ -34,34 +35,29 @@ export function anchorStrip<T>(
     rightStep = splitStrip.call(this, anchoringStrip, anchorPoint) as Strip<T>
   }
   let firstCompetitor: Strip<T>
+
+  // Overlap handling
   // This never happens on splits, tho after they are fragments this can happend when anchor point is anchoring strip length
   if (areCompetitors(incomingStrip, rightStep!)) {
     firstCompetitor = rightStep
     let largerCompetitor: NonNullable<Strip<T>> | undefined
     let smallerCompetitor: Strip<T> = rightStep
 
-    // Traverse to next to the first smaller competitor then self
+    // Sort larger overlaps closer to anchor and smaller ones further.
     while (
       smallerCompetitor &&
-      ((incomingStrip.insertionDiff < 0 &&
-        smallerCompetitor.insertionDiff > 0) ||
-        (incomingStrip.insertionDiff < 0 ===
-          smallerCompetitor.insertionDiff < 0 &&
-          (incomingStrip.insertionSession <
-            smallerCompetitor.insertionSession ||
-            (incomingStrip.insertionSession ===
-              smallerCompetitor.insertionSession &&
-              incomingStrip.insertionTime >=
-                smallerCompetitor.insertionTime +
-                  Math.abs(smallerCompetitor.insertionDiff) +
-                  1))))
+      competitionIsLarger(incomingStrip, smallerCompetitor)
     ) {
+      // Set competitor as larger.
       largerCompetitor = smallerCompetitor
+      // Set the priorly right competitor of the larger competitor as smaller for next evaluation cycle.
       smallerCompetitor = smallerCompetitor.rightCompetitor
     }
 
+    // Set found smaller competitor as the incoming competitors right competitor note this may be undefined
     incomingStrip.rightCompetitor = smallerCompetitor
 
+    // If incoming strip was not the largest of competition set incomingStrip as rightCompetitor for the largest
     if (largerCompetitor) largerCompetitor.rightCompetitor = incomingStrip
     else if (rightStep) rightStep.rightCompetitor = incomingStrip
 

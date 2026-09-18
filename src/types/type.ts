@@ -35,7 +35,7 @@ export type Strip<T> =
       readonly footage?: ReadonlyArray<T | undefined>
 
       /** Next lexicographically smaller concurrent Insertion competing for the same anchor point. */
-      rightOverlap?: Strip<T>
+      rightCompetitor?: Strip<T>
 
       /** Next fragment belonging to the same original Insertion. */
       rightFragment?: Strip<T>

@@ -8,41 +8,43 @@ import type { Strip } from '../types/type.js'
  * becomes its right fragment. The total Projection effect remains unchanged.
  *
  * @param this Projection containing the Strip.
- * @param strip Strip to split.
+ * @param anchoringStrip Strip to split.
  * @param afterFrame Number of Frames retained by the left fragment.
  * @returns Newly created right fragment.
  */
 export function splitStrip<T>(
   this: Projection<T>,
-  strip: NonNullable<Strip<T>>,
+  anchoringStrip: NonNullable<Strip<T>>,
   afterFrame: number
 ): NonNullable<Strip<T>> {
-  const stripDiff = strip.fragmentDiff ?? strip.insertionDiff
-  const direction = stripDiff < 0 ? -1 : 1
+  const anchoringStripDiff =
+    anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
+  const direction = anchoringStripDiff < 0 ? -1 : 1
 
   const leftDiff = direction * afterFrame
-  const rightDiff = stripDiff - leftDiff
+  const rightDiff = anchoringStripDiff - leftDiff
 
-  const rightStep = strip.rightStep
-  const rightJump = strip.rightJump
+  const rightStep = anchoringStrip.rightStep
+  const rightJump = anchoringStrip.rightJump
 
   const rightFragment: NonNullable<Strip<T>> = {
-    anchorSession: strip.anchorSession,
-    anchorTime: strip.anchorTime,
-    anchorFrame: strip.anchorFrame,
+    anchorSession: anchoringStrip.anchorSession,
+    anchorStart: anchoringStrip.anchorStart,
+    anchorDiff: anchoringStrip.anchorDiff,
 
-    insertionSession: strip.insertionSession,
-    insertionTime: strip.insertionTime,
-    insertionDiff: strip.insertionDiff,
+    insertionSession: anchoringStrip.insertionSession,
+    insertionStart: anchoringStrip.insertionStart,
+    insertionDiff: anchoringStrip.insertionDiff,
 
-    footage: strip.footage,
+    // only take reference
+    footage: anchoringStrip.footage,
 
     rightCompetitor: undefined,
 
-    rightFragment: strip.rightFragment,
+    rightFragment: anchoringStrip.rightFragment,
     fragmentDiff: rightDiff,
 
-    leftStep: strip,
+    leftStep: anchoringStrip,
     leftJump: undefined,
     leftJumpFrameCount: 0,
     leftJumpStripCount: 0,
@@ -53,13 +55,13 @@ export function splitStrip<T>(
     rightJumpStripCount: 0,
   }
 
-  strip.fragmentDiff = leftDiff
-  strip.rightFragment = rightFragment
-  strip.rightStep = rightFragment
+  anchoringStrip.fragmentDiff = leftDiff
+  anchoringStrip.rightFragment = rightFragment
+  anchoringStrip.rightStep = rightFragment
 
-  strip.rightJump = undefined
-  strip.rightJumpFrameCount = 0
-  strip.rightJumpStripCount = 0
+  anchoringStrip.rightJump = undefined
+  anchoringStrip.rightJumpFrameCount = 0
+  anchoringStrip.rightJumpStripCount = 0
 
   if (rightJump) rightJump.leftJump = undefined
 
