@@ -98,24 +98,34 @@ Two insertions are competitors when they resolve to the same anchor:
 
 `(anchorSession, anchorStart, anchorDiff)`
 
-Competitors are ordered deterministically using the following rules:
+Competitors form an ordered sibling chain. Larger competitors are placed closer to the anchor and smaller competitors further to the right.
+
+The ordering is deterministic:
 
 1. **Positive insertions come before negative insertions.**
 
 2. **Between insertions with the same sign, the greater `insertionSession` comes first.**
 
-3. **Within the same Session, an insertion that starts after the previous insertion's reserved logical range comes after it.**
+3. **Within the same Session, the greater `insertionStart` comes first.**
 
-   In other words, the existing competitor comes first when:
+   This case should not occur for valid concurrent input, but is ordered deterministically nevertheless.
 
-   `incoming.insertionStart >= existing.insertionStart + |existing.insertionDiff| + 1`
+4. **If `insertionSession` and `insertionStart` are also equal, the greater signed `insertionDiff` comes first.**
 
-These rules define the competitor order independently of arrival order.
+   This is the final deterministic tie-break and would normally already have been eliminated by deduplication.
 
-When an incoming Strip belongs after an existing competitor, it is not inserted directly after that Strip. It is inserted after the competitor's entire causal subtree, resolved by `subtreeEnd()`.
+Equivalently, competitors are ordered from the anchor outward by:
+
+`sign → insertionSession → insertionStart → insertionDiff`
+
+with positive before negative and otherwise greater values before smaller values.
+
+When an incoming Strip belongs after an existing competitor, it is not inserted directly after that Strip. Each competitor occupies its entire causal subtree in Structural Order, so the incoming competitor is inserted after the complete subtree of the preceding larger competitor, resolved by `subtreeEnd()`.
+
+The `rightCompetitor` links preserve only the sibling ordering between competitors; Structural Order preserves each sibling together with its causal subtree.
 
 So structurally the rule is:
 
 `competitor ordering → preserve causal subtree → insert at resolved boundary`
 
-The resulting order is deterministic across replicas even when competing insertions are received in different orders.
+The resulting order is independent of arrival order.

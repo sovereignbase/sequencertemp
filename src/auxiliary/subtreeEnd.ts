@@ -45,7 +45,7 @@ export function subtreeEnd<T>(
       ancestorFragmentFrame = ancestor[1]
     }
 
-    ancestors.push([ancestorStrip, ancestorFragmentFrame])
+    void ancestors.push([ancestorStrip, ancestorFragmentFrame])
 
     if (ancestorStrip.rightFragment === nextStrip) {
       lastFragmentFrame =

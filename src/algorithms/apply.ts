@@ -142,7 +142,8 @@ export function apply<T>(
         const pending = this.pendingTable.take(incomingStrip)
 
         if (pending)
-          for (let i = pending.length - 1; i >= 0; --i) queue.push(pending[i])
+          for (let i = pending.length - 1; i >= 0; --i)
+            void queue.push(pending[i])
 
         if (incomingStrip.insertionDiff > 0) {
           if (incomingStrip.insertionSession === this.increaseClock[0])
