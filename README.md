@@ -129,3 +129,39 @@ So structurally the rule is:
 `competitor ordering → preserve causal subtree → insert at resolved boundary`
 
 The resulting order is independent of arrival order.
+
+## Resolving a subtree end
+
+The traversal starts from a given `subtree root` and walks Structural Order through `rightStep`.
+
+A following Strip remains inside the subtree when either:
+
+1. **It is the next fragment of an insertion already inside the subtree.**
+
+   `rightFragment` therefore remains part of its original insertion even when descendants have been structurally inserted between its fragments.
+
+2. **Its stable anchor belongs to a fragment already inside the subtree.**
+
+   For a fragment covering the original insertion's logical range beginning at `fragmentFrame`, the anchor belongs to it when:
+
+   `fragmentFrame <= anchorDiff <= fragmentFrame + fragmentLength`
+
+   and the anchor identifies the same original insertion:
+
+   `(anchorSession, anchorStart) = (insertionSession, insertionStart)`
+
+Because descendants may themselves contain descendants, traversal maintains the currently active ancestor chain.
+
+When the next Strip does not belong to the current Strip, `subtreeEnd()` walks back through that ancestor chain until it finds an ancestor whose fragment contains the Strip's anchor, or whose `rightFragment` is the Strip.
+
+If no such ancestor exists, the next Strip lies outside the root competitor's subtree and traversal stops.
+
+For right fragments, the fragment's position within the original insertion is accumulated as traversal progresses. This allows anchors expressed in the original insertion's stable coordinate space to be tested against the correct current fragment.
+
+So the subtree rule is:
+
+`root → descendants anchored within active fragments → right fragments → their descendants`
+
+and the first Strip that cannot be connected back to the root through those relationships marks the end of the subtree.
+
+`subtreeEnd()` returns the final Strip before that boundary.
