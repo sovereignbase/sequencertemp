@@ -9,7 +9,7 @@ import type { Strip } from '../types/type.js'
  *
  * @param this Projection containing the Strip.
  * @param anchoringStrip Strip to split.
- * @param afterFrame Number of Frames retained by the left fragment.
+ * @param afterFrame Positive number of Frames retained by the left fragment.
  * @returns Newly created right fragment.
  */
 export function splitStrip<T>(
@@ -17,13 +17,21 @@ export function splitStrip<T>(
   anchoringStrip: NonNullable<Strip<T>>,
   afterFrame: number
 ): NonNullable<Strip<T>> {
+  // Anchor (strip | fragment) length.
   const anchoringStripDiff =
     anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
-  const direction = anchoringStripDiff < 0 ? -1 : 1
 
-  const leftDiff = direction * afterFrame
+  // When anchoring strip is of negative effect scalar is reducing, else increasing.
+  const effect = anchoringStripDiff < 0 ? -1 : 1
+
+  // Negative effect scalar makes left diff negative
+  const leftDiff = effect * afterFrame // -1 *  7
+  // Handles mask overlap/ownership by moving anchor to the right when left strip is a mask.
+  // -7 - -3 = -5
+  // Left reducing strip keeps owner ship of 2 overlapping frames
   const rightDiff = anchoringStripDiff - leftDiff
 
+  // Cache (used more than once)
   const rightStep = anchoringStrip.rightStep
   const rightJump = anchoringStrip.rightJump
 
@@ -36,7 +44,7 @@ export function splitStrip<T>(
     insertionStart: anchoringStrip.insertionStart,
     insertionDiff: anchoringStrip.insertionDiff,
 
-    // only take reference
+    // Only take reference.
     footage: anchoringStrip.footage,
 
     rightCompetitor: undefined,
@@ -54,20 +62,21 @@ export function splitStrip<T>(
     rightJumpFrameCount: 0,
     rightJumpStripCount: 0,
   }
-
+  // Update anchoring strip details.
   anchoringStrip.fragmentDiff = leftDiff
   anchoringStrip.rightFragment = rightFragment
   anchoringStrip.rightStep = rightFragment
-
   anchoringStrip.rightJump = undefined
   anchoringStrip.rightJumpFrameCount = 0
   anchoringStrip.rightJumpStripCount = 0
 
   if (rightJump) rightJump.leftJump = undefined
-
+  // Set the right fragment of anchroing strip as left step for anchoring strips left step.
   if (rightStep) rightStep.leftStep = rightFragment
+  // If there anchoring had no right step it was tail and now right fragment is new tail.
   else this.tail = rightFragment
 
+  // Right fragment was added to structural order.
   ++this.structuralStripCount
 
   return rightFragment

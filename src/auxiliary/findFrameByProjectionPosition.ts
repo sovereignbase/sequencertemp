@@ -57,7 +57,7 @@ export function findFrameByProjectionPosition<T>(
   while (true) {
     // Length of the (strip | fragment) being evaluated.
     const cursorDiff = cursorStrip.fragmentDiff ?? cursorStrip.insertionDiff
-    // Negative strips do not consume length.
+    // Negative strips do not consume length (already consumed on split).
     const stripLength = cursorDiff > 0 ? cursorDiff : 0
 
     // If cursor contains requested projection position.
