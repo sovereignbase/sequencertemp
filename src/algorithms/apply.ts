@@ -149,7 +149,7 @@ export function apply<T>(
           if (incomingStrip.insertionSession === this.increaseClock[0])
             this.increaseClock[1] = Math.max(
               this.increaseClock[1],
-              incomingStrip.insertionStart + incomingStrip.insertionDiff + 1
+              incomingStrip.insertionStart + incomingStrip.insertionDiff
             )
 
           continue
@@ -159,13 +159,13 @@ export function apply<T>(
         if (incomingStrip.insertionSession === this.decreaseClock[0])
           this.decreaseClock[1] = Math.max(
             this.decreaseClock[1],
-            incomingStrip.insertionStart - incomingStrip.insertionDiff + 1
+            incomingStrip.insertionStart - incomingStrip.insertionDiff
           )
 
         const acknowledgement: Acknowledgement = [
           this.actorID,
           incomingStrip.insertionSession,
-          incomingStrip.insertionStart - incomingStrip.insertionDiff + 1,
+          incomingStrip.insertionStart - incomingStrip.insertionDiff,
         ]
 
         void this.frontierTable.observeAcknowledgement(acknowledgement)

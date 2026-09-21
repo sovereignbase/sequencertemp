@@ -5,22 +5,31 @@ export function findFrameByProjectionPosition<T>(
   this: Projection<T>,
   index: number
 ): number {
+  // Use gate as the default traverse start node.
   let cursorStrip: NonNullable<Strip<T>> = this.gate!
   let cursorIndex: number = this.projectedPosition
 
   let leftJumpToPatch = this.leftJumpToPatch
   let rightJumpToPatch = this.rightJumpToPatch
 
+  // Tail (strip | fragment) length.
   const tailDiff = this.tail!.fragmentDiff ?? this.tail!.insertionDiff
+  // Index at the first frame of tail (strip | fragment).
   const tailIndex = this.projectionFrameCount - tailDiff
+
+  // Length of the (strip | fragment) left of tail or 0 when there is no fragment.
   const tailPredecessorDiff =
     this.tail!.leftStep?.fragmentDiff ?? this.tail!.leftStep?.insertionDiff ?? 0
 
+  // Length from gate to requested projection position.
   const distanceToTravel = Math.abs(this.projectedPosition - index)
+  // Length from tail to requested projection position.
   const tailDistance = Math.abs(tailIndex - index)
 
   if (
-    tailPredecessorDiff < 0 ||
+    // Length of the (strip | fragment) left of tail is negative.
+    tailPredecessorDiff < 0 || // Or
+    // Distance to travel from head to requested projection position is shorter than distance from gate and tail.
     (index < distanceToTravel && index <= tailDistance)
   ) {
     cursorStrip = this.head!
@@ -28,7 +37,12 @@ export function findFrameByProjectionPosition<T>(
 
     leftJumpToPatch = cursorStrip
     rightJumpToPatch = cursorStrip.rightJump
-  } else if (tailPredecessorDiff >= 0 && tailDistance < distanceToTravel) {
+  } else if (
+    // Length of the (strip | fragment) left of tail is 0 or positive.
+    tailPredecessorDiff >= 0 && // And
+    // Distance to travel from tail to requested projection position is shorter than distance from gate.
+    tailDistance < distanceToTravel
+  ) {
     cursorStrip = this.tail!
     cursorIndex = tailIndex
 
@@ -36,27 +50,38 @@ export function findFrameByProjectionPosition<T>(
     rightJumpToPatch = cursorStrip
   }
 
+  // Calculate optimal jump distance that allows for an average minimum strips traversed
+  // (<= sqrt(structuralStripCount) * 2)
   const optimalJumpSpacing = Math.round(Math.sqrt(this.structuralStripCount))
 
   while (true) {
+    // Length of the (strip | fragment) being evaluated.
     const cursorDiff = cursorStrip.fragmentDiff ?? cursorStrip.insertionDiff
+    // Negative strips do not consume length.
     const stripLength = cursorDiff > 0 ? cursorDiff : 0
 
+    // If cursor contains requested projection position.
     if (cursorIndex <= index && index < cursorIndex + stripLength) {
+      // If cursor strip was left jump to patch (see below).
       if (!leftJumpToPatch && !rightJumpToPatch && cursorStrip.rightJump) {
+        // Set patch points if missing and cursor has one to right.
         leftJumpToPatch = cursorStrip
         rightJumpToPatch = cursorStrip.rightJump
       }
 
+      // Patch gate and projection position.
       this.gate = cursorStrip
       this.projectedPosition = cursorIndex
 
+      // Set jumps to patch at top level.
       this.leftJumpToPatch = leftJumpToPatch
       this.rightJumpToPatch = rightJumpToPatch
 
-      return index - cursorIndex + 1
+      // Return requestsed frame.
+      return index - cursorIndex
     }
 
+    // Absolute distance from cursor to requested projection position.
     const currentDistance = Math.abs(cursorIndex - index)
 
     if (cursorIndex <= index) {
