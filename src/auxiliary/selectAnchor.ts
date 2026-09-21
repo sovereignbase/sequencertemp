@@ -2,7 +2,7 @@ import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
 import { findFrameByProjectionPosition } from '../auxiliary/findFrameByProjectionPosition.js'
-import { anchorOfStrip } from './anhorOfStrip.js'
+import { containsAnchor } from './containsAnchor.js'
 
 /**
  * Selects the structural anchor for an insertion at a Projection position.
@@ -67,7 +67,12 @@ export function selectAnchor<T>(
       anchoringStrip.rightStep &&
       anchorFramePosition ==
         Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff) &&
-      anchorOfStrip(anchoringStrip, anchoringStrip.rightStep)
+      containsAnchor(
+        anchoringStrip,
+        anchoringStrip.rightStep,
+        anchoringStrip.insertionDiff,
+        anchoringStrip.insertionDiff
+      )
     ) {
       anchorFramePosition = 0
       anchoringStrip = anchoringStrip.rightStep

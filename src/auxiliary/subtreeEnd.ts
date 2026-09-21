@@ -1,4 +1,5 @@
 import type { Strip } from '../types/type.js'
+import { containsAnchor } from '../auxiliary/containsAnchor.js'
 
 /**
  * Finds the final Strip belonging to one causal subtree.
@@ -17,47 +18,44 @@ export function subtreeEnd<T>(
     [strip: NonNullable<Strip<T>>, fragmentFrame: number]
   > = []
 
-  let lastStrip = rootStrip
-  let lastFragmentFrame = 0
-  let nextStrip = lastStrip.rightStep
+  let previousStrip = rootStrip
+  let previousFragmentFrame = 0
+  let nextStrip = previousStrip.rightStep
 
   while (nextStrip) {
-    let ancestorStrip = lastStrip
-    let ancestorFragmentFrame = lastFragmentFrame
+    let ancestorStrip = previousStrip
+    let ancestorFragmentFrame = previousFragmentFrame
 
     while (
       ancestorStrip.rightFragment !== nextStrip &&
-      (ancestorStrip.insertionSession !== nextStrip.anchorSession ||
-        ancestorStrip.insertionStart !== nextStrip.anchorStart ||
-        nextStrip.anchorDiff < ancestorFragmentFrame ||
-        nextStrip.anchorDiff >
-          ancestorFragmentFrame +
-            Math.abs(
-              ancestorStrip.fragmentDiff ?? ancestorStrip.insertionDiff
-            ) +
-            1)
+      !containsAnchor(
+        ancestorStrip,
+        nextStrip,
+        ancestorFragmentFrame,
+        ancestorFragmentFrame +
+          Math.abs(ancestorStrip.fragmentDiff ?? ancestorStrip.insertionDiff)
+      )
     ) {
       const ancestor = ancestors.pop()
 
-      if (!ancestor) return lastStrip
+      if (!ancestor) return previousStrip
 
-      ancestorStrip = ancestor[0]
-      ancestorFragmentFrame = ancestor[1]
+      ;[ancestorStrip, ancestorFragmentFrame] = ancestor
     }
 
     void ancestors.push([ancestorStrip, ancestorFragmentFrame])
 
     if (ancestorStrip.rightFragment === nextStrip) {
-      lastFragmentFrame =
+      previousFragmentFrame =
         ancestorFragmentFrame +
         Math.abs(ancestorStrip.fragmentDiff ?? ancestorStrip.insertionDiff)
     } else {
-      lastFragmentFrame = 0
+      previousFragmentFrame = 0
     }
 
-    lastStrip = nextStrip
+    previousStrip = nextStrip
     nextStrip = nextStrip.rightStep
   }
 
-  return lastStrip
+  return previousStrip
 }
