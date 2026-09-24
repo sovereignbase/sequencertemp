@@ -3,7 +3,6 @@ import { anchorStrip } from '../auxiliary/anchorStrip.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
 import { isAcknowledgement, isInsertion } from '../auxiliary/isGossip.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
-import { findFrame } from '../auxiliary/findFrame.js'
 import type { Projection } from '../class.js'
 import type {
   Acknowledgement,
@@ -22,7 +21,6 @@ export function apply<T>(
 
   const changes = []
   const acknowledgements: Array<Acknowledgement> = []
-  let gateAffected: boolean | undefined
   let gateRemoved = false
 
   for (const entry of gossip) {
@@ -59,18 +57,10 @@ export function apply<T>(
       if (birth && this.structuralStripCount === 0) {
         void insertFirst.call(this, incomingStrip)
       } else {
-        let anchoringStrip: NonNullable<Strip<T>>
-        let anchorFramePosition: number
+        let anchoringStrip: Strip<T>
+        let anchorFramePosition = 0
 
-        if (birth) {
-          // Compete with the entire projection.
-          // Maybe this should tie-break with the heads insertion point (session,start,diff)
-          // Or create and runtime should index root strips seperately and tie break between them rather.
-          // And then in case there is no root competitors the root would always be put left or something
-          // This also needs explicit tests.
-          anchoringStrip = this.head!
-          anchorFramePosition = 1
-        } else {
+        if (!birth) {
           const origin = this.containmentTable.get(incoming)
 
           if (!origin) {
@@ -82,99 +72,103 @@ export function apply<T>(
             origin,
             incomingStrip
           )
-
-          startAt =
-            findProjectionPositionOfStrip.call(this, anchoringStrip) +
-            anchorFramePosition -
-            1
-
-          // If the Insertion was made on the left side of gate gates projection position changed
-          // if it was made on gate the gate strip changed but not the position.
-          gateAffected ??=
-            this.projectedPosition > startAt ||
-            (anchoringStrip === this.gate && anchorFramePosition === 1)
-
-          const previousStructuralStripCount = this.structuralStripCount
-
-          void anchorStrip.call(
-            this,
-            incomingStrip,
-            anchoringStrip,
-            anchorFramePosition
-          )
-
-          if (
-            incomingStrip.insertionDiff < 0 &&
-            anchoringStrip === this.gate &&
-            (this.gate.fragmentDiff ?? this.gate.insertionDiff) === 0
-          ) {
-            this.gate = this.gate.rightFragment
-            gateRemoved = true
-          }
-
-          if (gateRemoved && incomingStrip.insertionDiff > 0) {
-            this.gate = incomingStrip
-            this.projectedPosition = startAt
-            gateRemoved = false
-          } else if (gateAffected)
-            this.projectedPosition += incomingStrip.insertionDiff
-
-          void patchJumps.call(
-            this,
-            incomingStrip.insertionDiff,
-            this.structuralStripCount - previousStructuralStripCount
-          )
         }
 
-        void this.containmentTable.set(incomingStrip)
+        const previousStructuralStripCount = this.structuralStripCount
 
-        if (incomingStrip.insertionDiff > 0) {
-          void changes.push([
-            startAt,
-            startAt,
-            incomingStrip.footage ??
-              new Array<T | undefined>(incomingStrip.insertionDiff),
-          ])
-        } else {
-          void changes.push([startAt, startAt - incomingStrip.insertionDiff])
+        void anchorStrip.call(
+          this,
+          incomingStrip,
+          anchoringStrip,
+          anchorFramePosition
+        )
+
+        if (
+          incomingStrip.insertionDiff < 0 &&
+          anchoringStrip === this.gate &&
+          (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) === 0
+        ) {
+          this.gate = this.gate!.rightFragment
+          gateRemoved = true
         }
 
-        const pending = this.pendingTable.take(incomingStrip)
+        const rootPrecedesZeroGate =
+          birth &&
+          incomingStrip === this.head &&
+          incomingStrip !== this.gate &&
+          this.projectedPosition === 0 &&
+          (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) === 0
 
-        if (pending)
-          for (let i = pending.length - 1; i >= 0; --i)
-            void queue.push(pending[i])
+        startAt = findProjectionPositionOfStrip.call(
+          this,
+          incomingStrip,
+          incomingStrip.insertionDiff
+        )
 
-        if (incomingStrip.insertionDiff > 0) {
-          if (incomingStrip.insertionSession === this.increaseClock[0])
-            this.increaseClock[1] = Math.max(
-              this.increaseClock[1],
-              incomingStrip.insertionStart + incomingStrip.insertionDiff
-            )
+        if (rootPrecedesZeroGate)
+          this.projectedPosition += incomingStrip.insertionDiff
 
-          continue
+        if (gateRemoved && incomingStrip.insertionDiff > 0) {
+          this.gate = incomingStrip
+          this.projectedPosition = startAt
+          gateRemoved = false
         }
 
-        // Impossible
-        if (incomingStrip.insertionSession === this.decreaseClock[0])
-          this.decreaseClock[1] = Math.max(
-            this.decreaseClock[1],
-            incomingStrip.insertionStart - incomingStrip.insertionDiff
-          )
-
-        const acknowledgement: Acknowledgement = [
-          this.actorID,
-          incomingStrip.insertionSession,
-          incomingStrip.insertionStart - incomingStrip.insertionDiff,
-        ]
-
-        void this.frontierTable.observeAcknowledgement(acknowledgement)
-        void acknowledgements.push(acknowledgement)
+        void patchJumps.call(
+          this,
+          incomingStrip.insertionDiff,
+          this.structuralStripCount - previousStructuralStripCount
+        )
       }
-    }
 
-    return acknowledgements.length === 0
-      ? [changes as unknown as Change<T>]
-      : [changes as unknown as Change<T>, acknowledgements]
+      void this.containmentTable.set(incomingStrip)
+
+      if (incomingStrip.insertionDiff > 0) {
+        void changes.push([
+          startAt,
+          startAt,
+          incomingStrip.footage ??
+            new Array<T | undefined>(incomingStrip.insertionDiff),
+        ])
+      } else {
+        void changes.push([startAt, startAt - incomingStrip.insertionDiff])
+      }
+
+      const pending = this.pendingTable.take(incomingStrip)
+
+      if (pending)
+        for (let i = pending.length - 1; i >= 0; --i)
+          void queue.push(pending[i])
+
+      if (incomingStrip.insertionDiff > 0) {
+        if (incomingStrip.insertionSession === this.increaseClock[0])
+          this.increaseClock[1] = Math.max(
+            this.increaseClock[1],
+            incomingStrip.insertionStart + incomingStrip.insertionDiff
+          )
+
+        continue
+      }
+
+      // Impossible
+      if (incomingStrip.insertionSession === this.decreaseClock[0])
+        this.decreaseClock[1] = Math.max(
+          this.decreaseClock[1],
+          incomingStrip.insertionStart - incomingStrip.insertionDiff
+        )
+
+      const acknowledgement: Acknowledgement = [
+        this.actorID,
+        incomingStrip.insertionSession,
+        incomingStrip.insertionStart - incomingStrip.insertionDiff,
+      ]
+
+      void this.frontierTable.observeAcknowledgement(acknowledgement)
+      void acknowledgements.push(acknowledgement)
+    }
   }
+
+  return acknowledgements.length === 0
+    ? [changes as unknown as Change<T>]
+    : [changes as unknown as Change<T>, acknowledgements]
 }

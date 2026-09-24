@@ -58,13 +58,10 @@ export function create<T>(
         if (birth && this.structuralStripCount === 0) {
           void insertFirst.call(this, incomingStrip)
         } else {
-          let anchoringStrip: NonNullable<Strip<T>>
-          let targetFramePosition: number
+          let anchoringStrip: Strip<T>
+          let targetFramePosition = 0
 
-          if (birth) {
-            anchoringStrip = this.head!
-            targetFramePosition = 1
-          } else {
+          if (!birth) {
             const origin = this.containmentTable.get(incoming)
             if (!origin) continue
 
@@ -73,16 +70,18 @@ export function create<T>(
               incomingStrip
             )
 
-            void anchorStrip.call(
-              this,
-              incomingStrip,
-              anchoringStrip,
-              targetFramePosition
-            )
           }
 
-          void this.containmentTable.set(incomingStrip)
+          void anchorStrip.call(
+            this,
+            incomingStrip,
+            anchoringStrip,
+            targetFramePosition
+          )
+
         }
+
+        void this.containmentTable.set(incomingStrip)
 
         if (!jumpCursor) {
           jumpStart = this.head
@@ -123,21 +122,22 @@ export function create<T>(
         }
       }
 
-      const getSafeSessionID = () => {
-        let sessionID
-        do {
-          sessionID = getRandom53bitNumber()
-        } while (unsafeIDs.has(sessionID))
-        void unsafeIDs.add(sessionID)
-        return sessionID
-      }
-
-      this.increaseClock[0] = getSafeSessionID()
-      this.increaseClock[1] = 0
-
-      this.decreaseClock[0] = getSafeSessionID()
-      this.decreaseClock[1] = 0
-
-      void this.frontierTable.freeCompactedSessions(Array.from(compactableIDs))
     }
+
+  const getSafeSessionID = () => {
+    let sessionID
+    do {
+      sessionID = getRandom53bitNumber()
+    } while (unsafeIDs.has(sessionID))
+    void unsafeIDs.add(sessionID)
+    return sessionID
+  }
+
+  this.increaseClock[0] = getSafeSessionID()
+  this.increaseClock[1] = 0
+
+  this.decreaseClock[0] = getSafeSessionID()
+  this.decreaseClock[1] = 0
+
+  void this.frontierTable.freeCompactedSessions(Array.from(compactableIDs))
 }

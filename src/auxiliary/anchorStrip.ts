@@ -18,31 +18,38 @@ import { subtreeEnd } from './subtreeEnd.js'
  *
  * @param this Projection receiving the Strip.
  * @param incomingStrip Strip to anchor.
- * @param anchoringStrip Strip containing the anchor Frame.
+ * @param anchoringStrip Strip containing the anchor Frame, or undefined for
+ * the virtual root anchor.
  * @param anchorPoint Frame position within the anchoring Strip.
  */
 export function anchorStrip<T>(
   this: Projection<T>,
   incomingStrip: NonNullable<Strip<T>>,
-  anchoringStrip: NonNullable<Strip<T>>,
+  anchoringStrip: Strip<T>,
   anchorPoint: number
 ): void {
-  // Structural length of the anchoring Strip or its current fragment.
-  const anchoringStripLength = Math.abs(
-    anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
-  )
+  let leftStep: Strip<T> = anchoringStrip
+  let rightStep: Strip<T> = this.head
 
-  // Default insertion point is immediately after the anchoring Strip.
-  let leftStep = anchoringStrip
-  let rightStep: Strip<T>
+  if (anchoringStrip) {
+    // Structural length of the anchoring Strip or its current fragment.
+    const anchoringStripLength = Math.abs(
+      anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
+    )
 
-  // Happy path: the anchor is already at the end of the anchoring Strip.
-  if (anchorPoint === anchoringStripLength) {
-    rightStep = anchoringStrip.rightStep
+    // Happy path: the anchor is already at the end of the anchoring Strip.
+    if (anchorPoint === anchoringStripLength) {
+      rightStep = anchoringStrip.rightStep
+    } else {
+      // The anchor is inside the Strip. Split it so that the right fragment
+      // becomes the structural successor of the anchor point.
+      rightStep = splitStrip.call(this, anchoringStrip, anchorPoint) as Strip<T>
+    }
   } else {
-    // The anchor is inside the Strip. Split it so that the right fragment
-    // becomes the structural successor of the anchor point.
-    rightStep = splitStrip.call(this, anchoringStrip, anchorPoint) as Strip<T>
+    // Root competitors share the virtual `(0, 0, 0)` anchor. `head` is the
+    // anchor-facing root competitor; sibling placement still skips complete
+    // trees through `subtreeEnd` below.
+    rightStep = this.head
   }
 
   // Overlap handling.
@@ -117,7 +124,8 @@ export function anchorStrip<T>(
   incomingStrip.leftStep = leftStep
   incomingStrip.rightStep = rightStep
 
-  leftStep.rightStep = incomingStrip
+  if (leftStep) leftStep.rightStep = incomingStrip
+  else this.head = incomingStrip
 
   if (rightStep) {
     rightStep.leftStep = incomingStrip
