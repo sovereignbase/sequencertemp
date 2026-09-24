@@ -43,13 +43,12 @@ export function selectAnchor<T>(
 
   // The Projection end lies immediately after the final projected Frame and
   // therefore cannot be resolved through the normal in-Projection lookup.
-  if (of === this.projectionFrameCount) {
-    anchoringStrip = this.tail!
+  if (of === 0) {
+    anchoringStrip = this.head!
 
     // Anchor at the end of the tail Strip's current fragment.
-    anchorFramePosition = Math.abs(
-      anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
-    )
+    anchorFramePosition =
+      Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff) - 1
 
     // No traversal was required, so there are no surrounding jump links to
     // preserve for later patching.
@@ -58,7 +57,7 @@ export function selectAnchor<T>(
   } else {
     // Resolve the Projection position and use the resulting gate as its
     // structural anchor.
-    anchorFramePosition = findFrameByProjectionPosition.call(this, of)
+    anchorFramePosition = findFrameByProjectionPosition.call(this, of - 1)
     anchoringStrip = this.gate!
 
     // At a Strip boundary, move the anchor to position zero of the right Strip
