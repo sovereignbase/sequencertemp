@@ -1,7 +1,7 @@
 import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
-export function findFrameByProjectionPosition<T>(
+export function findFramePositionByProjectionPosition<T>(
   this: Projection<T>,
   index: number
 ): number {
