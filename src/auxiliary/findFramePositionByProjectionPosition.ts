@@ -1,6 +1,20 @@
 import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
+/**
+ * Finds the Frame at a Projection position.
+ *
+ * Moves `gate` to the Strip or fragment containing `index` and updates
+ * `projectedPosition` to that Strip's first Projection position.
+ *
+ * The returned Frame position is relative to the original insertion, not the
+ * current fragment. It can therefore be used directly as an index into the
+ * Footage array shared by all fragments of that insertion.
+ *
+ * @param this Projection containing the requested position.
+ * @param index Projection position to resolve.
+ * @returns Zero-based Frame position in the containing insertion's Footage.
+ */
 export function findFramePositionByProjectionPosition<T>(
   this: Projection<T>,
   index: number
@@ -77,8 +91,8 @@ export function findFramePositionByProjectionPosition<T>(
       this.leftJumpToPatch = leftJumpToPatch
       this.rightJumpToPatch = rightJumpToPatch
 
-      // Return requestsed frame.
-      return index - cursorIndex
+      // Return the Frame's position in the original insertion's Footage.
+      return (cursorStrip.fragmentStart ?? 0) + index - cursorIndex
     }
 
     // Absolute distance from cursor to requested projection position.
