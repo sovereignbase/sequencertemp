@@ -38,26 +38,19 @@ export function selectAnchor<T>(
   this: Projection<T>,
   of: number
 ): [number, Strip<T>] {
-  // covers all cases, frameposition in 0 based footage + 1 will always return the corerct anchor diff
-  let anchorDiff: number =
-    findFramePositionByProjectionPosition.call(this, of === 0 ? 0 : of - 1) + 1
-  let anchoringStrip: NonNullable<Strip<T>> = this.gate!
+  let anchorDiff: number
+  let anchoringStrip: NonNullable<Strip<T>>
 
-  // At a Strip boundary, move the anchor to position zero of the right Strip
-  // when the right Strip is anchored to the left Strip.
-  if (
-    anchoringStrip.rightStep &&
-    anchorDiff ==
-      Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff) &&
-    containsAnchor(
-      anchoringStrip,
-      anchoringStrip.rightStep,
-      anchoringStrip.insertionDiff,
-      anchoringStrip.insertionDiff
-    )
-  ) {
-    anchorDiff = 0
-    anchoringStrip = anchoringStrip.rightStep
+  // Pushing at the end of tail cant use FramePosition directly and also cannot be traversed to since the projection position does not yet exist.
+  if (of === this.projectionFrameCount) {
+    anchoringStrip = this.tail!
+    anchorDiff =
+      (anchoringStrip.fragmentStart ?? 0) +
+      Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff)
+  } else {
+    // Automatically returns the right diff, because projection position (of) is bound to move right meaning, the new insertion is coming after the frame currently left of the projection position and frame position are always one less than logical positions an insertion targeting the projection position first at a strip would be anchored to the frame to the left (last frame of a strip) but since here we already know there is a strip to ther right because we are getting its footage index or frame position 0, we want to use the logical time zero reservation, where anchor diff 0.
+    anchorDiff = findFramePositionByProjectionPosition.call(this, of)
+    anchoringStrip = this.gate!
   }
 
   return [anchorDiff, anchoringStrip]
