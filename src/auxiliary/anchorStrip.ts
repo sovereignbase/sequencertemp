@@ -50,7 +50,7 @@ export function anchorStrip<T>(
   // A freshly created split cannot itself already have an overlapping
   // competitor at the new boundary. Once fragments exist, however, anchoring
   // at the end of a fragment may encounter Strips already using that anchor.
-  if (anchorsOverlap(incomingStrip, rightStep!)) {
+  if (rightStep && anchorsOverlap(incomingStrip, rightStep)) {
     // Closest known competitor that sorts larger than the incoming Strip.
     let largerCompetitor: NonNullable<Strip<T>> | undefined
 

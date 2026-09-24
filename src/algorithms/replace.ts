@@ -31,7 +31,7 @@ export function replace<T>(
 
     const decreasingLength = Math.min(
       remaining,
-      containingStripLength - targetFramePosition + 1
+      containingStripLength - targetFramePosition
     )
 
     const decreasingStrip: NonNullable<Strip<T>> = {
@@ -63,7 +63,7 @@ export function replace<T>(
       this.structuralStripCount - previousStructuralStripCount
     )
 
-    if (targetFramePosition === 1) {
+    if (targetFramePosition === 0) {
       if ((this.gate!.fragmentDiff ?? this.gate!.insertionDiff) === 0)
         this.gate = this.gate!.rightFragment
       this.projectedPosition += decreasingStrip.insertionDiff
@@ -92,7 +92,7 @@ export function replace<T>(
 
     if (replacementAnchor) {
       containingStrip = replacementAnchor
-      targetFramePosition = 1
+      targetFramePosition = 0
     } else if (startAt === this.projectionFrameCount) {
       containingStrip = this.tail!
       targetFramePosition = 1

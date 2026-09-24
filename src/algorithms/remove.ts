@@ -27,7 +27,7 @@ export function remove<T>(
 
     const decreasingLength = Math.min(
       remaining,
-      containingStripLength - targetFramePosition + 1
+      containingStripLength - targetFramePosition
     )
 
     const decreasingStrip: NonNullable<Strip<T>> = {
@@ -54,10 +54,10 @@ export function remove<T>(
       this.structuralStripCount - previousStructuralStripCount
     )
 
-    if (targetFramePosition === 1) {
+    if (targetFramePosition === 0) {
       if ((this.gate!.fragmentDiff ?? this.gate!.insertionDiff) === 0)
         this.gate = this.gate!.rightFragment
-      this.projectionFrameCount += decreasingStrip.insertionDiff
+      this.projectedPosition += decreasingStrip.insertionDiff
     }
 
     void this.containmentTable.set(decreasingStrip)

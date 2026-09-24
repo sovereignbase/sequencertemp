@@ -24,17 +24,17 @@ export function values<T>(
 
       const length = Math.max(
         0,
-        Math.min(remaining, stripDiff - framePosition + 1)
+        Math.min(remaining, stripDiff - framePosition)
       )
 
-      for (let i = -1; i < length - 1; ++i)
+      for (let i = 0; i < length; ++i)
         void values.push(strip.footage![anchorFrame + i]!)
 
       remaining -= length
     }
 
     strip = strip.rightStep
-    framePosition = Math.max(1, framePosition - stripDiff)
+    framePosition = Math.max(0, framePosition - stripDiff)
   }
 
   return values

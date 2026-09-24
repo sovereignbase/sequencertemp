@@ -15,5 +15,5 @@ export function value<T>(this: Projection<T>, at: number): T | undefined {
     framePositionRelativeToItsStrip
   )
 
-  return projectedStrip.footage?.[projectedFrame - 1]
+  return projectedStrip.footage?.[projectedFrame]
 }
