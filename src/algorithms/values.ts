@@ -1,5 +1,4 @@
-import { findFrameByProjectionPosition } from '../auxiliary/findFrameByProjectionPosition.js'
-import { findFrame } from '../auxiliary/findFrame.js'
+import { findFramePositionByProjectionPosition } from '../auxiliary/findFramePositionByProjectionPosition.js'
 import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
@@ -12,7 +11,7 @@ export function values<T>(
 
   if (startAt > endWith || this.projectionFrameCount === 0) return values
 
-  let framePosition = findFrameByProjectionPosition.call(this, startAt)
+  let framePosition = findFramePositionByProjectionPosition.call(this, startAt)
   let strip: Strip<T> = this.gate
   let remaining = endWith - startAt + 1
 
@@ -20,12 +19,10 @@ export function values<T>(
     const stripDiff = strip.fragmentDiff ?? strip.insertionDiff
 
     if (stripDiff > 0) {
-      const anchorFrame = findFrame(strip, framePosition)
-
       const length = Math.max(0, Math.min(remaining, stripDiff - framePosition))
 
       for (let i = 0; i < length; ++i)
-        void values.push(strip.footage![anchorFrame + i]!)
+        void values.push(strip.footage![framePosition + i]!)
 
       remaining -= length
     }

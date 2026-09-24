@@ -1,8 +1,6 @@
 import type { Projection } from '../class.js'
 import type { Gossip, Strip } from '../types/type.js'
 
-import { findFrame } from '../auxiliary/findFrame.js'
-import { findFrameByProjectionPosition } from '../auxiliary/findFrameByProjectionPosition.js'
 import { anchorStrip } from '../auxiliary/anchorStrip.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
