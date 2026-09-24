@@ -1,7 +1,7 @@
 import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
-import { findFrameByProjectionPosition } from '../auxiliary/findFrameByProjectionPosition.js'
+import { findFramePositionByProjectionPosition } from '../auxiliary/findFramePositionByProjectionPosition.js'
 import { containsAnchor } from './containsAnchor.js'
 
 /**
@@ -38,44 +38,26 @@ export function selectAnchor<T>(
   this: Projection<T>,
   of: number
 ): [number, Strip<T>] {
-  let anchorDiff: number
-  let anchoringStrip: NonNullable<Strip<T>>
+  // covers all cases, frameposition in 0 based footage + 1 will always return the corerct anchor diff
+  let anchorDiff: number =
+    findFramePositionByProjectionPosition.call(this, of === 0 ? 0 : of - 1) + 1
+  let anchoringStrip: NonNullable<Strip<T>> = this.gate!
 
-  // The Projection end lies immediately after the final projected Frame and
-  // therefore cannot be resolved through the normal in-Projection lookup.
-  if (of === 0) {
-    anchoringStrip = this.head!
-
-    // Anchor at the end of the tail Strip's current fragment.
-    anchorDiff =
-      Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff) - 1
-
-    // No traversal was required, so there are no surrounding jump links to
-    // preserve for later patching.
-    this.leftJumpToPatch = undefined
-    this.rightJumpToPatch = undefined
-  } else {
-    // Resolve the Projection position and use the resulting gate as its
-    // structural anchor.
-    anchorDiff = findFrameByProjectionPosition.call(this, of - 1)
-    anchoringStrip = this.gate!
-
-    // At a Strip boundary, move the anchor to position zero of the right Strip
-    // when the right Strip is anchored to the left Strip.
-    if (
-      anchoringStrip.rightStep &&
-      anchorDiff ==
-        Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff) &&
-      containsAnchor(
-        anchoringStrip,
-        anchoringStrip.rightStep,
-        anchoringStrip.insertionDiff,
-        anchoringStrip.insertionDiff
-      )
-    ) {
-      anchorDiff = 0
-      anchoringStrip = anchoringStrip.rightStep
-    }
+  // At a Strip boundary, move the anchor to position zero of the right Strip
+  // when the right Strip is anchored to the left Strip.
+  if (
+    anchoringStrip.rightStep &&
+    anchorDiff ==
+      Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff) &&
+    containsAnchor(
+      anchoringStrip,
+      anchoringStrip.rightStep,
+      anchoringStrip.insertionDiff,
+      anchoringStrip.insertionDiff
+    )
+  ) {
+    anchorDiff = 0
+    anchoringStrip = anchoringStrip.rightStep
   }
 
   return [anchorDiff, anchoringStrip]
