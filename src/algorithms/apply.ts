@@ -87,21 +87,11 @@ export function apply<T>(
           gateRemoved = true
         }
 
-        const rootPrecedesZeroGate =
-          birth &&
-          incomingStrip === this.head &&
-          incomingStrip !== this.gate &&
-          this.projectedPosition === 0 &&
-          (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) === 0
-
         startAt = findProjectionPositionOfStrip.call(
           this,
           incomingStrip,
           incomingStrip.insertionDiff
         )
-
-        if (rootPrecedesZeroGate)
-          this.projectedPosition += incomingStrip.insertionDiff
 
         if (gateRemoved && incomingStrip.insertionDiff > 0) {
           this.gate = incomingStrip

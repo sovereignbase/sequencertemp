@@ -39,6 +39,15 @@ describe('benchmark local/remote replacement equivalence', () => {
       const acknowledgements = receiver.apply(update)?.[1]
       if (acknowledgements) author.apply(acknowledgements)
       expect(receiver.projectionFrameCount).toBe(author.projectionFrameCount)
+      const authorProjection = project(author)
+      const receiverProjection = project(receiver)
+      const difference = receiverProjection.findIndex(
+        (frame, index) => frame !== authorProjection[index]
+      )
+      if (difference !== -1)
+        throw new Error(
+          `first difference at ${difference}: ${receiverProjection[difference]} !== ${authorProjection[difference]}`
+        )
     }
 
     const createStrip = (length?: number) => {

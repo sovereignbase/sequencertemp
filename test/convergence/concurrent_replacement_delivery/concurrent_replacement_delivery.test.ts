@@ -97,23 +97,6 @@ describe('concurrent replacement delivery', () => {
         .map(({ update }) => update)
     )
 
-    const dump = (sequence: Projection<string>) => {
-      const strips = []
-      for (let strip = sequence.head; strip; strip = strip.rightStep)
-        strips.push({
-          footage: strip.footage?.[0],
-          anchor: [strip.anchorSession, strip.anchorStart, strip.anchorDiff],
-          insertion: [strip.insertionSession, strip.insertionStart],
-          insertionDiff: strip.insertionDiff,
-          fragmentStart: strip.fragmentStart,
-          fragmentDiff: strip.fragmentDiff,
-          rightCompetitor: strip.rightCompetitor?.footage?.[0],
-        })
-      return strips
-    }
-
-    console.log(JSON.stringify({ gossip, chronological: dump(chronological), mixed: dump(mixed) }, null, 2))
-
     expect(mixed.projectionFrameCount).toBe(chronological.projectionFrameCount)
     expect(project(mixed)).toEqual(project(chronological))
   })

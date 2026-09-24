@@ -45,7 +45,7 @@ export function findProjectionPositionOfStrip<T>(
 
       ++leftStripDistance
 
-      if (gateDiff === 0 && leftCursor === this.gate) {
+      if (leftCursor === this.gate) {
         knownIndex = this.projectedPosition + leftDistance
       }
 
@@ -68,7 +68,8 @@ export function findProjectionPositionOfStrip<T>(
       rightCursor = rightCursor.rightStep!
       ++rightStripDistance
 
-      if (gateDiff === 0 && rightCursor === this.gate) {
+      if (rightCursor === this.gate) {
+        this.projectedPosition += gateDiff
         knownIndex = this.projectedPosition - rightDistance
       }
 

@@ -12,8 +12,7 @@ export function findContainingFragment<T>(
 
     if (
       incomingStrip.anchorDiff < fragmentEnd ||
-      (incomingStrip.insertionDiff > 0 &&
-        incomingStrip.anchorDiff === fragmentEnd &&
+      (incomingStrip.anchorDiff === fragmentEnd &&
         anchoringStrip.rightFragment !== anchoringStrip.rightStep &&
         anchoringStrip.rightStep?.anchorSession ===
           incomingStrip.anchorSession &&
