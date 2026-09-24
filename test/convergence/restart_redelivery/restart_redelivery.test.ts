@@ -10,8 +10,8 @@ import {
 describe('restart and redelivery', () => {
   it('converges through hostile delivery, create, and stale redelivery', () => {
     const retained: Sequence<string> = [[], []]
-    const mutations: Array<Gossip<string>> = [41, 42, 43, 44, 45].map(
-      (actor) => new Projection<string>(actor).insert([`actor-${actor}`], 0)
+    const mutations: Array<Gossip<string>> = [41, 42, 43, 44, 45].map((actor) =>
+      new Projection<string>(actor).insert([`actor-${actor}`], 0)
     )
 
     const ordered = deliver(retained, mutations)

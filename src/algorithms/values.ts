@@ -22,10 +22,7 @@ export function values<T>(
     if (stripDiff > 0) {
       const anchorFrame = findFrame(strip, framePosition)
 
-      const length = Math.max(
-        0,
-        Math.min(remaining, stripDiff - framePosition)
-      )
+      const length = Math.max(0, Math.min(remaining, stripDiff - framePosition))
 
       for (let i = 0; i < length; ++i)
         void values.push(strip.footage![anchorFrame + i]!)

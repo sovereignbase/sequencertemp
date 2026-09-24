@@ -69,7 +69,6 @@ export function create<T>(
               origin,
               incomingStrip
             )
-
           }
 
           void anchorStrip.call(
@@ -78,7 +77,6 @@ export function create<T>(
             anchoringStrip,
             targetFramePosition
           )
-
         }
 
         void this.containmentTable.set(incomingStrip)
@@ -121,7 +119,6 @@ export function create<T>(
           }
         }
       }
-
     }
 
   const getSafeSessionID = () => {
