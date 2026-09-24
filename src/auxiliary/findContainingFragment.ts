@@ -17,7 +17,13 @@ export function findContainingFragment<T>(
         anchoringStrip.rightStep?.anchorSession ===
           incomingStrip.anchorSession &&
         anchoringStrip.rightStep.anchorStart === incomingStrip.anchorStart &&
-        anchoringStrip.rightStep.anchorDiff === incomingStrip.anchorDiff)
+        anchoringStrip.rightStep.anchorDiff === incomingStrip.anchorDiff &&
+        (incomingStrip.insertionSession !==
+          anchoringStrip.rightStep.insertionSession ||
+          incomingStrip.insertionStart <
+            anchoringStrip.rightStep.insertionStart +
+              Math.abs(anchoringStrip.rightStep.insertionDiff) +
+              1))
     )
       break
 
