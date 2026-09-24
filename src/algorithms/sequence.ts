@@ -15,15 +15,15 @@ export function sequence<T>(this: Projection<T>): Sequence<T> {
       included.set(strip.insertionSession, sequencer)
     }
 
-    if (!sequencer.has(strip.insertionTime)) {
-      sequencer.add(strip.insertionTime)
+    if (!sequencer.has(strip.insertionStart)) {
+      sequencer.add(strip.insertionStart)
 
       projection.push([
         strip.anchorSession,
-        strip.anchorTime,
-        strip.anchorFrame,
+        strip.anchorStart,
+        strip.anchorDiff,
         strip.insertionSession,
-        strip.insertionTime,
+        strip.insertionStart,
         strip.insertionDiff,
         strip.footage,
       ])

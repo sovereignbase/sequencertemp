@@ -26,10 +26,10 @@ export class PendingTable<T> {
     const sequencer = this.insertions.get(incomingStrip.insertionSession)
     if (!sequencer) return
 
-    const pending = sequencer.get(incomingStrip.insertionTime)
+    const pending = sequencer.get(incomingStrip.insertionStart)
     if (!pending) return
 
-    sequencer.delete(incomingStrip.insertionTime)
+    sequencer.delete(incomingStrip.insertionStart)
 
     if (sequencer.size === 0)
       this.insertions.delete(incomingStrip.insertionSession)

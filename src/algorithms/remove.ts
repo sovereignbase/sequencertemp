@@ -64,7 +64,7 @@ export function remove<T>(
 
     void insertions.push([
       decreasingStrip.anchorSession,
-      decreasingStrip.anchorStart,
+      decreasingStrip.insertionStart,
       decreasingStrip.anchorDiff,
       decreasingStrip.insertionSession,
       decreasingStrip.anchorStart,
