@@ -33,8 +33,13 @@ export function values<T>(
       remaining -= length
     }
 
+    framePosition =
+      (strip.rightStep?.fragmentStart ?? 0) +
+      Math.max(
+        0,
+        framePosition - (strip.fragmentStart ?? 0) - stripDiff
+      )
     strip = strip.rightStep
-    framePosition = strip?.fragmentStart ?? 0
   }
 
   return values
