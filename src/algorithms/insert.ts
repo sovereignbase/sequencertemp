@@ -41,7 +41,7 @@ export function insert<T>(
     ]
   }
 
-  const [anchorFramePosition, anchoringStrip] = selectAnchor.call(this, at) as [
+  const [anchorDiff, anchoringStrip] = selectAnchor.call(this, at) as [
     number,
     NonNullable<Strip<T>>,
   ]
@@ -49,7 +49,7 @@ export function insert<T>(
   const increasingStrip: NonNullable<Strip<T>> = {
     anchorSession: anchoringStrip.insertionSession,
     anchorStart: anchoringStrip.insertionStart,
-    anchorDiff: findFrame(anchoringStrip, anchorFramePosition),
+    anchorDiff: anchorDiff,
     insertionSession: this.increaseClock[0],
     insertionStart: this.increaseClock[1],
     insertionDiff: values.length,
@@ -58,12 +58,7 @@ export function insert<T>(
 
   const previousStructuralStripCount = this.structuralStripCount
 
-  void anchorStrip.call(
-    this,
-    increasingStrip,
-    anchoringStrip,
-    anchorFramePosition
-  )
+  void anchorStrip.call(this, increasingStrip, anchoringStrip, anchorDiff)
 
   void patchJumps.call(
     this,

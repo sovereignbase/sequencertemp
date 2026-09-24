@@ -38,7 +38,7 @@ export function selectAnchor<T>(
   this: Projection<T>,
   of: number
 ): [number, Strip<T>] {
-  let anchorFramePosition: number
+  let anchorDiff: number
   let anchoringStrip: NonNullable<Strip<T>>
 
   // The Projection end lies immediately after the final projected Frame and
@@ -47,7 +47,7 @@ export function selectAnchor<T>(
     anchoringStrip = this.head!
 
     // Anchor at the end of the tail Strip's current fragment.
-    anchorFramePosition =
+    anchorDiff =
       Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff) - 1
 
     // No traversal was required, so there are no surrounding jump links to
@@ -57,14 +57,14 @@ export function selectAnchor<T>(
   } else {
     // Resolve the Projection position and use the resulting gate as its
     // structural anchor.
-    anchorFramePosition = findFrameByProjectionPosition.call(this, of - 1)
+    anchorDiff = findFrameByProjectionPosition.call(this, of - 1)
     anchoringStrip = this.gate!
 
     // At a Strip boundary, move the anchor to position zero of the right Strip
     // when the right Strip is anchored to the left Strip.
     if (
       anchoringStrip.rightStep &&
-      anchorFramePosition ==
+      anchorDiff ==
         Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff) &&
       containsAnchor(
         anchoringStrip,
@@ -73,10 +73,10 @@ export function selectAnchor<T>(
         anchoringStrip.insertionDiff
       )
     ) {
-      anchorFramePosition = 0
+      anchorDiff = 0
       anchoringStrip = anchoringStrip.rightStep
     }
   }
 
-  return [anchorFramePosition, anchoringStrip]
+  return [anchorDiff, anchoringStrip]
 }
