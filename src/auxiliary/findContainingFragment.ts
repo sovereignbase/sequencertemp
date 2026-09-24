@@ -10,7 +10,6 @@ export function findContainingFragment<T>(
       (anchoringStrip.fragmentStart ?? 0) +
       Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff)
 
-    // TODO: maybe this could use contains anchor?
     if (
       incomingStrip.anchorDiff < fragmentEnd ||
       (incomingStrip.insertionDiff > 0 &&

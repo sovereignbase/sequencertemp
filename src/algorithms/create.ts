@@ -65,7 +65,7 @@ export function create<T>(
             const origin = this.containmentTable.get(incoming)
             if (!origin) continue
 
-            ;[anchoringStrip, targetFramePosition] = findContainingFragment(
+            ;[targetFramePosition, anchoringStrip] = findContainingFragment(
               origin,
               incomingStrip
             )
