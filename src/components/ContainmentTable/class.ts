@@ -9,14 +9,6 @@ export class ContainmentTable<T> {
     return false
   }
 
-  isRightFragment(strip: NonNullable<Strip<T>>): boolean {
-    const origin = this.strips
-      .get(strip.insertionSession)
-      ?.get(strip.insertionStart)
-
-    return origin !== undefined && origin !== strip
-  }
-
   get(incomingInsertion: Insertion<T>): Strip<T> {
     const sequencer = this.strips.get(incomingInsertion[0])
     if (!sequencer) return undefined

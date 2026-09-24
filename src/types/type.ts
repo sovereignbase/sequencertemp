@@ -40,8 +40,12 @@ export type Strip<T> =
       /** Next fragment belonging to the same original Insertion. */
       rightFragment?: Strip<T>
 
+      /** Anchor point of the original insertion after which this fragments first frame comes. */
+      fragmentStart?: number
+
       /** Signed Projection effect represented by this fragment. */
       fragmentDiff?: number
+
       /** Immediately preceding Strip in Sequence. */
       leftStep?: Strip<T>
 
