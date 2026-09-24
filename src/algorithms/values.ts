@@ -19,7 +19,13 @@ export function values<T>(
     const stripDiff = strip.fragmentDiff ?? strip.insertionDiff
 
     if (stripDiff > 0) {
-      const length = Math.max(0, Math.min(remaining, stripDiff - framePosition))
+      const length = Math.max(
+        0,
+        Math.min(
+          remaining,
+          stripDiff - framePosition + (strip.fragmentStart ?? 0)
+        )
+      )
 
       for (let i = 0; i < length; ++i)
         void values.push(strip.footage![framePosition + i]!)
@@ -28,7 +34,7 @@ export function values<T>(
     }
 
     strip = strip.rightStep
-    framePosition = Math.max(0, framePosition - stripDiff)
+    framePosition = strip?.fragmentStart ?? 0
   }
 
   return values

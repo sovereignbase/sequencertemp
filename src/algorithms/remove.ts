@@ -1,5 +1,4 @@
-import { findFrameByProjectionPosition } from '../auxiliary/findFrameByProjectionPosition.js'
-import { findFrame } from '../auxiliary/findFrame.js'
+import { findFramePositionByProjectionPosition } from '../auxiliary/findFramePositionByProjectionPosition.js'
 import { anchorStrip } from '../auxiliary/anchorStrip.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Projection } from '../class.js'
@@ -15,11 +14,13 @@ export function remove<T>(
   let remaining = endWith - startAt + 1
 
   while (remaining > 0) {
-    const targetFramePosition = findFrameByProjectionPosition.call(
+    const framePosition = findFramePositionByProjectionPosition.call(
       this,
       startAt
     )
     const containingStrip = this.gate!
+    const fragmentPosition =
+      framePosition - (containingStrip.fragmentStart ?? 0)
 
     const containingStripLength = Math.abs(
       containingStrip.fragmentDiff ?? containingStrip.insertionDiff
@@ -27,13 +28,13 @@ export function remove<T>(
 
     const decreasingLength = Math.min(
       remaining,
-      containingStripLength - targetFramePosition
+      containingStripLength - fragmentPosition
     )
 
     const decreasingStrip: NonNullable<Strip<T>> = {
       anchorSession: containingStrip.insertionSession,
       anchorStart: containingStrip.insertionStart,
-      anchorDiff: findFrame(containingStrip, targetFramePosition),
+      anchorDiff: framePosition,
       insertionSession: this.decreaseClock[0],
       insertionStart: this.decreaseClock[1],
       insertionDiff: -decreasingLength,
@@ -45,7 +46,7 @@ export function remove<T>(
       this,
       decreasingStrip,
       containingStrip,
-      targetFramePosition
+      fragmentPosition
     )
 
     void patchJumps.call(
@@ -54,7 +55,7 @@ export function remove<T>(
       this.structuralStripCount - previousStructuralStripCount
     )
 
-    if (targetFramePosition === 0) {
+    if (fragmentPosition === 0) {
       if ((this.gate!.fragmentDiff ?? this.gate!.insertionDiff) === 0)
         this.gate = this.gate!.rightFragment
       this.projectedPosition += decreasingStrip.insertionDiff

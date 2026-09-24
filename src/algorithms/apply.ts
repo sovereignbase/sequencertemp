@@ -58,7 +58,7 @@ export function apply<T>(
         void insertFirst.call(this, incomingStrip)
       } else {
         let anchoringStrip: Strip<T>
-        let anchorFramePosition = 0
+        let anchorDiff = 0
 
         if (!birth) {
           const origin = this.containmentTable.get(incoming)
@@ -68,7 +68,7 @@ export function apply<T>(
             continue
           }
 
-          ;[anchoringStrip, anchorFramePosition] = findContainingFragment(
+          ;[anchorDiff, anchoringStrip] = findContainingFragment(
             origin,
             incomingStrip
           )
@@ -76,12 +76,7 @@ export function apply<T>(
 
         const previousStructuralStripCount = this.structuralStripCount
 
-        void anchorStrip.call(
-          this,
-          incomingStrip,
-          anchoringStrip,
-          anchorFramePosition
-        )
+        void anchorStrip.call(this, incomingStrip, anchoringStrip, anchorDiff)
 
         if (
           incomingStrip.insertionDiff < 0 &&

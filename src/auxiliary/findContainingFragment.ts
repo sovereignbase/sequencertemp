@@ -3,18 +3,18 @@ import type { Strip } from '../class.js'
 export function findContainingFragment<T>(
   origin: NonNullable<Strip<T>>,
   incomingStrip: NonNullable<Strip<T>>
-): [NonNullable<Strip<T>>, number] {
+): [number, NonNullable<Strip<T>>] {
   let anchoringStrip = origin
-  let anchorFramePosition = incomingStrip.anchorDiff
   while (true) {
-    const anchoringStripLength = Math.abs(
-      anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
-    )
+    const fragmentEnd =
+      (anchoringStrip.fragmentStart ?? 0) +
+      Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff)
 
+    // TODO: maybe this could use contains anchor?
     if (
-      anchorFramePosition <= anchoringStripLength ||
+      incomingStrip.anchorDiff < fragmentEnd ||
       (incomingStrip.insertionDiff > 0 &&
-        anchorFramePosition === anchoringStripLength &&
+        incomingStrip.anchorDiff === fragmentEnd &&
         anchoringStrip.rightFragment !== anchoringStrip.rightStep &&
         anchoringStrip.rightStep?.anchorSession ===
           incomingStrip.anchorSession &&
@@ -26,9 +26,11 @@ export function findContainingFragment<T>(
     const rightFragment = anchoringStrip.rightFragment
     if (!rightFragment) break
 
-    anchorFramePosition -= anchoringStripLength
     anchoringStrip = rightFragment
   }
 
-  return [anchoringStrip, anchorFramePosition]
+  return [
+    incomingStrip.anchorDiff - (anchoringStrip.fragmentStart ?? 0),
+    anchoringStrip,
+  ]
 }
