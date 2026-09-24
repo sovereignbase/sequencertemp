@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { Projection } from '../../../src/class.js'
 import type { Sequence } from '../../../src/types/type.js'
-import { deliver, expect_converged } from '../../.helpers/replica.js'
+import { deliver } from '../../.helpers/replica.js'
 
 describe('historical boundary view', () => {
   it('orders same-actor insertions by the view in which they were authored', () => {
@@ -25,14 +25,16 @@ describe('historical boundary view', () => {
       mutations[5],
     ])
 
-    expect_converged(ordered, hostile)
-    expect(ordered.values()).toEqual([
+    const expected = [
+      'middle',
       'fifth',
       'fourth',
       'second',
-      'middle',
       'first',
       'root',
-    ])
+    ]
+
+    expect(ordered.values()).toEqual(expected)
+    expect(hostile.values()).toEqual(expected)
   })
 })
