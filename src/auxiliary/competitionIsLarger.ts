@@ -13,9 +13,6 @@ export function competitionIsLarger<T>(
     (incomingStrip.insertionDiff < 0 === competition.insertionDiff < 0 &&
       (incomingStrip.insertionSession < competition.insertionSession ||
         (incomingStrip.insertionSession === competition.insertionSession &&
-          incomingStrip.insertionStart >=
-            competition.insertionStart +
-              Math.abs(competition.insertionDiff) +
-              1)))
+          incomingStrip.insertionStart < competition.insertionStart)))
   )
 }
