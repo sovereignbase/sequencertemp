@@ -1,14 +1,46 @@
 # Concurrent root subtree
 
-Two replicas independently build head-insertion chains from an empty Projection:
+Two replicas begin from the same empty Sequence and independently build their own documents by inserting at the head.
+
+Actor 0:
 
 ```text
-Actor 100: primary-5 -> primary-3 -> primary-2 -> primary-root
-Actor 101: concurrent-4 -> concurrent-root
+Project notes.
+
+Draft:
+Project notes.
+
+Final:
+Draft:
+Project notes.
+
+Reviewed:
+Final:
+Draft:
+Project notes.
 ```
 
-The hostile delivery sends Actor 101's complete subtree before Actor 100's
-root. Even though Actor 101's root has already split around its child, its root
-competitor is still represented by the `rightFragment`. Session ordering may
-place either complete subtree first, but network delivery cannot change that
-order or interleave their contents.
+Actor 1:
+
+```text
+Shopping list.
+
+Updated:
+Shopping list.
+```
+
+The hostile delivery sends Actor 1's complete document subtree before Actor 0's root arrives. Even though Actor 1's root has already been fragmented by its child insertion, its root competitor remains represented by the `rightFragment`.
+
+Session ordering determines one deterministic order for the complete root subtrees. Delivery order must not change that order or interleave their contents.
+
+For example:
+
+```text
+Updated:
+Shopping list.
+
+Reviewed:
+Final:
+Draft:
+Project notes.
+```
