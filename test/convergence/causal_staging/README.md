@@ -1,24 +1,26 @@
 # Causal staging
 
-Actor 21 creates one causal chain:
+One editor creates a short text in two dependent steps:
 
 ```text
-parent -> child
+Hello
+Hello world
 ```
 
-Actor 22 starts empty but receives the packets in this order:
+The second replica starts empty but receives the edits in reverse order:
 
 ```text
-1. child  -> accepted into pending, still invisible
-2. parent -> accepted and automatically unlocks child
+1. insert " world" after "Hello"
+   -> accepted into pending, still invisible
+
+2. insert "Hello"
+   -> accepted and automatically unlocks the pending edit
 ```
 
 The required Projection is then:
 
 ```text
-parent -> child
+Hello world
 ```
 
-The receiver must equal the authoring replica exactly without child redelivery
-or sequence exchange. Packet order does not change causal order, and an
-unresolved child is never partially materialized.
+The receiver must equal the authoring replica exactly without redelivering ` world` or exchanging a retained Sequence. Packet order does not change causal order, and an unresolved edit is never partially materialized.
