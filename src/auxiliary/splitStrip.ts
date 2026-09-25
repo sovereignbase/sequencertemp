@@ -2,7 +2,7 @@ import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
 /**
- * Splits one Strip into two fragments at a Frame position.
+ * Splits one Strip into two fragments after a zero-based anchor point.
  *
  * The existing Strip becomes the left fragment while the newly created Strip
  * becomes its right fragment. Together, the two fragments retain the complete
@@ -16,39 +16,40 @@ import type { Strip } from '../types/type.js'
  *
  * `leftDiff + rightDiff === anchoringStripDiff`
  *
- * For a positive Strip, `afterFrame` Frames are retained by the left fragment
- * as a positive effect. For a negative Strip, the same amount is retained as a
- * negative effect.
+ * `after` is the largest zero-based anchor point retained by the left fragment.
+ * Its sign-independent magnitude determines the left fragment's effect; the
+ * Strip's effect direction determines whether that effect is increasing or
+ * reducing.
  *
  * @param this Projection containing the Strip.
  * @param anchoringStrip Strip to split. Becomes the left fragment.
- * @param afterFrame Positive number of Frames retained by the left fragment.
+ * @param after Largest zero-based anchor point retained by the left fragment.
  * @returns Newly created right fragment.
  */
 export function splitStrip<T>(
   this: Projection<T>,
   anchoringStrip: NonNullable<Strip<T>>,
-  afterFrame: number
+  after: number
 ): NonNullable<Strip<T>> {
   // Anchor (strip | fragment) length.
   //
   // An already fragmented Strip is split according to its current fragment
-  // length. Otherwise its original insertion effect defines its length.
+  // effect. Otherwise its original insertion effect defines the extent.
   const anchoringStripDiff =
     anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
 
   // When anchoring strip is of negative effect scalar is reducing, else increasing.
   //
   // This preserves the direction of the Strip's Projection effect while
-  // allowing `afterFrame` itself to remain a positive Frame count.
+  // `after` remains a zero-based anchor point independent of that direction.
   const effect = anchoringStripDiff < 0 ? -1 : 1
 
   // Negative effect scalar makes left diff negative.
   //
-  // For example, splitting after 3 Frames gives:
+  // For example, splitting after anchor point 3 gives:
   //   positive Strip ->  3
   //   negative Strip -> -3
-  const leftDiff = effect * afterFrame
+  const leftDiff = effect * after
 
   // Handles mask overlap/ownership by moving anchor to the right when left strip is a mask.
   //
@@ -57,8 +58,8 @@ export function splitStrip<T>(
   //
   //   -7 - -3 = -4
   //
-  // Left reducing strip keeps ownership of the overlapping Frames that remain
-  // in `leftDiff`; the remainder moves to the right fragment.
+  // Left reducing strip keeps ownership of the overlapping range represented
+  // by `leftDiff`; the remainder moves to the right fragment.
   const rightDiff = anchoringStripDiff - leftDiff
 
   // Cache (used more than once).
@@ -100,7 +101,7 @@ export function splitStrip<T>(
     // Preserve the existing fragment chain by placing the new fragment between
     // the anchoring Strip and its previous right fragment.
     rightFragment: anchoringStrip.rightFragment,
-    fragmentStart: (anchoringStrip.fragmentStart ?? 0) + afterFrame,
+    fragmentStart: (anchoringStrip.fragmentStart ?? 0) + after + 1,
     fragmentDiff: rightDiff,
 
     // The newly created fragment immediately follows the anchoring Strip.
