@@ -40,7 +40,16 @@ export type Strip<T> =
       /** Next fragment belonging to the same original Insertion. */
       rightFragment?: Strip<T>
 
-      /** First anchor point held by this fragment. */
+      /** First zero-based anchor point held by this fragment.
+       *
+       * A `fragmentStart` of 1 means that the first Frame is owned by the fragment
+       * and is accessible at footage index 0. Equivalently, any non-zero
+       * `fragmentStart` resolves to footage index `fragmentStart - 1`.
+       *
+       * A `fragmentStart` of 0 with length 0 holds no footage. With a larger length,
+       * it does; for example, a length of 3 contains three Frames, with anchor point
+       * 1 resolving to footage index 0 and anchor point 3 to footage index 2.
+       */
       fragmentStart?: number
 
       /** Signed Projection effect represented by this fragment. */
