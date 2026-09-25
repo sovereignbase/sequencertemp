@@ -32,4 +32,4 @@ Actor 3 has the larger competing Clock, so both receivers must project the same 
 Hello right left
 ```
 
-This verifies the same delivery-order-independent ordering in the actual browser boundary used by the public TypeScript/WebAssembly API.
+This verifies the same delivery-order-independent ordering in the actual browser boundary used by the public API.
