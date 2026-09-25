@@ -33,13 +33,8 @@ export function patchJumps<T>(
   frameDiff: number,
   stripDiff: number
 ): void {
-  // Consume the cached jump span selected by the traversal preceding the
-  // structural mutation.
   const left = this.leftJumpToPatch
   const right = this.rightJumpToPatch
-
-  this.leftJumpToPatch = undefined
-  this.rightJumpToPatch = undefined
 
   // No jump crossed the mutation position.
   if (!left || !right) return

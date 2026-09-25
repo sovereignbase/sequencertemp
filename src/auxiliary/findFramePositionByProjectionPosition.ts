@@ -26,6 +26,14 @@ export function findFramePositionByProjectionPosition<T>(
   let leftJumpToPatch = this.leftJumpToPatch
   let rightJumpToPatch = this.rightJumpToPatch
 
+  if (
+    !leftJumpToPatch ||
+    !rightJumpToPatch
+  ) {
+    leftJumpToPatch = undefined
+    rightJumpToPatch = undefined
+  }
+
   // Tail (strip | fragment) length.
   const tailDiff = this.tail!.fragmentDiff ?? this.tail!.insertionDiff
   // Index at the first frame of tail (strip | fragment).
@@ -34,6 +42,8 @@ export function findFramePositionByProjectionPosition<T>(
   // Length of the (strip | fragment) left of tail or 0 when there is no fragment.
   const tailPredecessorDiff =
     this.tail!.leftStep?.fragmentDiff ?? this.tail!.leftStep?.insertionDiff ?? 0
+  const gatePredecessorDiff =
+    this.gate!.leftStep?.fragmentDiff ?? this.gate!.leftStep?.insertionDiff ?? 0
 
   // Length from gate to requested projection position.
   const distanceToTravel = Math.abs(this.projectedPosition - index)
@@ -42,6 +52,7 @@ export function findFramePositionByProjectionPosition<T>(
 
   if (
     // Length of the (strip | fragment) left of tail is negative.
+    gatePredecessorDiff < 0 ||
     tailPredecessorDiff < 0 || // Or
     // Distance to travel from head to requested projection position is shorter than distance from gate and tail.
     (index < distanceToTravel && index <= tailDistance)
@@ -99,6 +110,19 @@ export function findFramePositionByProjectionPosition<T>(
     // Absolute distance from cursor to requested projection position.
     const currentDistance = Math.abs(cursorIndex - index)
 
+    if (index === 116)
+      console.error(
+        'TRACE',
+        this.actorID,
+        cursorIndex,
+        cursorStrip.insertionSession,
+        cursorStrip.insertionStart,
+        cursorStrip.fragmentStart,
+        cursorStrip.fragmentDiff,
+        cursorStrip.leftJumpFrameCount,
+        cursorStrip.rightJumpFrameCount
+      )
+
     if (cursorIndex <= index) {
       // Traverse right
       const walkStrip = cursorStrip.rightStep!
@@ -142,7 +166,7 @@ export function findFramePositionByProjectionPosition<T>(
 
         const jumpIndex = cursorIndex + rightJumpFrameCount
 
-        if (cursorIndex <= index && index <= jumpIndex) {
+        if (cursorIndex <= index && index < jumpIndex) {
           leftJumpToPatch = cursorStrip
           rightJumpToPatch = rightJump
         }
@@ -176,6 +200,15 @@ export function findFramePositionByProjectionPosition<T>(
       // Traverse left
       const walkStrip = cursorStrip.leftStep!
       const walkDiff = walkStrip.fragmentDiff ?? walkStrip.insertionDiff
+
+      if (walkDiff < 0) {
+        cursorStrip = this.head!
+        cursorIndex = 0
+        leftJumpToPatch = cursorStrip
+        rightJumpToPatch = cursorStrip.rightJump
+        continue
+      }
+
       const walkIndex = cursorIndex - walkDiff
       const walkDistance = Math.abs(walkIndex - index)
 
@@ -213,7 +246,7 @@ export function findFramePositionByProjectionPosition<T>(
 
         const jumpIndex = cursorIndex - leftJumpFrameCount
 
-        if (jumpIndex <= index && index <= cursorIndex) {
+        if (jumpIndex <= index && index < cursorIndex) {
           leftJumpToPatch = leftJump
           rightJumpToPatch = cursorStrip
         }
