@@ -2,6 +2,7 @@ import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
 import { findFramePositionByProjectionPosition } from '../auxiliary/findFramePositionByProjectionPosition.js'
+import { containsAnchor } from './containsAnchor.js'
 
 /**
  * Selects the stable anchor point for a local insertion.
@@ -44,6 +45,15 @@ export function selectAnchor<T>(
     // the stable logical anchor point immediately preceding it.
     anchorDiff = findFramePositionByProjectionPosition.call(this, of)
     anchoringStrip = this.gate!
+
+    if (
+      of === 1 &&
+      anchoringStrip.leftStep &&
+      containsAnchor(anchoringStrip, anchoringStrip.leftStep, 0, 0)
+    ) {
+      anchoringStrip = anchoringStrip.leftStep
+      anchorDiff = Math.abs(anchoringStrip.insertionDiff)
+    }
   }
 
   return [anchorDiff, anchoringStrip]
