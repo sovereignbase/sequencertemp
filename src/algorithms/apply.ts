@@ -2,7 +2,6 @@ import { findProjectionPositionOfStrip } from '../auxiliary/findProjectionPositi
 import { anchorStrip } from '../auxiliary/anchorStrip.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
 import { isAcknowledgement, isInsertion } from '../auxiliary/isGossip.js'
-import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Projection } from '../class.js'
 import type {
   Acknowledgement,
@@ -74,15 +73,7 @@ export function apply<T>(
           )
         }
 
-        const previousStructuralStripCount = this.structuralStripCount
-
         void anchorStrip.call(this, incomingStrip, anchoringStrip, anchorDiff)
-
-        void patchJumps.call(
-          this,
-          incomingStrip.insertionDiff,
-          this.structuralStripCount - previousStructuralStripCount
-        )
 
         if (
           incomingStrip.insertionDiff < 0 &&
@@ -104,7 +95,6 @@ export function apply<T>(
           this.projectedPosition = startAt
           gateRemoved = false
         }
-
       }
 
       void this.containmentTable.set(incomingStrip)

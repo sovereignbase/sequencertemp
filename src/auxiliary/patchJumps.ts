@@ -44,10 +44,6 @@ export function patchJumps<T>(
   // No jump crossed the mutation position.
   if (!left || !right) return
 
-  // The cached span may already have been invalidated or rewired by the
-  // structural mutation itself. Only patch the original reciprocal jump.
-  if (left.rightJump !== right || right.leftJump !== left) return
-
   // Projection distance cannot become negative. Reducing Strips remain in
   // Structural Order but do not consume additional Projection Frames.
   const frameCount = Math.max(0, left.rightJumpFrameCount! + frameDiff)
