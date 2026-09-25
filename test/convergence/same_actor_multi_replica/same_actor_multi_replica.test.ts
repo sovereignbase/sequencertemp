@@ -52,6 +52,17 @@ describe('same actor in multiple replicas', () => {
     gossip(right, left, rightRemove)
     gossip(right, left, rightInsert)
 
+    for (const [name, replica] of [['left', left], ['right', right]] as const) {
+      const strips = []
+      for (let strip = replica.head; strip; strip = strip.rightStep)
+        strips.push([
+          strip.anchorDiff, strip.insertionSession, strip.insertionStart,
+          strip.insertionDiff, strip.fragmentStart, strip.fragmentDiff,
+          strip.footage,
+        ])
+      console.log(name, JSON.stringify(strips))
+    }
+
     expectConverged(left, [right])
 
     const leftTail = left.insert(['left-tail'], left.projectionFrameCount)

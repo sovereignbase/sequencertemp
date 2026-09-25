@@ -1,4 +1,4 @@
-# Concurrent replace Mask restart
+# Concurrent replace remove restart
 
 Actor 1 builds and edits:
 
@@ -20,7 +20,7 @@ At the same time, Actor 2 independently inserts:
 Meanwhile,
 ```
 
-Actor 1 never observes that concurrent insertion before creating the replacement. Its replacement Mask may therefore remove `very old `, but it must not acquire ownership of `Meanwhile,` when the histories are later merged.
+Actor 1 never observes that concurrent insertion before creating the replacement. Its replacement remove may therefore remove `very old `, but it must not acquire ownership of `Meanwhile,` when the histories are later merged.
 
 The test reconstructs the same Gossip history both continuously and through a restart after the concurrent operation has been delivered. In both cases the visible content must retain:
 
@@ -34,4 +34,4 @@ here
 Meanwhile,
 ```
 
-while the replaced `very` and `old` content remains removed. Restart or stale redelivery must not expand the causal scope of the replacement Mask to include Actor 2's concurrent root.
+while the replaced `very` and `old` content remains removed. Restart or stale redelivery must not expand the causal scope of the replacement remove to include Actor 2's concurrent root.
