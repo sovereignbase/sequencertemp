@@ -3,7 +3,7 @@ import { Projection } from '../../../src/class.ts'
 import type { Sequence } from '../../../src/types/type.ts'
 import { deliver } from '../../.helpers/replica.ts'
 
-describe('resolves the right anchor in unordered view', () => {
+describe('author-time view equivalence', () => {
   /**
    * Verifies that same-actor insertions preserve the exact anchor points visible
    * in the author's Projection when each operation was created.
@@ -44,7 +44,7 @@ describe('resolves the right anchor in unordered view', () => {
    * Two replicas are reconstructed from the same empty Sequence:
    *
    * 1. `ordered` receives mutations in authoring order.
-   * 2. `hostile` receives the same mutations in a deliberately reordered
+   * 2. `unordered` receives the same mutations in a deliberately reordered
    *    delivery sequence, including delivery of `middle` before `second`.
    *
    * Because each mutation carries the stable anchor coordinate resolved from
@@ -94,7 +94,7 @@ describe('resolves the right anchor in unordered view', () => {
     const ordered = deliver(empty, mutations)
 
     /**
-     * Reconstruct the same operation set in a hostile delivery order.
+     * Reconstruct the same operation set in a unordered delivery order.
      *
      * In particular, `middle`, whose authored anchor is `(second, 1)`, is
      * delivered before `second`. The receiver must still eventually place it
@@ -102,7 +102,7 @@ describe('resolves the right anchor in unordered view', () => {
      *
      * No tie-break is involved: every insertion has a distinct anchor point.
      */
-    const hostile = deliver(empty, [
+    const unordered = deliver(empty, [
       mutations[0],
       mutations[1],
       mutations[3],
@@ -115,6 +115,6 @@ describe('resolves the right anchor in unordered view', () => {
 
     // Both delivery orders must reconstruct the exact authored Projection.
     expect(ordered.values()).toEqual(expected)
-    expect(hostile.values()).toEqual(expected)
+    expect(unordered.values()).toEqual(expected)
   })
 })

@@ -1,4 +1,4 @@
-# Historical boundary view
+# Author-time view equivelance
 
 This test verifies that a replica reconstructs the author's intended text even when the same insertions arrive in a different order.
 
@@ -24,7 +24,7 @@ actually
 Now
 Okay
 
-Hostile delivery:
+Unordered delivery:
 world
 Hello
 actually
@@ -33,7 +33,7 @@ Well
 Okay
 ```
 
-In the hostile delivery, `actually` arrives before `Well`, even though it was authored after `Well`. Its stored anchor must preserve that historical relationship until `Well` is available.
+In the unordered delivery, `actually` arrives before `Well`, even though it was authored after `Well`. Its stored anchor must preserve that historical relationship until `Well` is available.
 
 Both delivery orders must therefore resolve to:
 
