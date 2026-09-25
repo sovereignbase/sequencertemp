@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { Projection } from '../../../src/class.js'
-import type { Gossip, Sequence } from '../../../src/types/type.js'
-import { deliver, expect_converged } from '../../.helpers/replica.js'
+import { Projection } from '../../../src/class.ts'
+import type { Gossip, Sequence } from '../../../src/types/type.ts'
+import { deliver, expect_converged } from '../../.helpers/replica.ts'
 
 describe('tail replace remove', () => {
   /**
