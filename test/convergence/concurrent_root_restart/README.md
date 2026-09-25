@@ -1,14 +1,34 @@
 # Concurrent root restart
 
-Actor 100 starts with a two-frame root and builds a causal head-insertion
-chain. Actor 101 independently inserts `concurrent` into the empty root:
+Two editors begin from the same empty Sequence and independently create their own document.
+
+Actor 0:
 
 ```text
-Actor 100: root-0, root-1 -> first -> third -> fourth -> fifth
-Actor 101: concurrent
+Hello world.
+This is the original document.
+A new heading is added.
+Another line is inserted above it.
+One more line is inserted at the top.
 ```
 
-The receiver is recreated after the first three packets and those packets are
-redelivered. The per-instance Session IDs may place either root subtree first,
-but restart and redelivery must preserve the same index-by-index Projection
-without losing, duplicating, or interleaving Frames.
+Actor 1:
+
+```text
+A separate concurrent document.
+```
+
+The receiver is recreated after the first three Gossip packets and those packets are redelivered.
+
+After all Gossip has been delivered, both the uninterrupted and restarted receivers must expose exactly the same Projection. Each root remains a complete subtree: no Frames are lost or duplicated, and content from the two independently created documents must not become interleaved.
+
+For example:
+
+```text
+One more line is inserted at the top.
+Another line is inserted above it.
+A new heading is added.
+Hello world.
+This is the original document.
+A separate concurrent document.
+```
