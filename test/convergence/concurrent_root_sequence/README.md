@@ -1,15 +1,50 @@
 # Concurrent root sequence
 
-Three replicas independently insert at the empty Projection root while one of
-them also builds a head-insertion subtree:
+Three replicas begin from the same empty Sequence and independently create their own documents.
+
+Actor 0 builds one document by repeatedly inserting at its head:
 
 ```text
-Actor 100: primary-5 -> primary-4 -> primary-1 -> primary-root
-Actor 101: second-root
-Actor 102: third-root
+Project notes.
+
+Draft:
+Project notes.
+
+Updated:
+Draft:
+Project notes.
+
+Final:
+Updated:
+Draft:
+Project notes.
 ```
 
-The first root's logical zero-reservation remains the Structural Order head.
-It therefore retains the head of the concurrent-root competitor chain while
-the visible root fragment can move behind other complete subtrees. Recreating
-the Projection must preserve the Session-ID-derived ordering and every frame.
+Actor 1 independently creates:
+
+```text
+Shopping list.
+```
+
+Actor 2 independently creates:
+
+```text
+Travel plans.
+```
+
+Actor 0's logical zero-reservation remains the Structural Order head of its subtree even if the visible root fragment is ordered behind other concurrent root subtrees.
+
+After all Gossip has been delivered, the resulting Sequence is used to recreate a fresh Projection. The recreated Projection must preserve the same deterministic root ordering and keep every root's complete subtree intact.
+
+For example:
+
+```text
+Travel plans.
+
+Shopping list.
+
+Final:
+Updated:
+Draft:
+Project notes.
+```
