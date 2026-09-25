@@ -1,10 +1,55 @@
 # Live scale-down gossip
 
-Two live peers execute the benchmark's deterministic eight-step scale-up and
-scale-down workload through the public `Projection` API. Every local delta is
-delivered immediately and every returned acknowledgement is sent back to its
-author.
+Two continuously synchronized peers build and edit the same document through repeated inserts, replacements, and removals.
 
-The peers must retain the same `projectionFrameCount` and resolve identical
-footage from every projection position after every update, including removals during
-scale-down after repeated replacements and retained masks.
+For example, the document may grow through edits such as:
+
+```text
+Hello world.
+
+↓ insert
+
+Hello beautiful world.
+
+↓ replace "beautiful" with "quiet"
+
+Hello quiet world.
+
+↓ insert
+
+Today, Hello quiet world.
+
+↓ replace "Hello" with "goodbye"
+
+Today, goodbye quiet world.
+```
+
+After this heavily edited state has accumulated replacement Masks and fragmented history, the workload begins scaling the visible document back down while normal edits continue:
+
+```text
+Today, goodbye quiet world.
+
+↓ remove "quiet "
+
+Today, goodbye world.
+
+↓ replace "goodbye" with "farewell"
+
+Today, farewell world.
+
+↓ remove "Today, "
+
+farewell world.
+
+↓ remove "farewell "
+
+world.
+
+↓ remove "world."
+
+(empty)
+```
+
+Every local edit is delivered immediately to the other peer and every acknowledgement is returned to its author.
+
+After every update, both live peers must expose the same `projectionFrameCount` and resolve identical Footage from every Projection position, including throughout the scale-down after repeated replacements, removals, fragmentation, and retained Masks.
