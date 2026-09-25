@@ -144,18 +144,6 @@ export function findProjectionPositionOfStrip<T>(
     }
   }
 
-  // CACHE JUMP SPAN TO PATCH
-  if (strip.rightJump) {
-    this.leftJumpToPatch = strip
-    this.rightJumpToPatch = strip.rightJump
-  } else if (rightCursor !== strip && leftCursor.rightJump === rightCursor) {
-    this.leftJumpToPatch = leftCursor
-    this.rightJumpToPatch = rightCursor
-  } else {
-    this.leftJumpToPatch = undefined
-    this.rightJumpToPatch = undefined
-  }
-
   if (knownIndex !== undefined) {
     return knownIndex
   }
