@@ -48,7 +48,7 @@ export function selectAnchor<T>(
 
     const leftStep = anchoringStrip.leftStep
     const fragmentStart = anchoringStrip.fragmentStart ?? 0
-    // If anchor 0 has already been consumed by a past boundary insertion, anchor after
+    // If anchorDiff 0 has already been consumed by a past boundary insertion, anchor after
     // the insertion that consumed it by using that insertion's final Frame instead.
     if (
       leftStep &&

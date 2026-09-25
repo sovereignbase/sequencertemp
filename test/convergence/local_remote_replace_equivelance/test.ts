@@ -21,6 +21,22 @@ const project = (sequence: Projection<number>): Array<number | undefined> =>
     sequence.value(index)
   )
 
+const structure = (projection: Projection<number>) => {
+  const result = []
+  for (let strip = projection.head; strip; strip = strip.rightStep)
+    result.push([
+      strip.anchorSession,
+      strip.anchorStart,
+      strip.anchorDiff,
+      strip.insertionSession,
+      strip.insertionStart,
+      strip.insertionDiff,
+      strip.fragmentStart,
+      strip.fragmentDiff,
+    ])
+  return result
+}
+
 describe('local/remote replacement equivalence', () => {
   /**
    * Verifies immediate convergence between two replicas that share exactly the
@@ -102,6 +118,21 @@ describe('local/remote replacement equivalence', () => {
       // Different visible lengths are already sufficient to prove divergence.
       expect(receiver.projectionFrameCount).toBe(author.projectionFrameCount)
 
+      const cursor = (projection: Projection<number>) => {
+        let actual = 0
+        let found = false
+        for (let strip = projection.head; strip; strip = strip.rightStep) {
+          if (strip === projection.gate) {
+            found = true
+            break
+          }
+          actual += strip.fragmentDiff ?? strip.insertionDiff
+        }
+        return [projection.projectedPosition, actual, found]
+      }
+      const authorCursor = cursor(author)
+      const receiverCursor = cursor(receiver)
+
       const authorProjection = project(author)
       const receiverProjection = project(receiver)
 
@@ -113,7 +144,7 @@ describe('local/remote replacement equivalence', () => {
 
       if (difference !== -1)
         throw new Error(
-          `first difference at ${difference}: ${receiverProjection[difference]} !== ${authorProjection[difference]}`
+          `first difference at ${difference}: ${receiverProjection[difference]} !== ${authorProjection[difference]}; cursors=${JSON.stringify([authorCursor, receiverCursor])}; update=${JSON.stringify(update)}; author=${JSON.stringify(structure(author))}; receiver=${JSON.stringify(structure(receiver))}`
         )
     }
 
