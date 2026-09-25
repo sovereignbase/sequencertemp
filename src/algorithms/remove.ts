@@ -20,7 +20,8 @@ export function remove<T>(
     )
     const containingStrip = this.gate!
     const fragmentPosition =
-      framePosition + 1 - (containingStrip.fragmentStart ?? 0)
+      framePosition -
+      (containingStrip.fragmentStart ? containingStrip.fragmentStart - 1 : 0)
 
     const containingStripLength = Math.abs(
       containingStrip.fragmentDiff ?? containingStrip.insertionDiff
