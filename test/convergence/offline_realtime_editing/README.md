@@ -1,9 +1,9 @@
 # Three online and three offline editors
 
-Every editor starts from a Sequence containing:
+Every editor starts from the same retained document:
 
 ```text
-document
+Project notes.
 ```
 
 ## Online causal chain
@@ -11,93 +11,165 @@ document
 Three online editors hand the latest Sequence forward:
 
 ```text
-Actor 90: document -> online-1
-                         |
-Actor 91:                +-> online-2
-                                  |
-Actor 92:                         +-> online-3
+Editor 1:
+Project notes.
+The draft is ready.
+
+Editor 2:
+Project notes.
+The draft is ready.
+Review begins tomorrow.
+
+Editor 3:
+Project notes.
+The draft is ready.
+Review begins tomorrow.
+Publication follows Friday.
 ```
 
-This is one causal subtree:
+This forms one causal subtree:
 
 ```text
-online-1 -> online-2 -> online-3
+The draft is ready.
+Review begins tomorrow.
+Publication follows Friday.
 ```
 
 ## Independent offline chains
 
-Three other editors retain the original base and work without seeing any
-online or peer-offline changes:
+Three other editors retain the original document and work independently without seeing the online changes or each other's edits:
 
 ```text
-Actor 80: offline-1-1 -> offline-1-2
-Actor 70: offline-2-1 -> offline-2-2
-Actor 60: offline-3-1 -> offline-3-2
+Editor 4:
+Project notes.
+Add the budget section.
+Verify the final numbers.
+
+Editor 5:
+Project notes.
+Include the customer feedback.
+Summarize the responses.
+
+Editor 6:
+Project notes.
+Update the technical appendix.
+Check the diagrams.
 ```
 
-The four roots compete after `document`. Their actor Clocks determine this
-exact Projection:
+When all edits are synchronized, the four concurrent branches are ordered deterministically while every causal subtree remains contiguous.
+
+For example:
 
 ```text
-document
-  -> online-1 -> online-2 -> online-3
-  -> offline-1-1 -> offline-1-2
-  -> offline-2-1 -> offline-2-2
-  -> offline-3-1 -> offline-3-2
+Project notes.
+
+The draft is ready.
+Review begins tomorrow.
+Publication follows Friday.
+
+Add the budget section.
+Verify the final numbers.
+
+Include the customer feedback.
+Summarize the responses.
+
+Update the technical appendix.
+Check the diagrams.
 ```
 
-The causal children stay with their own root. No arrival order may produce an
-interleaving such as:
+An arrival order must never interleave independent branches like:
 
 ```text
-offline-1-1 -> offline-2-1 -> offline-1-2
+Add the budget section.
+Include the customer feedback.
+Verify the final numbers.
 ```
 
 ## Offline data arriving during online editing
 
-The explicit mid-session delivery begins with an online packet, then injects
-offline packets between later online packets. Each offline branch is reversed,
-so some children arrive before their roots:
+Offline edits may arrive while the online chain is still progressing, including children arriving before their causal parents:
 
 ```text
-online packet
-offline child
-offline root
-online packet
-offline child
-...
+The draft is ready.
+
+Verify the final numbers.
+Add the budget section.
+
+Review begins tomorrow.
+
+Summarize the responses.
+Include the customer feedback.
+
+Publication follows Friday.
 ```
 
-The receiver retries unresolved causal children after their roots arrive. The
-network order must still produce the exact Projection shown above.
+The unresolved children remain pending until their parents arrive. Once every operation is available, the Projection must still resolve to the same document shown above.
 
-The suite also checks chronological delivery, complete reverse delivery, and
-10,000 deterministic seeded shuffles of all six editors' packets.
+The suite also checks chronological delivery, complete reverse delivery, and 10,000 deterministic shuffled arrival orders.
 
 ## Mixed lifecycle
 
-The same six-editor shape is repeated with hard deletes and native replace:
+The same six-editor topology is repeated with inserts, removals, and replacements.
+
+For example:
 
 ```text
-online-1 -> online-trash -> remove online-trash
-online-old -> replace with online-2
+Online branch:
 
-offline-1-1 -> offline-trash -> remove -> offline-1-2
-offline-2-1 -> offline-old   -> replace with offline-2-2
-offline-3-1 -> offline-trash -> remove
-              offline-old   -> replace with offline-3-2
+The draft is ready.
+Temporary note.
+↓ remove "Temporary note."
+
+Old review date.
+↓ replace with
+Review begins tomorrow.
+
+
+Offline branch 1:
+
+Add the budget section.
+Temporary estimate.
+↓ remove "Temporary estimate."
+
+Verify the final numbers.
+
+
+Offline branch 2:
+
+Include the customer feedback.
+Old summary.
+↓ replace with
+Summarize the responses.
+
+
+Offline branch 3:
+
+Update the technical appendix.
+Temporary diagram note.
+↓ remove "Temporary diagram note."
+
+Old instruction.
+↓ replace with
+Check the diagrams.
 ```
 
-Removed values must never reappear, and every replace packet must resolve as
-one Mask+Insert mutation. The final Projection remains exactly:
+Removed text must remain absent and replacement Footage must remain present. After synchronization, the final Projection is still:
 
 ```text
-document
-  -> online-1 -> online-2 -> online-3
-  -> offline-1-1 -> offline-1-2
-  -> offline-2-1 -> offline-2-2
-  -> offline-3-1 -> offline-3-2
+Project notes.
+
+The draft is ready.
+Review begins tomorrow.
+Publication follows Friday.
+
+Add the budget section.
+Verify the final numbers.
+
+Include the customer feedback.
+Summarize the responses.
+
+Update the technical appendix.
+Check the diagrams.
 ```
 
-Chronological, reversed, mid-online, and 64 additional seeded mixed-lifecycle
-orders must all equal that result exactly.
+Chronological, reverse, mid-session, and 64 additional deterministic mixed-lifecycle delivery orders must all reconstruct that same Projection.
