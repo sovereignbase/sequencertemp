@@ -20,7 +20,7 @@ export function remove<T>(
     )
     const containingStrip = this.gate!
     const fragmentPosition =
-      framePosition - (containingStrip.fragmentStart ?? 0)
+      framePosition + 1 - (containingStrip.fragmentStart ?? 0)
 
     const containingStripLength = Math.abs(
       containingStrip.fragmentDiff ?? containingStrip.insertionDiff
@@ -34,7 +34,7 @@ export function remove<T>(
     const decreasingStrip: NonNullable<Strip<T>> = {
       anchorSession: containingStrip.insertionSession,
       anchorStart: containingStrip.insertionStart,
-      anchorDiff: framePosition,
+      anchorDiff: framePosition + 1,
       insertionSession: this.decreaseClock[0],
       insertionStart: this.decreaseClock[1],
       insertionDiff: -decreasingLength,
