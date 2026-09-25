@@ -46,14 +46,16 @@ export function selectAnchor<T>(
     anchorDiff = findFramePositionByProjectionPosition.call(this, of)
     anchoringStrip = this.gate!
 
+    const leftStep = anchoringStrip.leftStep
+    const fragmentStart = anchoringStrip.fragmentStart ?? 0
     // If anchor 0 has already been consumed by a past head insertion, anchor after
     // the insertion that consumed it by using that insertion's final Frame instead.
     if (
-      anchorDiff === 0 &&
-      anchoringStrip.leftStep &&
-      containsAnchor(anchoringStrip, anchoringStrip.leftStep, 0, 0)
+      leftStep &&
+      anchorDiff === fragmentStart &&
+      containsAnchor(anchoringStrip, leftStep, fragmentStart, fragmentStart)
     ) {
-      anchoringStrip = anchoringStrip.leftStep
+      anchoringStrip = leftStep
       anchorDiff = Math.abs(anchoringStrip.insertionDiff)
     }
   }
