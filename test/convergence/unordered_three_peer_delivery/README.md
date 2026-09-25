@@ -1,4 +1,4 @@
-# Hostile three-peer delivery
+# Unordered three-peer delivery
 
 Three peers begin from the same empty Sequence and independently produce a
 mixture of inserts, removes, and equal-length replacements. Every resulting
