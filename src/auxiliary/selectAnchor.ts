@@ -46,6 +46,8 @@ export function selectAnchor<T>(
     anchorDiff = findFramePositionByProjectionPosition.call(this, of)
     anchoringStrip = this.gate!
 
+    // If anchor 0 has already been consumed by a head insertion, anchor after the
+    // insertion that consumed it by using that insertion's final Frame instead.
     if (
       of === 1 &&
       anchoringStrip.leftStep &&
