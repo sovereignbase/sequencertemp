@@ -6,28 +6,14 @@ export function findContainingFragment<T>(
 ): [number, NonNullable<Strip<T>>] {
   let anchoringStrip = origin
   while (true) {
+    const fragmentStart = anchoringStrip.fragmentStart ?? 0
     const fragmentEnd =
-      (anchoringStrip.fragmentStart ?? 0) +
+      fragmentStart +
       Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff)
 
     if (
-      incomingStrip.anchorDiff < fragmentEnd ||
-      (incomingStrip.anchorDiff === fragmentEnd &&
-        anchoringStrip.rightFragment !== anchoringStrip.rightStep &&
-        anchoringStrip.rightStep?.anchorSession ===
-          incomingStrip.anchorSession &&
-        anchoringStrip.rightStep.anchorStart === incomingStrip.anchorStart &&
-        anchoringStrip.rightStep.anchorDiff === incomingStrip.anchorDiff &&
-        !(
-          (incomingStrip.insertionSession ===
-            anchoringStrip.rightStep.insertionSession &&
-            incomingStrip.insertionStart >=
-              anchoringStrip.rightStep.insertionStart +
-                Math.abs(anchoringStrip.rightStep.insertionDiff) +
-                1) ||
-          (anchoringStrip.rightStep.insertionDiff > 0 &&
-            incomingStrip.insertionDiff < 0)
-        ))
+      incomingStrip.anchorDiff >= fragmentStart &&
+      incomingStrip.anchorDiff <= fragmentEnd
     )
       break
 
