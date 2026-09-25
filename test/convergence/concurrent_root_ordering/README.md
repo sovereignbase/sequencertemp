@@ -1,23 +1,38 @@
 # Concurrent root ordering
 
-Four editors start from the same empty Sequence and insert independently:
+Four editors begin from the same empty Sequence and independently create their own document:
 
 ```text
-Actor 11: insert "first"  at root
-Actor 12: insert "second" at root
-Actor 13: insert "third"  at root
-Actor 14: insert "fourth" at root
+Actor 0:
+Hello world.
+This is some text.
+
+Actor 1:
+Good morning.
+Another paragraph follows.
+
+Actor 2:
+A quiet forest.
+Birds move through the trees.
+
+Actor 3:
+Notes from today.
+Everything is working well.
 ```
 
-All four operations compete at the same boundary. Their per-instance Session
-IDs define one deterministic order independently of actor identity.
+When the replicas are merged, the concurrent roots are ordered deterministically while each document remains a complete subtree. Content from different documents must not interleave.
 
-The test delivers both:
+For example:
 
 ```text
-11 -> 12 -> 13 -> 14
-14 -> 13 -> 12 -> 11
+A quiet forest.
+Birds move through the trees.
+Hello world.
+This is some text.
+Notes from today.
+Everything is working well.
+Good morning.
+Another paragraph follows.
 ```
 
-Both replicas must materialize the same Projection, with no missing or
-duplicated values. The test does not prescribe one Session-ID order.
+Every delivery order must materialize the same Projection with the same deterministic root order and each document intact.
