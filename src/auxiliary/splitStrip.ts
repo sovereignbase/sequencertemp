@@ -69,6 +69,14 @@ export function splitStrip<T>(
   const rightStep = anchoringStrip.rightStep
   const rightJump = anchoringStrip.rightJump
 
+  if (anchoringStripDiff < 0 && rightStep?.footage)
+    void (rightStep.footage as Array<T | undefined>).fill(
+      undefined,
+      rightStep.fragmentStart ? rightStep.fragmentStart - 1 : 0,
+      (rightStep.fragmentStart ? rightStep.fragmentStart - 1 : 0) +
+        Math.abs(anchoringStripDiff)
+    )
+
   /**
    * Create the right fragment.
    *
