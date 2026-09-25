@@ -28,8 +28,10 @@ export function findFramePositionByProjectionPosition<T>(
 
   // Tail (strip | fragment) length.
   const tailDiff = this.tail!.fragmentDiff ?? this.tail!.insertionDiff
+  // Negative strips do not consume length (already consumed on split).
+  const tailLength = tailDiff > 0 ? tailDiff : 0
   // Index at the first frame of tail (strip | fragment).
-  const tailIndex = this.projectionFrameCount - tailDiff
+  const tailIndex = this.projectionFrameCount - tailLength
 
   // Length of the (strip | fragment) left of tail or 0 when there is no fragment.
   const tailPredecessorDiff =
@@ -67,6 +69,7 @@ export function findFramePositionByProjectionPosition<T>(
   // Calculate optimal jump distance that allows for an average minimum strips traversed
   // (<= sqrt(structuralStripCount) * 2)
   const optimalJumpSpacing = Math.round(Math.sqrt(this.structuralStripCount))
+
   while (true) {
     // Length of the (strip | fragment) being evaluated.
     const cursorDiff = cursorStrip.fragmentDiff ?? cursorStrip.insertionDiff
@@ -102,7 +105,7 @@ export function findFramePositionByProjectionPosition<T>(
     if (cursorIndex <= index) {
       // Traverse right
       const walkStrip = cursorStrip.rightStep!
-      const walkIndex = cursorIndex + cursorDiff
+      const walkIndex = cursorIndex + stripLength
       const walkDistance = Math.abs(walkIndex - index)
 
       let rightJump = cursorStrip.rightJump
@@ -176,7 +179,9 @@ export function findFramePositionByProjectionPosition<T>(
       // Traverse left
       const walkStrip = cursorStrip.leftStep!
       const walkDiff = walkStrip.fragmentDiff ?? walkStrip.insertionDiff
-      const walkIndex = cursorIndex - walkDiff
+      // Negative strips do not consume length (already consumed on split).
+      const walkLength = walkDiff > 0 ? walkDiff : 0
+      const walkIndex = cursorIndex - walkLength
       const walkDistance = Math.abs(walkIndex - index)
 
       let leftJump = cursorStrip.leftJump
