@@ -56,12 +56,7 @@ export function insert<T>(
 
   const previousStructuralStripCount = this.structuralStripCount
 
-  void anchorStrip.call(
-    this,
-    increasingStrip,
-    anchoringStrip,
-    anchorDiff
-  )
+  void anchorStrip.call(this, increasingStrip, anchoringStrip, anchorDiff)
 
   void patchJumps.call(
     this,

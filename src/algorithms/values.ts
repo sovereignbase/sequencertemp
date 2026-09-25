@@ -36,9 +36,7 @@ export function values<T>(
     }
 
     framePosition =
-      (strip.rightStep?.fragmentStart
-        ? strip.rightStep.fragmentStart - 1
-        : 0) +
+      (strip.rightStep?.fragmentStart ? strip.rightStep.fragmentStart - 1 : 0) +
       Math.max(
         0,
         framePosition -
