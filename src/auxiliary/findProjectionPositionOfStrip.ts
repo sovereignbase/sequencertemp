@@ -85,6 +85,17 @@ export function findProjectionPositionOfStrip<T>(
     }
   }
 
+  // Patch jumps affected by remote apply.
+  if (rightCursor !== strip && leftCursor.rightJump === rightCursor) {
+    const frameCount = leftDistance + rightDistance
+    const stripCount = leftStripDistance + rightStripDistance
+
+    leftCursor.rightJumpFrameCount = frameCount
+    leftCursor.rightJumpStripCount = stripCount
+    rightCursor.leftJumpFrameCount = frameCount
+    rightCursor.leftJumpStripCount = stripCount
+  }
+
   // CREATE JUMPS TOWARDS OPTIMAL SPACING
   if (
     !strip.leftJump &&
