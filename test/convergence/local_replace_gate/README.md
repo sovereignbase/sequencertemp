@@ -1,16 +1,21 @@
 # Local replace gate
 
-A replacement removes and inserts at the same projection boundary:
+A replacement removes and inserts at the same Projection boundary.
+
+For example:
 
 ```text
-a, b, c
-replace positions [0, 1] with x, y
-x, y, c
-insert z at 1
-x, z, y, c
+The old draft remains.
+
+↓ replace "old draft" with "new version"
+
+The new version remains.
+
+↓ insert "final " between "new" and "version"
+
+The new final version remains.
 ```
 
-For a replacement contained by one Strip, the local gate remains on the left
-side of the replacement insertion. Its numeric projected position therefore does
-not move. A later indexed operation must work without an intervening
-`values()` call recalculating the gate.
+For a replacement contained by one Strip, the local gate remains on the left side of the replacement insertion. Its numeric projected position therefore does not move.
+
+A later indexed edit must resolve correctly from that existing gate state without requiring an intervening any call to recalculate it.
