@@ -38,7 +38,7 @@ export function selectAnchor<T>(
   if (of === this.projectionFrameCount) {
     anchoringStrip = this.tail!
     anchorDiff =
-      (anchoringStrip.fragmentStart ?? 0) +
+      (anchoringStrip.fragmentStart ? anchoringStrip.fragmentStart - 1 : 0) +
       Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff)
   } else {
     // The Frame currently at `of` moves right. Its Footage position is exactly
@@ -47,7 +47,9 @@ export function selectAnchor<T>(
     anchoringStrip = this.gate!
 
     const leftStep = anchoringStrip.leftStep
-    const fragmentStart = anchoringStrip.fragmentStart ?? 0
+    const fragmentStart = anchoringStrip.fragmentStart
+      ? anchoringStrip.fragmentStart - 1
+      : 0
     // If anchorDiff 0 has already been consumed by a past boundary insertion, anchor after
     // the insertion that consumed it by using that insertion's final Frame instead.
     if (
