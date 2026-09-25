@@ -167,7 +167,7 @@ export function findProjectionPositionOfStrip<T>(
         this.gate !== this.head &&
         (leftDistance < this.projectedPosition ||
           (leftDistance === this.projectedPosition &&
-            (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) > 0))
+            (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) >= 0))
       )
         this.projectedPosition += gateDiff
 
@@ -184,7 +184,7 @@ export function findProjectionPositionOfStrip<T>(
         this.gate !== this.head &&
         (index < this.projectedPosition ||
           (index === this.projectedPosition &&
-            (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) > 0))
+            (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) >= 0))
       )
         this.projectedPosition += gateDiff
 

@@ -16,7 +16,8 @@ export function findContainingFragment<T>(
     if (
       incomingStrip.anchorDiff >=
         fragmentStart + (incomingStrip.insertionDiff < 0 ? 1 : 0) &&
-      incomingStrip.anchorDiff <= fragmentEnd
+      incomingStrip.anchorDiff <
+        fragmentEnd + (incomingStrip.insertionDiff < 0 ? 1 : 0)
     )
       break
 

@@ -67,7 +67,6 @@ export function findFramePositionByProjectionPosition<T>(
   // Calculate optimal jump distance that allows for an average minimum strips traversed
   // (<= sqrt(structuralStripCount) * 2)
   const optimalJumpSpacing = Math.round(Math.sqrt(this.structuralStripCount))
-
   while (true) {
     // Length of the (strip | fragment) being evaluated.
     const cursorDiff = cursorStrip.fragmentDiff ?? cursorStrip.insertionDiff
@@ -103,31 +102,12 @@ export function findFramePositionByProjectionPosition<T>(
     if (cursorIndex <= index) {
       // Traverse right
       const walkStrip = cursorStrip.rightStep!
-      if (!walkStrip)
-        throw new Error(
-          `walked right past tail ${JSON.stringify([index, cursorIndex, cursorDiff, tailIndex, this.projectionFrameCount, cursorStrip === this.tail])}`
-        )
       const walkIndex = cursorIndex + cursorDiff
       const walkDistance = Math.abs(walkIndex - index)
 
       let rightJump = cursorStrip.rightJump
 
       if (tailPredecessorDiff >= 0 && rightJump && cursorIndex >= 0) {
-        let diagnostic = cursorStrip
-        let diagnosticFrames = 0
-        let diagnosticStrips = 0
-        while (diagnostic !== rightJump) {
-          diagnosticFrames += diagnostic.fragmentDiff ?? diagnostic.insertionDiff
-          diagnostic = diagnostic.rightStep!
-          ++diagnosticStrips
-        }
-        if (
-          diagnosticFrames !== cursorStrip.rightJumpFrameCount ||
-          diagnosticStrips !== cursorStrip.rightJumpStripCount
-        )
-          throw new Error(
-            `invalid right jump ${JSON.stringify([diagnosticFrames, diagnosticStrips, cursorStrip.rightJumpFrameCount, cursorStrip.rightJumpStripCount])}`
-          )
         let rightJumpFrameCount = cursorStrip.rightJumpFrameCount!
         let rightJumpStripCount = cursorStrip.rightJumpStripCount!
 
@@ -195,10 +175,6 @@ export function findFramePositionByProjectionPosition<T>(
     } else {
       // Traverse left
       const walkStrip = cursorStrip.leftStep!
-      if (!walkStrip)
-        throw new Error(
-          `walked left past head ${JSON.stringify([index, cursorIndex, cursorDiff, tailIndex, this.projectionFrameCount, cursorStrip === this.head])}`
-        )
       const walkDiff = walkStrip.fragmentDiff ?? walkStrip.insertionDiff
       const walkIndex = cursorIndex - walkDiff
       const walkDistance = Math.abs(walkIndex - index)
@@ -206,21 +182,6 @@ export function findFramePositionByProjectionPosition<T>(
       let leftJump = cursorStrip.leftJump
 
       if (tailPredecessorDiff >= 0 && leftJump) {
-        let diagnostic = leftJump
-        let diagnosticFrames = 0
-        let diagnosticStrips = 0
-        while (diagnostic !== cursorStrip) {
-          diagnosticFrames += diagnostic.fragmentDiff ?? diagnostic.insertionDiff
-          diagnostic = diagnostic.rightStep!
-          ++diagnosticStrips
-        }
-        if (
-          diagnosticFrames !== cursorStrip.leftJumpFrameCount ||
-          diagnosticStrips !== cursorStrip.leftJumpStripCount
-        )
-          throw new Error(
-            `invalid left jump ${JSON.stringify([diagnosticFrames, diagnosticStrips, cursorStrip.leftJumpFrameCount, cursorStrip.leftJumpStripCount])}`
-          )
         let leftJumpFrameCount = cursorStrip.leftJumpFrameCount!
         let leftJumpStripCount = cursorStrip.leftJumpStripCount!
 
