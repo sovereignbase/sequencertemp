@@ -1,36 +1,83 @@
 # Regular WebSocket fanout
 
-Three browser Replicas connect to one deliberately ignorant WebSocket relay.
-The relay stores nothing, parses no Gossip, and broadcasts each text frame.
+Three browser replicas connect to one deliberately ignorant WebSocket relay. The relay stores no document state, parses no Gossip, and simply broadcasts each text frame to the other connected peers.
 
-All editors start their own timers. No editor waits for delivery, an ACK, or
-another editor before executing its four assigned operations:
+Each editor runs independently on its own timers.
+
+For example, they may begin from:
 
 ```text
-editor 0: insert at 0, 75, 150, and 225 ms
+Hello world.
+```
+
+Editor 0 performs inserts:
+
+```text
+Hello world.
+
+↓ insert "beautiful "
+
+Hello beautiful world.
+
+↓ insert "today "
+
+Hello beautiful world today.
+```
+
+Editor 1 independently performs replacements:
+
+```text
+Hello world.
+
+↓ replace "world" with "everyone"
+
+Hello everyone.
+
+↓ replace "Hello" with "Welcome"
+
+Welcome everyone.
+```
+
+Editor 2 independently performs removals:
+
+```text
+Hello world.
+
+↓ remove "Hello "
+
+world.
+
+↓ remove "world."
+
+(empty)
+```
+
+No editor waits for delivery, an acknowledgement, or another editor before executing its next operation:
+
+```text
+editor 0: insert  at 0,   75, 150, and 225 ms
 editor 1: replace at 25, 100, 175, and 250 ms
-editor 2: remove at 50, 125, 200, and 275 ms
+editor 2: remove   at 50, 125, 200, and 275 ms
 ```
 
-Expected:
+After all Gossip has been fanned out, the concurrent insertions that survive their causal histories must remain present, removed or replaced Footage must remain absent, and every browser must materialize the same deterministic Projection.
+
+For example:
 
 ```text
-each browser sends 4 local Gossip updates
-each browser receives 8 peer Gossip updates
-no local or peer Gossip is rejected or left pending
-all visible sequences are equal
-the two Mask-issuing actors use distinct Mask sessions even under identical
-host entropy
+Welcome beautiful everyone today.
 ```
 
-This is the practical timer-driven FIFO case. It does not reorder one sender's
-causal chain; causal-staging tests cover that adversarial case. A pass shows that
-ordinary WebSocket fanout does not itself require a pending store.
+Expected per browser:
 
-The test deliberately makes every browser context return the same random word.
-This regresses the former WASM `std::random_device` collision, where editor 1's
-replace Mask caused editor 2's remove Mask to be rejected as a duplicate.
+```text
+4 local Gossip updates sent
+8 peer Gossip updates received
+0 rejected local edits
+0 rejected peer Gossip updates
+identical final visible Projection
+```
 
-The original hand-written WebSocket frame parser produced a divergent result
-and was removed; transport correctness is part of the invariant being tested,
-so the test now uses the maintained `ws` implementation.
+This is the normal timer-driven FIFO case. A sender's own causal chain is not intentionally reordered, so no pending state should be required.
+
+Transport is part of the tested path: the relay uses the maintained `ws` implementation and performs only raw WebSocket fanout.
