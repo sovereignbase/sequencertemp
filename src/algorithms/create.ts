@@ -24,11 +24,11 @@ export function create<T>(
   const jumpSpacing = projectionIsArray
     ? Math.max(1, Math.round(Math.sqrt(projection.length)))
     : 1
+
   let jumpStart: Strip<T>
   let jumpCursor: Strip<T>
   let jumpFrameCount = 0
   let jumpStripCount = 0
-  let jumpable = true
 
   if (projectionIsArray)
     for (let index = 0; index < projection.length; ++index) {
@@ -95,27 +95,25 @@ export function create<T>(
           jumpCursor !== finalizedThrough
         ) {
           const diff = jumpCursor.fragmentDiff ?? jumpCursor.insertionDiff
-          jumpFrameCount += diff
+
+          // Negative strips do not consume length (already consumed on split).
+          jumpFrameCount += Math.max(0, diff)
           ++jumpStripCount
-          if (diff < 0) jumpable = false
 
           jumpCursor = jumpCursor.rightStep
 
           if (jumpStripCount === jumpSpacing) {
-            if (jumpable) {
-              jumpStart!.rightJump = jumpCursor
-              jumpStart!.rightJumpFrameCount = jumpFrameCount
-              jumpStart!.rightJumpStripCount = jumpStripCount
+            jumpStart!.rightJump = jumpCursor
+            jumpStart!.rightJumpFrameCount = jumpFrameCount
+            jumpStart!.rightJumpStripCount = jumpStripCount
 
-              jumpCursor!.leftJump = jumpStart
-              jumpCursor!.leftJumpFrameCount = jumpFrameCount
-              jumpCursor!.leftJumpStripCount = jumpStripCount
-            }
+            jumpCursor!.leftJump = jumpStart
+            jumpCursor!.leftJumpFrameCount = jumpFrameCount
+            jumpCursor!.leftJumpStripCount = jumpStripCount
 
             jumpStart = jumpCursor
             jumpFrameCount = 0
             jumpStripCount = 0
-            jumpable = true
           }
         }
       }
