@@ -1,4 +1,4 @@
-# Hostile replace delivery
+# Unordered replace delivery
 
 Two actors edit the same retained four-frame sequence independently. The
 resulting insert, remove, and replace deltas are then delivered to fresh live
