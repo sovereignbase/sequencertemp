@@ -23,10 +23,5 @@ export function findContainingFragment<T>(
     anchoringStrip = rightFragment
   }
 
-  return [
-    incomingStrip.anchorDiff -
-      (incomingStrip.insertionDiff < 0 ? 1 : 0) -
-      (anchoringStrip.fragmentStart ? anchoringStrip.fragmentStart - 1 : 0),
-    anchoringStrip,
-  ]
+  return [incomingStrip.anchorDiff, anchoringStrip]
 }

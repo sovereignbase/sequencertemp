@@ -20,7 +20,7 @@ import { subtreeEnd } from './subtreeEnd.js'
  * @param incomingStrip Strip to anchor.
  * @param anchoringStrip Strip containing the anchor Frame, or undefined for
  * the virtual root anchor.
- * @param anchorDiff Frame position within the anchoring Strip after which the incoming strip starts.
+ * @param anchorDiff Canonical anchor point within the anchoring Strip's original insertion.
  */
 export function anchorStrip<T>(
   this: Projection<T>,
@@ -32,6 +32,8 @@ export function anchorStrip<T>(
   let rightStep: Strip<T> = this.head
 
   if (anchoringStrip) {
+    anchorDiff -= anchoringStrip.fragmentStart ?? 0
+
     // Structural length of the anchoring Strip or its current fragment.
     const anchoringStripLength = Math.abs(
       anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff

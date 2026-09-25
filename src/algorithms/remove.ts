@@ -47,7 +47,7 @@ export function remove<T>(
       this,
       decreasingStrip,
       containingStrip,
-      fragmentPosition
+      decreasingStrip.anchorDiff
     )
 
     void patchJumps.call(

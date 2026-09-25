@@ -60,7 +60,7 @@ export function insert<T>(
     this,
     increasingStrip,
     anchoringStrip,
-    anchorDiff - (anchoringStrip.fragmentStart ?? 0)
+    anchorDiff
   )
 
   void patchJumps.call(
