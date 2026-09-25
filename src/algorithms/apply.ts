@@ -78,6 +78,12 @@ export function apply<T>(
 
         void anchorStrip.call(this, incomingStrip, anchoringStrip, anchorDiff)
 
+        void patchJumps.call(
+          this,
+          incomingStrip.insertionDiff,
+          this.structuralStripCount - previousStructuralStripCount
+        )
+
         if (
           incomingStrip.insertionDiff < 0 &&
           anchoringStrip === this.gate &&
@@ -99,11 +105,6 @@ export function apply<T>(
           gateRemoved = false
         }
 
-        void patchJumps.call(
-          this,
-          incomingStrip.insertionDiff,
-          this.structuralStripCount - previousStructuralStripCount
-        )
       }
 
       void this.containmentTable.set(incomingStrip)

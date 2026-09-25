@@ -133,6 +133,30 @@ describe('local/remote replacement equivalence', () => {
       const authorCursor = cursor(author)
       const receiverCursor = cursor(receiver)
 
+      const jumps = (projection: Projection<number>) => {
+        const strips = []
+        for (let strip = projection.head; strip; strip = strip.rightStep)
+          strips.push(strip)
+        return strips.map((strip) => {
+          const left = strips.indexOf(strip.leftJump!)
+          const right = strips.indexOf(strip.rightJump!)
+          return [
+            left === -1
+              ? undefined
+              : [left, strip.leftJumpFrameCount, strip.leftJumpStripCount],
+            right === -1
+              ? undefined
+              : [right, strip.rightJumpFrameCount, strip.rightJumpStripCount],
+          ]
+        })
+      }
+      const authorJumps = jumps(author)
+      const receiverJumps = jumps(receiver)
+      const jumpDifference = authorJumps.findIndex(
+        (jump, index) =>
+          JSON.stringify(jump) !== JSON.stringify(receiverJumps[index])
+      )
+
       const authorProjection = project(author)
       const receiverProjection = project(receiver)
 
@@ -144,7 +168,7 @@ describe('local/remote replacement equivalence', () => {
 
       if (difference !== -1)
         throw new Error(
-          `first difference at ${difference}: ${receiverProjection[difference]} !== ${authorProjection[difference]}; cursors=${JSON.stringify([authorCursor, receiverCursor])}; update=${JSON.stringify(update)}; author=${JSON.stringify(structure(author))}; receiver=${JSON.stringify(structure(receiver))}`
+          `first difference at ${difference}: ${receiverProjection[difference]} !== ${authorProjection[difference]}; cursors=${JSON.stringify([authorCursor, receiverCursor])}; jumpDifference=${jumpDifference}:${JSON.stringify([authorJumps[jumpDifference], receiverJumps[jumpDifference]])}; update=${JSON.stringify(update)}; author=${JSON.stringify(structure(author))}; receiver=${JSON.stringify(structure(receiver))}`
         )
     }
 
