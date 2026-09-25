@@ -1,6 +1,6 @@
 # Concurrent root ordering
 
-Four editors begin from the same empty Sequence and independently create their own document:
+Four editors begin from a empty Sequence and independently edit their a document:
 
 ```text
 Actor 0:
