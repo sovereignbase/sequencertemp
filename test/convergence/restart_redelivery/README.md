@@ -1,39 +1,78 @@
 # Restart and stale redelivery
 
-The shared base is:
+The shared document initially contains no text:
 
 ```text
-base-0 -> base-1 -> base-2
+(empty)
 ```
 
-Two editors then create mixed operations from that base:
+Five independent editors then create one concurrent root insertion each:
 
 ```text
 Actor 41:
-  insert "left-0, left-1" at index 1
-  insert "left-child" inside that new branch
-  remove a range spanning its local branch
+Project notes.
 
 Actor 42:
-  replace base-1 with "right"
-  insert "right-initial" at the head
+Shopping list.
+
+Actor 43:
+Travel plans.
+
+Actor 44:
+Meeting summary.
+
+Actor 45:
+Release checklist.
 ```
 
-One receiver gets author order. Another gets a seeded shuffle, is recreated
-from `sequence(receiver)` halfway through accepted packets, and is finally sent
-every old packet again:
+None of these edits observes any of the others, so all five are competing roots from the same empty origin.
+
+One receiver gets the Gossip in its original collection order. Another receives the exact same operations in a seeded hostile shuffle and is recreated from its retained `Sequence` halfway through delivery:
 
 ```text
-hostile packets -> create(sequence) -> stale redelivery
+shuffled Gossip
+↓
+some mutations integrated
+↓
+create(sequence(receiver))
+↓
+remaining mutations integrated
 ```
 
-The expected relationship is exact equality:
+After the restarted receiver has integrated the complete operation set, every original Gossip packet is delivered to it again:
+
+```text
+Project notes.        # stale redelivery
+Shopping list.        # stale redelivery
+Travel plans.         # stale redelivery
+Meeting summary.      # stale redelivery
+Release checklist.    # stale redelivery
+```
+
+Those packets must be idempotent. None may duplicate its text or alter the deterministic ordering of the concurrent roots.
+
+For example, the final Projection may be:
+
+```text
+Release checklist.
+
+Meeting summary.
+
+Travel plans.
+
+Shopping list.
+
+Project notes.
+```
+
+The exact root order is determined by Sequencer competition rules, not network arrival order. The important invariant is:
 
 ```text
 ordered Projection
-  == restarted Projection
-  == create(sequence(restarted)) Projection
+  ==
+restarted Projection
+  ==
+create(sequence(restarted)) Projection
 ```
 
-Stale packets must be idempotent, and create-time compaction must not change the
-visible result.
+Restarting from retained Sequence state, redelivering stale Gossip, and create-time compaction must all preserve the exact same visible document.
