@@ -1,27 +1,45 @@
-# Live peer index equivalence through signed jumps
+# Live peer index equivalence through jumps
 
-Two live Sequences use different Actor IDs. Every local Gossip reaches the
-other peer immediately, and every acknowledgement returned by `apply` travels
-back to the author. No sequence is exchanged and neither live instance is
-recreated.
+Two live editors continuously synchronize the same document. Every local edit is delivered immediately to the other peer and every acknowledgement is returned to its author.
 
-The workload alternates whole-Strip inserts, replacements, and removals at the
-head, middle, and tail. These edits leave signed Mask Strips between visible
-Footage and cause each peer to build a different local gate/jump cache while
-integrating the same operations through different public methods.
+The workload repeatedly edits already edited regions:
 
-After every gossip round the guarantee is checked directly on the live peers:
+```text
+old text
+↓ replace
+new text
+↓ remove
+(empty)
+↓ insert
+fresh text
+```
+
+and later performs the same kind of insert, replace, and remove operations around the head, middle, and tail:
+
+```text
+The old draft reads poorly and stops here
+        ↓ replace
+The new draft reads poorly and stops here
+                         ↓ remove
+The new draft reads and stops here
+                     ↓ insert
+The new draft reads clearly and stops here
+```
+
+These edits leave reducing Mask Strips between visible Footage. The two continuously running peers may therefore reach the same Projection with different local gate and jump caches.
+
+After every Gossip round they must nevertheless expose the same document at every Projection position:
 
 ```text
 left.projectionFrameCount === right.projectionFrameCount
-left.value(position) === right.value(position) for every projection position
+
+left.value(position) === right.value(position)
 ```
 
-The final middle replacement must be read identically as:
+After the complete edit history, both peers must read:
 
 ```text
-13 13 14 14 12 12 10 10
+The final draft reads clearly and ends here
 ```
 
-Sequence equality is intentionally irrelevant to this regression. The target
-is the Projection exposed by the two continuously running replicas.
+The local traversal state is intentionally irrelevant: different jump paths must resolve every Projection position to the same Footage.
