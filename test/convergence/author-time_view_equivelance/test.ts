@@ -3,7 +3,7 @@ import { Projection } from '../../../src/class.ts'
 import type { Sequence } from '../../../src/types/type.ts'
 import { deliver } from '../../.helpers/replica.ts'
 
-describe('resolves anchors in fragmented boundary view', () => {
+describe('resolves the right anchor in unordered view', () => {
   /**
    * Verifies that same-actor insertions preserve the exact anchor points visible
    * in the author's Projection when each operation was created.
@@ -52,10 +52,6 @@ describe('resolves anchors in fragmented boundary view', () => {
    * final Projection:
    *
    *   fifth, fourth, second, middle, first, root
-   *
-   * A failure indicates that remote anchor resolution is incorrectly depending
-   * on the receiver's current fragmented view rather than the stable coordinate
-   * encoded by the authored operation.
    */
   it('orders same-actor insertions by the view in which they were authored', () => {
     const source = new Projection<string>(100)
