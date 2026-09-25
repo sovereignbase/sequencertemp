@@ -1,4 +1,4 @@
-# Browser delivery
+# Browser fanout
 
 The browser starts from:
 
