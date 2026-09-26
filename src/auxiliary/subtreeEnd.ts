@@ -57,8 +57,7 @@ export function subtreeEnd<T>(
         nextStrip,
         ancestorFragmentFrame,
         ancestorFragmentFrame +
-          Math.abs(ancestorStrip.fragmentDiff ?? ancestorStrip.insertionDiff) +
-          1
+          Math.abs(ancestorStrip.fragmentDiff ?? ancestorStrip.insertionDiff)
       )
     ) {
       // Try an earlier active ancestor.
