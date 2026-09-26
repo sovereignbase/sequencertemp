@@ -20,8 +20,6 @@ export function findProjectionPositionOfStrip<T>(
 
   let leftSplitDistance = 0
   let rightSplitDistance = 0
-  let leftJumpable = true
-  let rightJumpable = true
 
   let knownIndex =
     gateDiff === 0 && strip === this.gate ? this.projectedPosition : undefined
@@ -40,8 +38,7 @@ export function findProjectionPositionOfStrip<T>(
       leftCursor = leftCursor.leftStep!
 
       const leftDiff = leftCursor.fragmentDiff ?? leftCursor.insertionDiff
-      leftDistance += leftDiff
-      if (leftDiff < 0) leftJumpable = false
+      leftDistance += Math.max(0, leftDiff)
 
       ++leftStripDistance
 
@@ -62,8 +59,7 @@ export function findProjectionPositionOfStrip<T>(
 
     if (!rightJumpFound) {
       const rightDiff = rightCursor.fragmentDiff ?? rightCursor.insertionDiff
-      rightDistance += rightDiff
-      if (rightDiff < 0) rightJumpable = false
+      rightDistance += Math.max(0, rightDiff)
 
       rightCursor = rightCursor.rightStep!
       ++rightStripDistance
@@ -124,7 +120,7 @@ export function findProjectionPositionOfStrip<T>(
       right.leftJumpStripCount = strips
     }
 
-    if (leftCursor !== strip && leftJumpable) {
+    if (leftCursor !== strip) {
       if (leftStripDistance >= optimalJumpSpacing * 2) {
         link(
           leftCursor,
@@ -139,7 +135,7 @@ export function findProjectionPositionOfStrip<T>(
       }
     }
 
-    if (rightCursor !== strip && rightJumpable) {
+    if (rightCursor !== strip) {
       if (rightStripDistance >= optimalJumpSpacing * 2) {
         link(strip, rightSplit!, rightSplitDistance, optimalJumpSpacing)
 
@@ -177,7 +173,8 @@ export function findProjectionPositionOfStrip<T>(
     // CHECK IF RIGHT IS AT TAIL
     if (rightCursor === this.tail) {
       const rightDiff = rightCursor.fragmentDiff ?? rightCursor.insertionDiff
-      const index = this.projectionFrameCount - rightDiff - rightDistance
+      const index =
+        this.projectionFrameCount - Math.max(0, rightDiff) - rightDistance
 
       if (
         strip !== this.gate &&
@@ -236,7 +233,7 @@ export function findProjectionPositionOfStrip<T>(
       leftCursor = leftCursor.leftStep!
 
       const leftDiff = leftCursor.fragmentDiff ?? leftCursor.insertionDiff
-      leftDistance += leftDiff
+      leftDistance += Math.max(0, leftDiff)
     }
 
     // USE RIGHT JUMP IF AVAILABLE
@@ -282,7 +279,7 @@ export function findProjectionPositionOfStrip<T>(
       rightDistance += rightJumpFrameCount
     } else {
       const rightDiff = rightCursor.fragmentDiff ?? rightCursor.insertionDiff
-      rightDistance += rightDiff
+      rightDistance += Math.max(0, rightDiff)
 
       rightCursor = rightCursor.rightStep!
     }
