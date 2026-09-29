@@ -40,7 +40,7 @@ export type Strip<T> =
       /** Next fragment belonging to the same original Insertion. */
       rightFragment?: Strip<T>
 
-      /** Logical time before the fragments first frame.*/
+      /** Logical time before the fragments first frame. */
       fragmentStart?: number
 
       /** Signed Projection effect represented by this fragment. */
