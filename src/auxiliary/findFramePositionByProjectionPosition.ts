@@ -28,10 +28,8 @@ export function findFramePositionByProjectionPosition<T>(
 
   // Tail (strip | fragment) length.
   const tailDiff = this.tail!.fragmentDiff ?? this.tail!.insertionDiff
-  // Negative strips do not consume length (already consumed on split).
-  const tailLength = tailDiff > 0 ? tailDiff : 0
   // Index at the first frame of tail (strip | fragment).
-  const tailIndex = this.projectionFrameCount - tailLength
+  const tailIndex = this.projectionFrameCount - tailDiff
 
   // Length of the (strip | fragment) left of tail or 0 when there is no fragment.
   const tailPredecessorDiff =
