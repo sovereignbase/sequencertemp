@@ -53,8 +53,8 @@ export function splitStrip<T>(
     ? anchorDiff - anchoringStrip.fragmentStart
     : anchorDiff
   const rightFragmentDiff =
-    anchoringStrip.insertionDiff -
-    anchorDiff +
+    (anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff) -
+    leftFragmentDiff +
     (incomingDiff < 0 ? incomingDiff : 0)
 
   // The existing Strip always becomes the left side of the split.
