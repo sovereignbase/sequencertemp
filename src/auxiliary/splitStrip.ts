@@ -32,6 +32,14 @@ export function splitStrip<T>(
   anchorDiff: number,
   incomingDiff: number
 ): NonNullable<Strip<T>> {
+  // Remove content.
+  if (incomingDiff < 0 && anchoringStrip?.footage) {
+    void (anchoringStrip.footage as Array<T | undefined>).fill(
+      undefined,
+      anchorDiff,
+      anchorDiff + Math.abs(incomingDiff)
+    )
+  }
   // Cache (used more than once).
   //
   // These links belong to the original Strip's right boundary. After the
@@ -72,7 +80,10 @@ export function splitStrip<T>(
     // the anchoring Strip and its previous right fragment.
     rightFragment: anchoringStrip.rightFragment,
     fragmentStart: anchorDiff,
-    fragmentDiff: anchoringStrip.insertionDiff - anchorDiff + incomingDiff,
+    fragmentDiff:
+      anchoringStrip.insertionDiff -
+      anchorDiff +
+      (incomingDiff < 0 ? incomingDiff : 0),
 
     // The newly created fragment immediately follows the anchoring Strip.
     leftStep: anchoringStrip,
@@ -122,17 +133,6 @@ export function splitStrip<T>(
   // Fragmentation preserves the logical insertion and Projection effect, but
   // physically adds one Strip node to Structural Order.
   ++this.structuralStripCount
-
-  // Remove content.
-  if (incomingDiff < 0 && anchoringStrip?.footage) {
-    void (anchoringStrip.footage as Array<T | undefined>).fill(
-      undefined,
-      anchorDiff,
-      anchorDiff + Math.abs(incomingDiff)
-    )
-    console.log(incomingDiff)
-    console.log(anchoringStrip.footage)
-  }
 
   return rightFragment
 }
