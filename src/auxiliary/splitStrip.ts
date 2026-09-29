@@ -36,11 +36,13 @@ export function splitStrip<T>(
 ): Strip<T> {
   // Remove content.
   if (incomingDiff < 0 && anchoringStrip?.footage) {
+    console.log(incomingDiff)
     void (anchoringStrip.footage as Array<T | undefined>).fill(
       undefined,
       anchorDiff,
       anchorDiff + Math.abs(incomingDiff)
     )
+    console.log(anchoringStrip.footage)
   }
   // Cache (used more than once).
   //

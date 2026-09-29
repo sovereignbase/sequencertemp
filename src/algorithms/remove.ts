@@ -3,7 +3,6 @@ import { anchorStrip } from '../auxiliary/anchorStrip.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Projection } from '../class.js'
 import type { Gossip, Strip } from '../types/type.js'
-import { selectAnchor } from '../auxiliary/selectAnchor.js'
 
 export function remove<T>(
   this: Projection<T>,
@@ -15,14 +14,12 @@ export function remove<T>(
   let remaining = endWith - startAt + 1
 
   while (remaining > 0) {
-    const [anchorDiff, anchoringStrip] = selectAnchor.call(this, startAt) as [
-      number,
-      NonNullable<Strip<T>>,
-    ]
+    const anchorDiff = findFramePositionByProjectionPosition.call(this, startAt)
+    const anchoringStrip = this.gate!
 
     const decreasingLength = Math.min(
       remaining,
-      anchoringStrip.insertionDiff - anchorDiff + 1
+      anchoringStrip.insertionDiff - anchorDiff
     )
 
     const decreasingStrip: NonNullable<Strip<T>> = {

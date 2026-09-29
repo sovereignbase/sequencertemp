@@ -153,6 +153,5 @@ export function anchorStrip<T>(
   ++this.structuralStripCount
 
   // Projection length changes by the signed effect of this Strip or fragment.
-  this.projectionFrameCount +=
-    incomingStrip.fragmentDiff ?? incomingStrip.insertionDiff
+  this.projectionFrameCount += incomingStrip.insertionDiff
 }
