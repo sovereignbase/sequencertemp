@@ -5,8 +5,9 @@ import { deliver, expect_converged } from '../../.helpers/replica.ts'
 
 describe('overlapping remove gate', () => {
   /**
-   * Verifies that overlapping reducing operations do not move a receiver's
-   * zero-reservation gate away from Projection position zero.
+   * Verifies that remote overlapping reducing operations preserve the
+   * receiver's existing gate index. In this scenario the receiver begins with
+   * its gate on the head zero-reservation at Projection position zero.
    *
    * Three replicas begin from the same retained two-Frame Sequence. They then
    * independently author overlapping removals, a replacement, and additional
@@ -21,10 +22,10 @@ describe('overlapping remove gate', () => {
    * - `unordered` receives exactly the same mutations in a deliberately reordered
    *   sequence beginning with later removals.
    *
-   * Both receivers must converge to the same Projection. In addition, the
-   * unordered delivery must leave its local gate positioned at Projection zero.
-   * Signed remove debt around the head must therefore not shift the logical
-   * zero-reservation represented by that gate.
+   * Both receivers must converge to the same Projection. In addition, remote
+   * application must not move the unordered receiver's locally cached gate:
+   * because its pre-apply position is zero, its post-apply position must still
+   * be zero despite signed remove debt around the head.
    */
   it('keeps a head zero-reservation gate stable across signed remove debt', () => {
     // Establish the retained two-Frame origin shared by all replicas.
@@ -76,8 +77,8 @@ describe('overlapping remove gate', () => {
     // Delivery order must not change the visible Projection.
     expect_converged(ordered, unordered)
 
-    // Overlapping signed remove debt at the head must not move the local
-    // zero-reservation gate away from Projection position zero.
+    // Remote application must preserve the receiver's existing gate index.
+    // This receiver began on the head zero-reservation, so that index is zero.
     expect(unordered.projectedPosition).toBe(0)
   })
 })

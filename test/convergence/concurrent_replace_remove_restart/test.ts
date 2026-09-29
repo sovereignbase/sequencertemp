@@ -15,7 +15,7 @@ describe('concurrent replace remove restart', () => {
    *   branch-0, branch-1, branch-2, branch-3, root
    *   replaced-head, branch-0, branch-1, branch-2, branch-3, root
    *
-   * It then replaces Projection range [0, 2], removing `replaced-head` and
+   * It then replaces Projection range [0, 1], removing `replaced-head` and
    * `branch-0` and inserting:
    *
    *   replacement-0, replacement-1

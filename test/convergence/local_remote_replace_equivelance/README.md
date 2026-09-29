@@ -37,3 +37,9 @@ The very quick red fox
 A replacement is therefore not considered correct merely because the local editing path produces the expected text. The same shared insertion and reduction operations must resolve to the same visible Projection when reconstructed through the remote Gossip path.
 
 This test checks immediate convergence under ordered delivery. It does not test concurrently authored operations created before synchronization or convergence under different Gossip delivery orders.
+
+The workload keeps a lightweight `StripIndex` only to choose valid local edit
+boundaries and ranges. It is not an independent model of Projection semantics
+and is not used as an expected result. The locally edited author is the oracle;
+the assertion is that applying the same Gossip remotely reproduces that local
+Projection exactly.

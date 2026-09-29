@@ -120,3 +120,6 @@ render('remove(0, 2)')
 
 projection.remove(5, 8)
 render('remove(5, 8)')
+
+projection.replace(['y', 'z'], 10, 11)
+render('replace([x, z], 10, 11)')

@@ -79,10 +79,10 @@ describe('local/remote replacement equivalence', () => {
     peer.decreaseClock[0] = 2_002
 
     /**
-     * Tracks the expected visible Strip layout independently of Projection.
-     *
-     * StripIndex is used only to choose valid frame ranges and insertion points;
-     * convergence itself is always checked directly between the two replicas.
+     * Tracks only the logical Strip boundaries needed to author valid local
+     * edits. This is a workload-positioning aid, not a Projection oracle, and
+     * is therefore never compared with either replica. The test's expectation
+     * is that remote `apply` reproduces the already validated local result.
      */
     const strips = new StripIndex()
 

@@ -42,7 +42,14 @@ old middle draft
 tail content
 ```
 
-When these histories are merged, overlapping removes can produce signed remove debt before visible Footage. The gate may therefore sit on the head zero-reservation while negative structural effect exists to its right.
+Before the remote histories are applied, the receiver's local gate is cached on
+the head zero-reservation at Projection position zero. Applying remote
+operations must preserve that existing gate index; remote structural changes
+must not silently relocate the receiver's local traversal cursor.
+
+When these histories are merged, overlapping removes can produce signed remove
+debt before visible Footage. The gate may therefore remain on the head
+zero-reservation while negative structural effect exists to its right.
 
 Nothing can exist to the left of `head`, so that reservation still represents Projection position zero:
 
@@ -52,4 +59,5 @@ head | visible content
 projectedPosition = 0
 ```
 
-Every delivery order must converge to the same Projection while preserving that cached zero position.
+Every delivery order must converge to the same Projection while preserving the
+receiver's pre-apply cached gate position, which is zero in this scenario.
