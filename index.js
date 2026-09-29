@@ -11,7 +11,7 @@ const projection = new Projection(1)
 
 const content = [0, 1, 2]
 
-projection.insert(content.slice(), 0)
+projection.insert(['a', 'b', 'c'], 0)
 
 export function render(name) {
   const topContainer = document.createElement('div')
@@ -32,21 +32,31 @@ export function render(name) {
     width: max-content;
     height: max-content;
     border: solid 1px red;
+    font-weight: bold;
     `
     let logical = cursor.insertionStart + (cursor.fragmentStart ?? 0)
     let footageOffset = cursor.fragmentStart ?? 0
-    console.log(footageOffset)
     const target =
       logical + Math.abs(cursor.fragmentDiff ?? cursor.insertionDiff) + 1
 
     while (logical < target) {
-      void container.appendChild(
-        document.createTextNode('{L' + String(logical) + '}')
-      )
+      if (logical !== cursor.insertionStart + cursor.fragmentStart)
+        void container.appendChild(
+          document.createTextNode(
+            `{${(cursor.fragmentDiff ?? cursor.insertionDiff) < 0 ? 'M' : 'L'}` +
+              String(logical) +
+              '}'
+          )
+        )
 
       if (logical <= target - 2)
         void container.appendChild(
-          document.createTextNode('[' + String(footageOffset) + ']')
+          document.createTextNode(
+            '[' +
+              String(footageOffset) +
+              ']=' +
+              cursor?.footage?.[footageOffset] ?? 'undefined'
+          )
         )
 
       logical++
@@ -59,19 +69,28 @@ export function render(name) {
   void document.body.appendChild(topContainer)
 }
 
-render('insert([0, 1, 2], 0)')
+render('insert([a, b, c], 0)')
 
-projection.insert(content.slice(), 3)
-render('insert([0, 1, 2], 3)')
+projection.insert(['d', 'e', 'f'], 3)
+render('insert([d, e, f], 3)')
 
-projection.insert(content.slice(), 0)
-render('insert([0, 1, 2], 0)')
+projection.insert(['g', 'h', 'i'], 0)
+render('insert([g, h, i], 0)')
 
-projection.insert(content.slice(), 3)
-render('insert([0, 1, 2], 3)')
+projection.insert(['j', 'k', 'l'], 3)
+render('insert([j, k, l], 3)')
 
-projection.insert(content.slice(), 5)
-render('insert([0, 1, 2], 5)')
+projection.insert(['m', 'n', 'o'], 5)
+render('insert([m, n, o], 5)')
 
-projection.insert(content.slice(), projection.length())
-render('insert([0, 1, 2], projection.length())')
+projection.insert(['p', 'q', 'r'], projection.length())
+render('insert([p, q, r], projection.length())')
+
+projection.insert(['s', 't', 'u'], 0)
+render('insert([s, t, u], 0)')
+
+projection.replace(['v', 'w', 'x'], 0, 2)
+render('replace([v, w, x], 0, 2)')
+
+projection.remove(0, 2)
+render('remove(0, 2)')
