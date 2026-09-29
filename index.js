@@ -134,3 +134,8 @@ render('apply(peer.insert([A, B, C], 0))')
 
 projection.apply(peer.replace(['D', 'E', 'F'], 2, 3))
 render('apply(peer.replace([D, E, F], 2, 3))')
+
+const gossip1 = projection.insert(['1', '2', '3'], 8)
+projection.apply(peer.insert(['G', 'H', 'I'], 8))
+peer.apply(gossip1)
+render(`insert([1, 2, 3], 8) \n apply(peer.insert([G, H, I], 8))`)
