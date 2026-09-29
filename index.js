@@ -66,6 +66,8 @@ export function render(name) {
     cursor = cursor.rightStep
   }
   void topContainer.appendChild(document.createTextNode(name ?? ''))
+  void topContainer.appendChild(document.createTextNode(projection.values()))
+
   void document.body.appendChild(topContainer)
 }
 
