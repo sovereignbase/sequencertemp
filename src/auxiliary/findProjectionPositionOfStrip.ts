@@ -15,6 +15,12 @@ export function findProjectionPositionOfStrip<T>(
   let leftStripDistance = 0
   let rightStripDistance = 0
 
+  let leftJump: Strip<T>
+  let rightJump: Strip<T>
+
+  let leftJumpedDistance = 0
+  let rightJumpedDistance = 0
+
   let knownIndex =
     gateDiff === 0 && strip === this.gate ? this.projectedPosition : undefined
 
@@ -41,8 +47,8 @@ export function findProjectionPositionOfStrip<T>(
       }
 
       if (leftStripDistance === optimalJumpSpacing) {
-        leftSplit = leftCursor
-        leftSplitDistance = leftFrameDistance
+        leftJump = leftCursor
+        leftJumpedDistance = leftFrameDistance
       }
 
       leftJumpFound =
@@ -64,8 +70,8 @@ export function findProjectionPositionOfStrip<T>(
       }
 
       if (rightStripDistance === optimalJumpSpacing) {
-        rightSplit = rightCursor
-        rightSplitDistance = rightFrameDistance
+        rightJump = rightCursor
+        rightJumpedDistance = rightFrameDistance
       }
 
       rightJumpFound =
@@ -118,12 +124,12 @@ export function findProjectionPositionOfStrip<T>(
       if (leftStripDistance >= optimalJumpSpacing * 2) {
         link(
           leftCursor,
-          leftSplit!,
-          leftFrameDistance - leftSplitDistance,
+          leftJump!,
+          leftFrameDistance - leftJumpedDistance,
           leftStripDistance - optimalJumpSpacing
         )
 
-        link(leftSplit!, strip, leftSplitDistance, optimalJumpSpacing)
+        link(leftJump!, strip, leftJumpedDistance, optimalJumpSpacing)
       } else {
         link(leftCursor, strip, leftFrameDistance, leftStripDistance)
       }
@@ -131,12 +137,12 @@ export function findProjectionPositionOfStrip<T>(
 
     if (rightCursor !== strip) {
       if (rightStripDistance >= optimalJumpSpacing * 2) {
-        link(strip, rightSplit!, rightSplitDistance, optimalJumpSpacing)
+        link(strip, rightJump!, rightJumpedDistance, optimalJumpSpacing)
 
         link(
-          rightSplit!,
+          rightJump!,
           rightCursor,
-          rightFrameDistance - rightSplitDistance,
+          rightFrameDistance - rightJumpedDistance,
           rightStripDistance - optimalJumpSpacing
         )
       } else {
