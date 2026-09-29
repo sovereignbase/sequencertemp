@@ -59,24 +59,19 @@ export function create<T>(
           void insertFirst.call(this, incomingStrip)
         } else {
           let anchoringStrip: Strip<T>
-          let targetFramePosition = 0
+          let anchorDiff = 0
 
           if (!birth) {
             const origin = this.containmentTable.get(incoming)
             if (!origin) continue
 
-            ;[targetFramePosition, anchoringStrip] = findContainingFragment(
+            ;[anchorDiff, anchoringStrip] = findContainingFragment(
               origin,
               incomingStrip
             )
           }
 
-          void anchorStrip.call(
-            this,
-            incomingStrip,
-            anchoringStrip,
-            targetFramePosition
-          )
+          void anchorStrip.call(this, incomingStrip, anchoringStrip, anchorDiff)
         }
 
         void this.containmentTable.set(incomingStrip)
