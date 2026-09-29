@@ -128,3 +128,9 @@ projection = new Projection(1, projection.sequence())
 render('new Projection(projection.sequence())')
 
 let peer = new Projection(2, projection.sequence())
+
+projection.apply(peer.insert(['A', 'B', 'C'], 0))
+render('apply(peer.insert([A, B, C], 0))')
+
+projection.apply(peer.replace(['D', 'E', 'F'], 2, 3))
+render('apply(peer.replace([D, E, F], 2, 3))')
