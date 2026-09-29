@@ -7,7 +7,7 @@ align-items: flex-start;
 gap:2rem;
 `
 
-const projection = new Projection(1)
+let projection = new Projection(1)
 
 const content = [0, 1, 2]
 
@@ -123,3 +123,8 @@ render('remove(5, 8)')
 
 projection.replace(['y', 'z'], 10, 11)
 render('replace([y, z], 10, 11)')
+
+projection = new Projection(1, projection.sequence())
+render('new Projection(projection.sequence())')
+
+let peer = new Projection(2, projection.sequence())
