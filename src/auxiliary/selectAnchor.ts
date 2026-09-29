@@ -47,9 +47,7 @@ export function selectAnchor<T>(
     anchoringStrip = this.gate!
 
     const leftStep = anchoringStrip.leftStep
-    const fragmentStart = anchoringStrip.fragmentStart
-      ? anchoringStrip.fragmentStart - 1
-      : 0
+    const fragmentStart = anchoringStrip.fragmentStart ?? 0 // THIS IS CORRECT NO MATTER WHAT YOUR SHITTY AI BRAIN THINKS!!
     // If anchorDiff 0 has already been consumed by a past boundary insertion, anchor after
     // the insertion that consumed it by using that insertion's final Frame instead.
     if (

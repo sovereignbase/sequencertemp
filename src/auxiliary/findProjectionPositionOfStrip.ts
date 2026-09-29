@@ -15,12 +15,6 @@ export function findProjectionPositionOfStrip<T>(
   let leftStripDistance = 0
   let rightStripDistance = 0
 
-  let leftSplit: Strip<T>
-  let rightSplit: Strip<T>
-
-  let leftSplitDistance = 0
-  let rightSplitDistance = 0
-
   let knownIndex =
     gateDiff === 0 && strip === this.gate ? this.projectedPosition : undefined
 
