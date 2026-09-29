@@ -29,53 +29,15 @@ import type { Strip } from '../types/type.js'
 export function splitStrip<T>(
   this: Projection<T>,
   anchoringStrip: NonNullable<Strip<T>>,
-  after: number
+  anchorDiff: number,
+  incomingDiff: number
 ): NonNullable<Strip<T>> {
-  // Anchor (strip | fragment) length.
-  //
-  // An already fragmented Strip is split according to its current fragment
-  // effect. Otherwise its original insertion effect defines the extent.
-  const anchoringStripDiff =
-    anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
-
-  // When anchoring strip is of negative effect scalar is reducing, else increasing.
-  //
-  // This preserves the direction of the Strip's Projection effect while
-  // `after` remains a zero-based anchor point independent of that direction.
-  const effect = anchoringStripDiff < 0 ? -1 : 1
-
-  // Negative effect scalar makes left diff negative.
-  //
-  // For example, splitting after anchor point 3 gives:
-  //   positive Strip ->  3
-  //   negative Strip -> -3
-  const leftDiff = effect * after
-
-  // Handles mask overlap/ownership by moving anchor to the right when left strip is a mask.
-  //
-  // The right fragment receives exactly the remainder of the original
-  // fragment's effect:
-  //
-  //   -7 - -3 = -4
-  //
-  // Left reducing strip keeps ownership of the overlapping range represented
-  // by `leftDiff`; the remainder moves to the right fragment.
-  const rightDiff = anchoringStripDiff - leftDiff
-
   // Cache (used more than once).
   //
   // These links belong to the original Strip's right boundary. After the
   // split, that boundary belongs to the newly created right fragment.
   const rightStep = anchoringStrip.rightStep
   const rightJump = anchoringStrip.rightJump
-
-  if (anchoringStripDiff < 0 && rightStep?.footage)
-    void (rightStep.footage as Array<T | undefined>).fill(
-      undefined,
-      rightStep.fragmentStart ? rightStep.fragmentStart - 1 : 0,
-      (rightStep.fragmentStart ? rightStep.fragmentStart - 1 : 0) +
-        Math.abs(anchoringStripDiff)
-    )
 
   /**
    * Create the right fragment.
@@ -109,8 +71,8 @@ export function splitStrip<T>(
     // Preserve the existing fragment chain by placing the new fragment between
     // the anchoring Strip and its previous right fragment.
     rightFragment: anchoringStrip.rightFragment,
-    fragmentStart: (anchoringStrip.fragmentStart ?? 0) + after,
-    fragmentDiff: rightDiff,
+    fragmentStart: anchorDiff,
+    fragmentDiff: anchoringStrip.insertionDiff - anchorDiff + incomingDiff,
 
     // The newly created fragment immediately follows the anchoring Strip.
     leftStep: anchoringStrip,
@@ -130,10 +92,10 @@ export function splitStrip<T>(
   }
 
   // Update anchoring strip details.
-  //
-  // The existing Strip becomes the left fragment and therefore receives the
-  // left fragment effect and points directly to the newly created fragment.
-  anchoringStrip.fragmentDiff = leftDiff
+
+  anchoringStrip.fragmentDiff = anchoringStrip.fragmentStart
+    ? anchorDiff - anchoringStrip.fragmentStart
+    : anchorDiff
   anchoringStrip.rightFragment = rightFragment
   anchoringStrip.rightStep = rightFragment
 
@@ -160,6 +122,17 @@ export function splitStrip<T>(
   // Fragmentation preserves the logical insertion and Projection effect, but
   // physically adds one Strip node to Structural Order.
   ++this.structuralStripCount
+
+  // Remove content.
+  if (incomingDiff < 0 && anchoringStrip?.footage) {
+    void (anchoringStrip.footage as Array<T | undefined>).fill(
+      undefined,
+      anchorDiff,
+      anchorDiff + Math.abs(incomingDiff)
+    )
+    console.log(incomingDiff)
+    console.log(anchoringStrip.footage)
+  }
 
   return rightFragment
 }

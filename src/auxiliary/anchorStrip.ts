@@ -37,13 +37,18 @@ export function anchorStrip<T>(
       anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
     )
 
-    // Happy path: the anchor is already at the end of the anchoring Strip.
+    // The anchor is already at the end of the anchoring Strip.
     if (anchorDiff === anchoringStripLength) {
       rightStep = anchoringStrip.rightStep
     } else {
       // The anchor is inside the Strip. Split it so that the right fragment
       // becomes the structural successor of the anchor point.
-      rightStep = splitStrip.call(this, anchoringStrip, anchorDiff) as Strip<T>
+      rightStep = splitStrip.call(
+        this,
+        anchoringStrip,
+        anchorDiff,
+        incomingStrip.insertionDiff
+      ) as Strip<T>
     }
   } else {
     // Root competitors share the virtual `(0, 0, 0)` anchor. `head` is the

@@ -30,21 +30,16 @@ export function findFramePositionByProjectionPosition<T>(
   const tailDiff = this.tail!.fragmentDiff ?? this.tail!.insertionDiff
   // Index at the first frame of tail (strip | fragment).
   const tailIndex = this.projectionFrameCount - tailDiff
-
-  // Length of the (strip | fragment) left of tail or 0 when there is no fragment.
-  const tailPredecessorDiff =
-    this.tail!.leftStep?.fragmentDiff ?? this.tail!.leftStep?.insertionDiff ?? 0
-
-  // Length from gate to requested projection position.
-  const distanceToTravel = Math.abs(this.projectedPosition - index)
   // Length from tail to requested projection position.
   const tailDistance = Math.abs(tailIndex - index)
 
+  // Length from gate to requested projection position.
+  const gateDistance = Math.abs(this.projectedPosition - index)
+
   if (
-    // Length of the (strip | fragment) left of tail is negative.
-    tailPredecessorDiff < 0 || // Or
     // Distance to travel from head to requested projection position is shorter than distance from gate and tail.
-    (index < distanceToTravel && index <= tailDistance)
+    index < gateDistance &&
+    index <= tailDistance
   ) {
     cursorStrip = this.head!
     cursorIndex = 0
@@ -52,10 +47,8 @@ export function findFramePositionByProjectionPosition<T>(
     leftJumpToPatch = cursorStrip
     rightJumpToPatch = cursorStrip.rightJump
   } else if (
-    // Length of the (strip | fragment) left of tail is 0 or positive.
-    tailPredecessorDiff >= 0 && // And
     // Distance to travel from tail to requested projection position is shorter than distance from gate.
-    tailDistance < distanceToTravel
+    tailDistance < gateDistance
   ) {
     cursorStrip = this.tail!
     cursorIndex = tailIndex
@@ -69,7 +62,7 @@ export function findFramePositionByProjectionPosition<T>(
   const optimalJumpSpacing = Math.round(Math.sqrt(this.structuralStripCount))
 
   while (true) {
-    // Length of the (strip | fragment) being evaluated.
+    // Length of the (strip | fragment) being traversed.
     const cursorDiff = cursorStrip.fragmentDiff ?? cursorStrip.insertionDiff
     // Negative strips do not consume length (already consumed on split).
     const stripLength = cursorDiff > 0 ? cursorDiff : 0
@@ -94,7 +87,7 @@ export function findFramePositionByProjectionPosition<T>(
       const fragmentStart = cursorStrip.fragmentStart
       // Return the Frame's position in the original insertion's Footage
       // Works, because projection positions do not land on 0 frame fragmentstart 0 positions.
-      return (fragmentStart ? fragmentStart - 1 : 0) + index - cursorIndex
+      return fragmentStart ?? 0 + index - cursorIndex
     }
 
     // Absolute distance from cursor to requested projection position.
@@ -108,7 +101,7 @@ export function findFramePositionByProjectionPosition<T>(
 
       let rightJump = cursorStrip.rightJump
 
-      if (tailPredecessorDiff >= 0 && rightJump && cursorIndex >= 0) {
+      if (rightJump && cursorIndex >= 0) {
         let rightJumpFrameCount = cursorStrip.rightJumpFrameCount!
         let rightJumpStripCount = cursorStrip.rightJumpStripCount!
 
@@ -184,7 +177,7 @@ export function findFramePositionByProjectionPosition<T>(
 
       let leftJump = cursorStrip.leftJump
 
-      if (tailPredecessorDiff >= 0 && leftJump) {
+      if (leftJump) {
         let leftJumpFrameCount = cursorStrip.leftJumpFrameCount!
         let leftJumpStripCount = cursorStrip.leftJumpStripCount!
 
