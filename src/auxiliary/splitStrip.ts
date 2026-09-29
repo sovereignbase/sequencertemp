@@ -24,14 +24,16 @@ import type { Strip } from '../types/type.js'
  * @param this Projection containing the Strip.
  * @param anchoringStrip Strip to split. Becomes the left fragment.
  * @param after Largest zero-based anchor point retained by the left fragment.
- * @returns Newly created right fragment.
+ * @returns The Strip immediately to the right of the anchoring Strip. When the
+ * right fragment would have no effect, it is not materialized and the
+ * original right step is returned instead.
  */
 export function splitStrip<T>(
   this: Projection<T>,
   anchoringStrip: NonNullable<Strip<T>>,
   anchorDiff: number,
   incomingDiff: number
-): NonNullable<Strip<T>> {
+): Strip<T> {
   // Remove content.
   if (incomingDiff < 0 && anchoringStrip?.footage) {
     void (anchoringStrip.footage as Array<T | undefined>).fill(
@@ -46,6 +48,30 @@ export function splitStrip<T>(
   // split, that boundary belongs to the newly created right fragment.
   const rightStep = anchoringStrip.rightStep
   const rightJump = anchoringStrip.rightJump
+
+  const leftFragmentDiff = anchoringStrip.fragmentStart
+    ? anchorDiff - anchoringStrip.fragmentStart
+    : anchorDiff
+  const rightFragmentDiff =
+    anchoringStrip.insertionDiff -
+    anchorDiff +
+    (incomingDiff < 0 ? incomingDiff : 0)
+
+  // The existing Strip always becomes the left side of the split.
+  anchoringStrip.fragmentDiff = leftFragmentDiff
+
+  // Its previous right jump crosses the insertion position and is no longer
+  // valid, whether or not a right fragment needs to be materialized.
+  anchoringStrip.rightJump = undefined
+  anchoringStrip.rightJumpFrameCount = 0
+  anchoringStrip.rightJumpStripCount = 0
+
+  if (rightJump) rightJump.leftJump = undefined
+
+  // A fully consumed right side has no structural identity of its own. Keep
+  // the existing fragment chain and structural links intact and let the
+  // caller insert directly before the original right step.
+  if (rightFragmentDiff === 0) return rightStep
 
   /**
    * Create the right fragment.
@@ -80,10 +106,7 @@ export function splitStrip<T>(
     // the anchoring Strip and its previous right fragment.
     rightFragment: anchoringStrip.rightFragment,
     fragmentStart: anchorDiff,
-    fragmentDiff:
-      anchoringStrip.insertionDiff -
-      anchorDiff +
-      (incomingDiff < 0 ? incomingDiff : 0),
+    fragmentDiff: rightFragmentDiff,
 
     // The newly created fragment immediately follows the anchoring Strip.
     leftStep: anchoringStrip,
@@ -104,21 +127,8 @@ export function splitStrip<T>(
 
   // Update anchoring strip details.
 
-  anchoringStrip.fragmentDiff = anchoringStrip.fragmentStart
-    ? anchorDiff - anchoringStrip.fragmentStart
-    : anchorDiff
   anchoringStrip.rightFragment = rightFragment
   anchoringStrip.rightStep = rightFragment
-
-  // Its previous right jump crossed the split position and is no longer valid.
-  anchoringStrip.rightJump = undefined
-  anchoringStrip.rightJumpFrameCount = 0
-  anchoringStrip.rightJumpStripCount = 0
-
-  // The previous right jump pointed across the position where a Strip was
-  // inserted into Structural Order. Its reciprocal left jump is therefore
-  // invalid as well.
-  if (rightJump) rightJump.leftJump = undefined
 
   // Set the right fragment of anchoring strip as left step for anchoring strips left step.
   //
