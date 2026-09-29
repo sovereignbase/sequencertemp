@@ -87,7 +87,7 @@ export function findFramePositionByProjectionPosition<T>(
       const fragmentStart = cursorStrip.fragmentStart
       // Return the Frame's position in the original insertion's Footage
       // Works, because projection positions do not land on 0 frame fragmentstart 0 positions.
-      return fragmentStart ?? 0 + index - cursorIndex
+      return (fragmentStart ?? 0) + index - cursorIndex
     }
 
     // Absolute distance from cursor to requested projection position.
