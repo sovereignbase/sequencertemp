@@ -3,6 +3,7 @@ import { anchorStrip } from '../auxiliary/anchorStrip.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Projection } from '../class.js'
 import type { Gossip, Strip } from '../types/type.js'
+import { selectAnchor } from '../auxiliary/selectAnchor.js'
 
 export function remove<T>(
   this: Projection<T>,
@@ -14,28 +15,20 @@ export function remove<T>(
   let remaining = endWith - startAt + 1
 
   while (remaining > 0) {
-    const framePosition = findFramePositionByProjectionPosition.call(
-      this,
-      startAt
-    )
-    const containingStrip = this.gate!
-    const fragmentPosition =
-      framePosition -
-      (containingStrip.fragmentStart ? containingStrip.fragmentStart - 1 : 0)
-
-    const containingStripLength = Math.abs(
-      containingStrip.fragmentDiff ?? containingStrip.insertionDiff
-    )
+    const [anchorDiff, anchoringStrip] = selectAnchor.call(this, startAt) as [
+      number,
+      NonNullable<Strip<T>>,
+    ]
 
     const decreasingLength = Math.min(
       remaining,
-      containingStripLength - fragmentPosition
+      anchoringStrip.insertionDiff - anchorDiff + 1
     )
 
     const decreasingStrip: NonNullable<Strip<T>> = {
-      anchorSession: containingStrip.insertionSession,
-      anchorStart: containingStrip.insertionStart,
-      anchorDiff: framePosition + 1,
+      anchorSession: anchoringStrip.insertionSession,
+      anchorStart: anchoringStrip.insertionStart,
+      anchorDiff: anchorDiff,
       insertionSession: this.decreaseClock[0],
       insertionStart: this.decreaseClock[1],
       insertionDiff: -decreasingLength,
@@ -43,12 +36,7 @@ export function remove<T>(
 
     const previousStructuralStripCount = this.structuralStripCount
 
-    void anchorStrip.call(
-      this,
-      decreasingStrip,
-      containingStrip,
-      decreasingStrip.anchorDiff
-    )
+    void anchorStrip.call(this, decreasingStrip, anchoringStrip, anchorDiff)
 
     void patchJumps.call(
       this,
@@ -56,7 +44,7 @@ export function remove<T>(
       this.structuralStripCount - previousStructuralStripCount
     )
 
-    if (fragmentPosition === 0) {
+    if (anchorDiff === 0) {
       if ((this.gate!.fragmentDiff ?? this.gate!.insertionDiff) === 0)
         this.gate = this.gate!.rightFragment
       this.projectedPosition += decreasingStrip.insertionDiff

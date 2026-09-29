@@ -94,3 +94,6 @@ render('replace([v, w, x], 0, 2)')
 
 projection.remove(0, 2)
 render('remove(0, 2)')
+
+projection.remove(5, 8)
+render('remove(5, 8)')

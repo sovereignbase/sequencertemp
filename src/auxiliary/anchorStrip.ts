@@ -29,13 +29,9 @@ export function anchorStrip<T>(
   anchorDiff: number
 ): void {
   let leftStep: Strip<T> = anchoringStrip
-  let rightStep: Strip<T> = this.head
+  let rightStep: Strip<T>
 
   if (anchoringStrip) {
-    anchorDiff -=
-      (incomingStrip.insertionDiff < 0 ? 1 : 0) +
-      (anchoringStrip.fragmentStart ? anchoringStrip.fragmentStart - 1 : 0)
-
     // Structural length of the anchoring Strip or its current fragment.
     const anchoringStripLength = Math.abs(
       anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
