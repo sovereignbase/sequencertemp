@@ -25,7 +25,7 @@ export function render(name) {
     padding: 1rem;
     `
   let cursor = projection.head
-  for (let i = 0; i < projection.length(); i++) {
+  for (let i = 0; i < projection.structuralStripCount; i++) {
     if (!cursor) break
     const container = document.createElement('div')
     container.style.cssText = `

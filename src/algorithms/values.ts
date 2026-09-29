@@ -40,7 +40,9 @@ export function values<T>(
       Math.max(
         0,
         framePosition -
-          (strip.fragmentStart ? strip.fragmentStart : 0) -
+          (strip.fragmentStart && strip.fragmentStart > 0
+            ? strip.fragmentStart
+            : 0) -
           stripDiff
       )
     strip = strip.rightStep
