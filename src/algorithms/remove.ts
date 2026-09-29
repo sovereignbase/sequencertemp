@@ -41,12 +41,6 @@ export function remove<T>(
       this.structuralStripCount - previousStructuralStripCount
     )
 
-    if (anchorDiff === 0) {
-      if ((this.gate!.fragmentDiff ?? this.gate!.insertionDiff) === 0)
-        this.gate = this.gate!.rightFragment
-      this.projectedPosition += decreasingStrip.insertionDiff
-    }
-
     void this.containmentTable.set(decreasingStrip)
 
     void insertions.push([
