@@ -9,7 +9,7 @@ import { containsAnchor } from './containsAnchor.js'
  *
  * A Projection position occupied by a Frame identifies the Frame that the new
  * insertion moves to the right. Its zero-based position in the original
- * insertion's Footage is also the logical anchor point immediately preceding
+ * insertion's zero-based Footage is also the logical anchor point immediately preceding
  * that Frame. {@link findFramePositionByProjectionPosition} therefore provides
  * `anchorDiff` directly and leaves `gate` on the anchoring Strip or fragment.
  *
@@ -38,8 +38,9 @@ export function selectAnchor<T>(
   if (of === this.projectionFrameCount) {
     anchoringStrip = this.tail!
     anchorDiff =
-      (anchoringStrip.fragmentStart ? anchoringStrip.fragmentStart - 1 : 0) +
-      Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff)
+      anchoringStrip.fragmentStart && anchoringStrip.fragmentDiff
+        ? anchoringStrip.fragmentStart + Math.abs(anchoringStrip.fragmentDiff)
+        : anchoringStrip.insertionDiff
   } else {
     // The Frame currently at `of` moves right. Its Footage position is exactly
     // the stable logical anchor point immediately preceding it.
@@ -47,12 +48,14 @@ export function selectAnchor<T>(
     anchoringStrip = this.gate!
 
     const leftStep = anchoringStrip.leftStep
-    const fragmentStart = anchoringStrip.fragmentStart ?? 0 // THIS IS CORRECT NO MATTER WHAT YOUR SHITTY AI BRAIN THINKS!!
+    const fragmentStart = anchoringStrip.fragmentStart ?? 0
     // If anchorDiff 0 has already been consumed by a past boundary insertion, anchor after
     // the insertion that consumed it by using that insertion's final Frame instead.
     if (
       leftStep &&
+      // Safe because traversal never lands on the -1 fragmentStart sentinel.
       anchorDiff === fragmentStart &&
+      // The boundary anchor is already reserved by `leftStep`.
       containsAnchor(anchoringStrip, leftStep, fragmentStart, fragmentStart)
     ) {
       anchoringStrip = leftStep
