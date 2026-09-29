@@ -107,7 +107,7 @@ export function splitStrip<T>(
     // Preserve the existing fragment chain by placing the new fragment between
     // the anchoring Strip and its previous right fragment.
     rightFragment: anchoringStrip.rightFragment,
-    fragmentStart: anchorDiff,
+    fragmentStart: anchorDiff + (incomingDiff < 0 ? Math.abs(incomingDiff) : 0),
     fragmentDiff: rightFragmentDiff,
 
     // The newly created fragment immediately follows the anchoring Strip.
