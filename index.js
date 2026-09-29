@@ -66,7 +66,28 @@ export function render(name) {
     cursor = cursor.rightStep
   }
   void topContainer.appendChild(document.createTextNode(name ?? ''))
-  void topContainer.appendChild(document.createTextNode(projection.values()))
+  const valuesContainer = document.createElement('div')
+  valuesContainer.style.cssText = `
+    width: max-content;
+    height: max-content;
+    border: solid 1px blue;
+    font-weight: bold;
+    `
+  void valuesContainer.appendChild(document.createTextNode(projection.values()))
+  void topContainer.appendChild(valuesContainer)
+
+  const valueContainer = document.createElement('div')
+  valueContainer.style.cssText = `
+    width: max-content;
+    height: max-content;
+    border: solid 1px green;
+    font-weight: bold;
+    `
+  for (let i = 0; i < projection.length(); i++)
+    void valueContainer.appendChild(
+      document.createTextNode(projection.value(i) + ' ')
+    )
+  void topContainer.appendChild(valueContainer)
 
   void document.body.appendChild(topContainer)
 }
