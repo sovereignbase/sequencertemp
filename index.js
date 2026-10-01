@@ -73,7 +73,9 @@ export function render(name) {
     border: solid 1px blue;
     font-weight: bold;
     `
-  void valuesContainer.appendChild(document.createTextNode(projection.values()))
+  void valuesContainer.appendChild(
+    document.createTextNode(JSON.stringify(projection.values()))
+  )
   void topContainer.appendChild(valuesContainer)
 
   const valueContainer = document.createElement('div')
@@ -160,3 +162,14 @@ peer.apply(gossip4)
 render(
   `replace([7, 8, 9], 0, 2) \n apply(peer.replace([M, N, O], 0, 2))\n\n ${JSON.stringify(peer.values())}`
 )
+
+projection = new Projection(1, peer.sequence())
+peer = new Projection(2, peer.sequence())
+
+const thisContainer1 = document.createElement('div')
+thisContainer1.textContent = JSON.stringify(projection.values())
+document.body.appendChild(thisContainer1)
+
+const peerContainer1 = document.createElement('div')
+peerContainer1.textContent = JSON.stringify(peer.values())
+document.body.appendChild(peerContainer1)
