@@ -138,13 +138,14 @@ render('apply(peer.replace([D, E, F], 2, 3))')
 const gossip1 = projection.insert(['1', '2', '3'], 8)
 projection.apply(peer.insert(['G', 'H', 'I'], 8))
 peer.apply(gossip1)
-render(
-  `insert([1, 2, 3], 8) \n apply(peer.insert([G, H, I], 8))\n\n${JSON.stringify(peer.values())}\n\n${JSON.stringify(peer.sequence())}`
-)
+render(`insert([1, 2, 3], 8) \n apply(peer.insert([G, H, I], 8))`)
 
 const gossip2 = projection.remove(5, 8)
 projection.apply(peer.remove(6, 9))
 peer.apply(gossip2)
-render(
-  `remove(5, 8) \n apply(peer.remove(6, 9))\n\n${JSON.stringify(peer.values())}\n\n${JSON.stringify(peer.sequence())}`
-)
+render(`remove(5, 8) \n apply(peer.remove(6, 9))`)
+
+const gossip3 = projection.replace(['4', '5', '6'], 0, 7)
+projection.apply(peer.replace(['J', 'K', 'L'], 5, 12))
+peer.apply(gossip3)
+render(`replace([4, 5, 6], 0, 7) \n apply(peer.replace([J, K, L], 5, 12))`)
