@@ -11,8 +11,6 @@ let projection = new Projection(1)
 
 const content = [0, 1, 2]
 
-projection.insert(['a', 'b', 'c'], 0)
-
 export function render(name) {
   const topContainer = document.createElement('div')
   topContainer.style.cssText = `
@@ -94,6 +92,7 @@ export function render(name) {
   void document.body.appendChild(topContainer)
 }
 
+projection.insert(['a', 'b', 'c'], 0)
 render('insert([a, b, c], 0)')
 
 projection.insert(['d', 'e', 'f'], 3)
@@ -200,3 +199,78 @@ peerContainer2.replaceChildren(
   )
 )
 document.body.appendChild(peerContainer2)
+
+peer.apply(projection.apply(peer.remove()))
+render(`peer.apply(projection.apply(peer.remove()))
+`)
+
+projection.insert(['a', 'b', 'c'], 0)
+render('insert([a, b, c], 0)')
+
+projection.insert(['d', 'e', 'f'], 3)
+render('insert([d, e, f], 3)')
+
+projection.insert(['g', 'h', 'i'], 0)
+render('insert([g, h, i], 0)')
+
+projection.insert(['j', 'k', 'l'], 3)
+render('insert([j, k, l], 3)')
+
+projection.insert(['m', 'n', 'o'], 5)
+render('insert([m, n, o], 5)')
+
+projection.insert(['p', 'q', 'r'], projection.length())
+render('insert([p, q, r], projection.length())')
+
+projection.insert(['s', 't', 'u'], 0)
+render('insert([s, t, u], 0)')
+
+projection.replace(['v', 'w', 'x'], 0, 2)
+render('replace([v, w, x], 0, 2)')
+
+projection.remove(0, 2)
+render('remove(0, 2)')
+
+projection.remove(5, 8)
+render('remove(5, 8)')
+
+projection.replace(['y', 'z'], 10, 11)
+render('replace([y, z], 10, 11)')
+
+peer.insert(['a', 'b', 'c'], 0)
+render('peer.insert([a, b, c], 0)')
+
+peer.insert(['d', 'e', 'f'], 3)
+render('peer.insert([d, e, f], 3)')
+
+peer.insert(['g', 'h', 'i'], 0)
+render('peer.insert([g, h, i], 0)')
+
+peer.insert(['j', 'k', 'l'], 3)
+render('peer.insert([j, k, l], 3)')
+
+peer.insert(['m', 'n', 'o'], 5)
+render('peer.insert([m, n, o], 5)')
+
+peer.insert(['p', 'q', 'r'], peer.length())
+render('peer.insert([p, q, r], peer.length())')
+
+peer.insert(['s', 't', 'u'], 0)
+render('peer.insert([s, t, u], 0)')
+
+peer.replace(['v', 'w', 'x'], 0, 2)
+render('peer.replace([v, w, x], 0, 2)')
+
+peer.remove(0, 2)
+render('peer.remove(0, 2)')
+
+peer.remove(5, 8)
+render('peer.remove(5, 8)')
+
+peer.replace(['y', 'z'], 10, 11)
+render('peer.replace([y, z], 10, 11)')
+
+projection = new Projection(1, projection.sequence())
+render('new Projection(projection.sequence())')
+projection = new Projection(1, peer.sequence())
+render('new Projection(peer.sequence())')
