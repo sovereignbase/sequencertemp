@@ -25,6 +25,7 @@ export function create<T>(
     let jumpCursor: Strip<T>
     let jumpFrameCount = 0
     let jumpStripCount = 0
+
     for (let index = 0; index < projection.length; ++index) {
       const incoming = projection[index]
       let incomingStrip: Strip<T>
@@ -102,6 +103,14 @@ export function create<T>(
           jumpFrameCount = 0
           jumpStripCount = 0
         }
+      }
+
+      if (incomingStrip.insertionDiff < 0) {
+        void this.frontierTable.observeAcknowledgement([
+          this.actorID,
+          incomingStrip.insertionSession,
+          incomingStrip.insertionStart - incomingStrip.insertionDiff,
+        ])
       }
     }
   }

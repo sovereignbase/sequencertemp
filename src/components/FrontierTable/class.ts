@@ -22,7 +22,8 @@ export class FrontierTable {
 
       if (session.size === 0) void this.sessions.set(sessionID, session)
 
-      void session.set(actorID, time)
+      if (this.sessions.get(actorID) ?? 0 < time)
+        void session.set(actorID, time)
     }
   }
 
