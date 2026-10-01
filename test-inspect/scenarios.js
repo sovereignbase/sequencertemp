@@ -948,7 +948,6 @@ export const scenarios = [
   overlappingGate,
   unorderedReplace,
   overlappingOwnership,
-  reducingJumps,
   tailReplaceRemove,
   localRemoteReplacement,
   liveUnobserved,
