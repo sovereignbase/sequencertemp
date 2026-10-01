@@ -89,7 +89,7 @@ export function create<T>(
 
         jumpCursor = jumpCursor.rightStep
 
-        if (jumpStripCount === jumpSpacing) {
+        if (jumpStripCount === jumpSpacing && jumpCursor) {
           jumpStart!.rightJump = jumpCursor
           jumpStart!.rightJumpFrameCount = jumpFrameCount
           jumpStart!.rightJumpStripCount = jumpStripCount
