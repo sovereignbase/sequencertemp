@@ -65,7 +65,10 @@ export function findProjectionPositionOfStrip<T>(
       ++rightStripDistance
 
       if (rightCursor === this.gate) {
-        this.projectedPosition += gateDiff
+        this.projectedPosition = Math.max(
+          0,
+          this.projectedPosition + gateDiff
+        )
         knownIndex = this.projectedPosition - rightFrameDistance
       }
 
@@ -165,7 +168,10 @@ export function findProjectionPositionOfStrip<T>(
           (leftFrameDistance === this.projectedPosition &&
             (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) >= 0))
       )
-        this.projectedPosition += gateDiff
+        this.projectedPosition = Math.max(
+          0,
+          this.projectedPosition + gateDiff
+        )
 
       return leftFrameDistance
     }
@@ -183,7 +189,10 @@ export function findProjectionPositionOfStrip<T>(
           (index === this.projectedPosition &&
             (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) >= 0))
       )
-        this.projectedPosition += gateDiff
+        this.projectedPosition = Math.max(
+          0,
+          this.projectedPosition + gateDiff
+        )
 
       return index
     }

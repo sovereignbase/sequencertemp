@@ -77,8 +77,19 @@ export function findContainingFragment<T>(
         if (incomingStrip.fragmentDiff === 0)
           return [anchorDiff + consumed, consumingMask]
 
-        const rightStep = consumingMask.rightStep!
-        return [rightStep.fragmentStart ?? 0, rightStep]
+        const advancedAnchor = incomingStrip.anchorDiff + consumed
+        let rightFragment = anchoringStrip.rightFragment!
+
+        while (
+          advancedAnchor >=
+          (rightFragment.fragmentStart ?? 0) +
+            Math.abs(
+              rightFragment.fragmentDiff ?? rightFragment.insertionDiff
+            )
+        )
+          rightFragment = rightFragment.rightFragment!
+
+        return [advancedAnchor, rightFragment]
       }
     }
 
