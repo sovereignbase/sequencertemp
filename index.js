@@ -143,9 +143,13 @@ render(`insert([1, 2, 3], 8) \n apply(peer.insert([G, H, I], 8))`)
 const gossip2 = projection.remove(5, 8)
 projection.apply(peer.remove(6, 9))
 peer.apply(gossip2)
-render(`remove(5, 8) \n apply(peer.remove(6, 9))`)
+render(
+  `remove(5, 8) \n apply(peer.remove(6, 9)) \n\n ${JSON.stringify(peer.values())}`
+)
 
 const gossip3 = projection.replace(['4', '5', '6'], 0, 7)
 projection.apply(peer.replace(['J', 'K', 'L'], 5, 12))
 peer.apply(gossip3)
-render(`replace([4, 5, 6], 0, 7) \n apply(peer.replace([J, K, L], 5, 12))`)
+render(
+  `replace([4, 5, 6], 0, 7) \n apply(peer.replace([J, K, L], 5, 12))\n\n ${JSON.stringify(peer.values())}`
+)
