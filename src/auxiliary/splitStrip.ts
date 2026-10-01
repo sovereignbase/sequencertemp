@@ -49,11 +49,13 @@ export function splitStrip<T>(
   const rightStep = anchoringStrip.rightStep
   const rightJump = anchoringStrip.rightJump
 
-  const leftFragmentDiff = anchoringStrip.fragmentStart
-    ? anchorDiff - anchoringStrip.fragmentStart
-    : anchorDiff
+  const anchoringStripDiff =
+    anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
+  const leftFragmentDiff =
+    (anchoringStripDiff < 0 ? -1 : 1) *
+    (anchorDiff - (anchoringStrip.fragmentStart ?? 0))
   const rightFragmentDiff =
-    (anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff) -
+    anchoringStripDiff -
     leftFragmentDiff +
     (incomingDiff < 0 ? incomingDiff : 0)
 

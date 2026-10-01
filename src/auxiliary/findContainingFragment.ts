@@ -26,8 +26,17 @@ export function findContainingFragment<T>(
         incomingStrip.insertionStart >=
           anchoringStrip.insertionStart + Math.abs(anchoringStrip.insertionDiff)
       )
-    )
+    ) {
+      if (
+        incomingStrip.insertionDiff < 0 &&
+        Math.abs(incomingStrip.insertionDiff) >
+          fragmentEnd - incomingStrip.anchorDiff
+      )
+        incomingStrip.fragmentDiff =
+          incomingStrip.anchorDiff - fragmentEnd
+
       break
+    }
 
     const consumingMask = anchoringStrip.rightStep
 
@@ -66,13 +75,7 @@ export function findContainingFragment<T>(
         incomingStrip.fragmentDiff = incomingStrip.insertionDiff + consumed
 
         if (incomingStrip.fragmentDiff === 0)
-          return [
-            (consumingMask.fragmentStart ?? 0) +
-              Math.abs(
-                consumingMask.fragmentDiff ?? consumingMask.insertionDiff
-              ),
-            consumingMask,
-          ]
+          return [anchorDiff + consumed, consumingMask]
 
         const rightStep = consumingMask.rightStep!
         return [rightStep.fragmentStart ?? 0, rightStep]
