@@ -52,7 +52,6 @@ export function apply<T>(
         incomingStrip.anchorStart === 0 &&
         incomingStrip.anchorDiff === 0
       let startAt = 0
-      let projectionDiff = incomingStrip.insertionDiff
 
       if (birth && this.structuralStripCount === 0) {
         void insertFirst.call(this, incomingStrip)
@@ -76,22 +75,19 @@ export function apply<T>(
 
         void anchorStrip.call(this, incomingStrip, anchoringStrip, anchorDiff)
 
-        projectionDiff =
-          incomingStrip?.fragmentDiff ?? incomingStrip.insertionDiff
-
         if (
-          projectionDiff < 0 &&
+          incomingStrip.insertionDiff < 0 &&
           anchoringStrip === this.gate &&
           (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) === 0
         ) {
-          this.gate = this.gate!.rightFragment ?? incomingStrip
+          this.gate = this.gate!.rightFragment
           gateRemoved = true
         }
 
         startAt = findProjectionPositionOfStrip.call(
           this,
           incomingStrip,
-          projectionDiff
+          incomingStrip.insertionDiff
         )
 
         if (gateRemoved && incomingStrip.insertionDiff > 0) {
@@ -103,15 +99,15 @@ export function apply<T>(
 
       void this.containmentTable.set(incomingStrip)
 
-      if (projectionDiff > 0) {
+      if (incomingStrip.insertionDiff > 0) {
         void changes.push([
           startAt,
           startAt,
           incomingStrip.footage ??
             new Array<T | undefined>(incomingStrip.insertionDiff),
         ])
-      } else if (projectionDiff < 0) {
-        void changes.push([startAt, startAt - projectionDiff])
+      } else {
+        void changes.push([startAt, startAt - incomingStrip.insertionDiff])
       }
 
       const pending = this.pendingTable.take(incomingStrip)
