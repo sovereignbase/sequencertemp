@@ -153,3 +153,10 @@ peer.apply(gossip3)
 render(
   `replace([4, 5, 6], 0, 7) \n apply(peer.replace([J, K, L], 5, 12))\n\n ${JSON.stringify(peer.values())}`
 )
+
+const gossip4 = projection.replace(['7', '8', '9'], 0, 2)
+projection.apply(peer.replace(['M', 'N', 'O'], 0, 2))
+peer.apply(gossip4)
+render(
+  `replace([7, 8, 9], 0, 2) \n apply(peer.replace([M, N, O], 0, 2))\n\n ${JSON.stringify(peer.values())}`
+)
