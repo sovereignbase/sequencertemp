@@ -59,10 +59,14 @@ export function remove<T>(
     remaining -= decreasingLength
   }
 
-  void this.frontierTable.observeAcknowledgement([
+  const acknowledgement = [
     this.actorID,
     this.decreaseClock[0],
     this.decreaseClock[1] - 1,
-  ])
+  ]
+
+  void this.frontierTable.observeAcknowledgement(acknowledgement)
+  void insertions.push(acknowledgement)
+
   return insertions
 }

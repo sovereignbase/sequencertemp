@@ -134,7 +134,7 @@ let peer = new Projection(2, projection.sequence())
 projection.apply(peer.insert(['A', 'B', 'C'], 0))
 render('apply(peer.insert([A, B, C], 0))')
 
-projection.apply(peer.replace(['D', 'E', 'F'], 2, 3))
+peer.apply(projection.apply(peer.replace(['D', 'E', 'F'], 2, 3))?.[1])
 render('apply(peer.replace([D, E, F], 2, 3))')
 
 const gossip1 = projection.insert(['1', '2', '3'], 8)
@@ -143,22 +143,22 @@ peer.apply(gossip1)
 render(`insert([1, 2, 3], 8) \n apply(peer.insert([G, H, I], 8))`)
 
 const gossip2 = projection.remove(5, 8)
-projection.apply(peer.remove(6, 9))
-peer.apply(gossip2)
+peer.apply(projection.apply(peer.remove(6, 9))?.[1])
+projection.apply(peer.apply(gossip2)?.[1])
 render(
   `remove(5, 8) \n apply(peer.remove(6, 9)) \n\n ${JSON.stringify(peer.values())}`
 )
 
 const gossip3 = projection.replace(['4', '5', '6'], 0, 7)
-projection.apply(peer.replace(['J', 'K', 'L'], 5, 12))
-peer.apply(gossip3)
+peer.apply(projection.apply(peer.replace(['J', 'K', 'L'], 5, 12))?.[1])
+projection.apply(peer.apply(gossip3)?.[1])
 render(
   `replace([4, 5, 6], 0, 7) \n apply(peer.replace([J, K, L], 5, 12))\n\n ${JSON.stringify(peer.values())}`
 )
 
 const gossip4 = projection.replace(['7', '8', '9'], 0, 2)
-projection.apply(peer.replace(['M', 'N', 'O'], 0, 2))
-peer.apply(gossip4)
+peer.apply(projection.apply(peer.replace(['M', 'N', 'O'], 0, 2))?.[1])
+projection.apply(peer.apply(gossip4)?.[1])
 render(
   `replace([7, 8, 9], 0, 2) \n apply(peer.replace([M, N, O], 0, 2))\n\n ${JSON.stringify(peer.values())}`
 )
@@ -178,8 +178,10 @@ peerContainer1.replaceChildren(
 )
 document.body.appendChild(peerContainer1)
 
-projection.merge(peer.sequence())
-peer.merge(projection.sequence())
+const peerSequence = peer.sequence()
+const projectionSequence = projection.sequence()
+projection.merge(peerSequence)
+peer.merge(projectionSequence)
 const projectionContainer2 = document.createElement('div')
 projectionContainer2.replaceChildren(
   document.createTextNode(JSON.stringify(projection.values())),
