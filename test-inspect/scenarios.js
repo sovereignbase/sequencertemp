@@ -126,17 +126,143 @@ class StripIndex {
   }
 }
 
+let activeTrace
+const origins = new WeakMap()
+
+const snapshot = (projection, label) => {
+  const strips = []
+  const visible = []
+  const seen = new Set()
+  let gateIndex = -1
+  let cursor = projection.head
+
+  while (cursor && !seen.has(cursor)) {
+    seen.add(cursor)
+    if (cursor === projection.gate) gateIndex = strips.length
+
+    const diff = cursor.fragmentDiff ?? cursor.insertionDiff
+    const start = cursor.fragmentStart ?? 0
+    const footage = cursor.footage ? [...cursor.footage] : undefined
+
+    strips.push({
+      insertionStart: cursor.insertionStart,
+      insertionDiff: cursor.insertionDiff,
+      fragmentStart: cursor.fragmentStart,
+      fragmentDiff: cursor.fragmentDiff,
+      footage,
+      head: cursor === projection.head,
+      gate: cursor === projection.gate,
+      tail: cursor === projection.tail,
+    })
+
+    if (diff > 0)
+      for (let offset = start; offset < start + diff; ++offset)
+        visible.push(footage?.[offset])
+
+    cursor = cursor.rightStep
+  }
+
+  return {
+    label,
+    actorID: projection.actorID,
+    projectionFrameCount: projection.projectionFrameCount,
+    projectedPosition: projection.projectedPosition,
+    gateIndex,
+    strips,
+    visible,
+  }
+}
+
+const methods = ['insert', 'remove', 'replace', 'apply', 'merge']
+
+for (const method of methods) {
+  const original = Projection.prototype[method]
+
+  Projection.prototype[method] = function (...args) {
+    if (!activeTrace || activeTrace.depth > 0) return original.apply(this, args)
+
+    const source =
+      method === 'apply' || method === 'merge'
+        ? origins.get(args[0])
+        : undefined
+    const operation =
+      method === 'apply' || method === 'merge'
+        ? { method, source: source?.operation }
+        : {
+            method,
+            args: args.map((argument) =>
+              Array.isArray(argument) ? [...argument] : argument
+            ),
+          }
+    activeTrace.depth++
+
+    let result
+    let thrown
+
+    try {
+      result = original.apply(this, args)
+    } catch (error) {
+      thrown = error
+    } finally {
+      activeTrace.depth--
+    }
+
+    if (result && typeof result === 'object') {
+      if (method === 'insert' || method === 'remove' || method === 'replace')
+        origins.set(result, { projection: this, operation })
+      else {
+        origins.set(result, {
+          projection: this,
+          operation: { method: 'result' },
+        })
+        if (Array.isArray(result[1]))
+          origins.set(result[1], {
+            projection: this,
+            operation: { method: 'acknowledgements' },
+          })
+      }
+    }
+
+    const replicas = []
+    if (source?.projection && source.projection !== this)
+      replicas.push(snapshot(source.projection, 'this'))
+    replicas.push(snapshot(this, source?.projection ? 'peer' : 'this'))
+
+    activeTrace.steps.push({ operation, replicas })
+
+    if (thrown) throw thrown
+    return result
+  }
+}
+
+const originalSequence = Projection.prototype.sequence
+Projection.prototype.sequence = function (...args) {
+  const result = originalSequence.apply(this, args)
+  if (activeTrace)
+    origins.set(result, {
+      projection: this,
+      operation: { method: 'sequence' },
+    })
+  return result
+}
+
 const run = (title, body) => {
+  const trace = { depth: 0, steps: [] }
+  activeTrace = trace
+
   try {
     const result = body()
-    return { title, ...result }
+    return { title, ...result, trace: trace.steps }
   } catch (error) {
     return {
       title,
       error,
       note: 'Skenaario heitti ennen kuin se ehti palauttaa inspectoitavat replicat.',
       stages: [],
+      trace: trace.steps,
     }
+  } finally {
+    activeTrace = undefined
   }
 }
 
@@ -432,6 +558,45 @@ const sameActor = () =>
     }
   })
 
+const reducingJumps = () =>
+  run('reducing strip jumps', () => {
+    const seed = new Projection(1)
+    seed.insert(['base'], 0)
+    const retained = seed.sequence()
+    const first = new Projection(100, retained)
+    const second = new Projection(101, retained)
+    const mutations = [
+      second.insert(['branch-0', 'branch-1'], 1),
+      second.replace(['replacement-0', 'replacement-1'], 1, 2),
+      first.remove(0, 0),
+      second.remove(0, 0),
+      first.insert(['final-0', 'final-1', 'final-2'], 0),
+      second.remove(0, 0),
+    ]
+    const hostile = [
+      mutations[1],
+      mutations[5],
+      mutations[3],
+      mutations[0],
+      mutations[4],
+      mutations[2],
+    ]
+
+    const ordered = deliver(retained, mutations)
+    const unordered = deliver(retained, hostile)
+    const restarted = deliver(retained, hostile, 3)
+
+    return {
+      stages: [
+        stage('delivery paths', [
+          replica('this', ordered),
+          replica('peer', unordered),
+          replica('peer after restart', restarted),
+        ]),
+      ],
+    }
+  })
+
 const tailReplaceRemove = () =>
   run('tail replace remove', () => {
     const primary = new Projection(100)
@@ -701,29 +866,13 @@ const offlineLifecycle = () =>
     const chronological = deliver(scenario.base, mutations)
     const midSession = deliver(scenario.base, offlineDuringOnline(scenario))
     const reverse = deliver(scenario.base, [...mutations].reverse())
-    let failingShuffle
-    let failingSeed
-
-    for (let index = 0; index < 64; ++index) {
-      const seed = (0xc0ff_ee00 + index) >>> 0
-      const candidate = deliver(scenario.base, shuffled(mutations, seed))
-      if (firstDifference(chronological, candidate)) {
-        failingShuffle = candidate
-        failingSeed = seed
-        break
-      }
-    }
 
     return {
-      note: `Ensimmäinen löydetty shuffle seed: ${failingSeed ?? 'ei eroa tällä ajolla'}.`,
       stages: [
         stage('six editor lifecycle orders', [
           replica('this / chronological', chronological),
           replica('peer / offline during online', midSession),
           replica('peer / reverse', reverse),
-          ...(failingShuffle
-            ? [replica(`peer / shuffled ${failingSeed}`, failingShuffle)]
-            : []),
         ]),
       ],
     }
@@ -941,15 +1090,13 @@ const liveScaleDown = () =>
   })
 
 export const scenarios = [
-  liveScaleDown,
-  liveReplaceThenRemove,
   concurrentReplacement,
   sameActor,
   overlappingGate,
   unorderedReplace,
   overlappingOwnership,
+  reducingJumps,
   tailReplaceRemove,
-  localRemoteReplacement,
   liveUnobserved,
   offlineLifecycle,
 ]
