@@ -29,26 +29,52 @@ export function findContainingFragment<T>(
     )
       break
 
-    const rightFragment = anchoringStrip.rightFragment
-    if (!rightFragment) {
-      const consumingMask = anchoringStrip.rightStep
+    const consumingMask = anchoringStrip.rightStep
+
+    if (
+      consumingMask &&
+      consumingMask.insertionDiff < 0 &&
+      consumingMask.anchorSession === origin.insertionSession &&
+      consumingMask.anchorStart === origin.insertionStart
+    ) {
+      const maskEnd =
+        consumingMask.anchorDiff +
+        Math.abs(consumingMask.insertionDiff)
 
       if (
-        consumingMask &&
-        consumingMask.insertionDiff < 0 &&
-        consumingMask.anchorSession === origin.insertionSession &&
-        consumingMask.anchorStart === origin.insertionStart &&
+        incomingStrip.insertionDiff < 0 &&
+        incomingStrip.anchorDiff >= consumingMask.anchorDiff &&
+        incomingStrip.anchorDiff < maskEnd
+      ) {
+        const consumed = Math.min(
+          Math.abs(incomingStrip.insertionDiff),
+          maskEnd - incomingStrip.anchorDiff
+        )
+
+        incomingStrip.fragmentStart = consumed
+        incomingStrip.fragmentDiff = incomingStrip.insertionDiff + consumed
+
+        if (incomingStrip.anchorDiff === consumingMask.anchorDiff)
+          return [
+            Math.abs(
+              anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
+            ),
+            anchoringStrip,
+          ]
+      } else if (
+        incomingStrip.insertionDiff > 0 &&
         incomingStrip.anchorDiff > consumingMask.anchorDiff &&
-        incomingStrip.anchorDiff <=
-          consumingMask.anchorDiff + Math.abs(consumingMask.insertionDiff)
-      )
+        incomingStrip.anchorDiff <= maskEnd
+      ) {
         return [
           incomingStrip.anchorDiff - consumingMask.anchorDiff,
           consumingMask,
         ]
-
-      break
+      }
     }
+
+    const rightFragment = anchoringStrip.rightFragment
+    if (!rightFragment) break
 
     anchoringStrip = rightFragment
   }
