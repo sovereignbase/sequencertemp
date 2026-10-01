@@ -39,7 +39,10 @@ export function anchorStrip<T>(
     )
 
     // The anchor is already at the end of the anchoring Strip.
-    if (anchorDiff === anchoringStripLength) {
+    if (
+      anchorDiff ===
+      (anchoringStrip.fragmentStart ?? 0) + anchoringStripLength
+    ) {
       rightStep = anchoringStrip.rightStep
     } else {
       // The anchor is inside the Strip. Split it so that the right fragment

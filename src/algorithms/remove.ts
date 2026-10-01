@@ -19,7 +19,9 @@ export function remove<T>(
 
     const decreasingLength = Math.min(
       remaining,
-      anchoringStrip.insertionDiff - anchorDiff
+      (anchoringStrip.fragmentStart ?? 0) +
+        (anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff) -
+        anchorDiff
     )
 
     const decreasingStrip: NonNullable<Strip<T>> = {
