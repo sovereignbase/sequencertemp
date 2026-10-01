@@ -326,7 +326,6 @@ projectionContainer6.replaceChildren(
   document.createTextNode(JSON.stringify(projection.sequence())),
   document.createTextNode(`peer.apply(projection.merge(peer.sequence())?.[1])`)
 )
-
 document.body.appendChild(projectionContainer6)
 const peerContainer6 = document.createElement('div')
 peerContainer6.replaceChildren(
