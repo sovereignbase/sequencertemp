@@ -118,15 +118,15 @@ export function anchorStrip<T>(
       leftStep = smallerCompetitor.leftStep!
     }
 
-    // Inserting after an existing competitor subtree may invalidate a cached
-    // jump span that crosses the structural insertion point. Drop that span;
-    // traversal will recreate an appropriate jump when needed.
-    if (largerCompetitor && this.leftJumpToPatch && this.rightJumpToPatch) {
-      this.leftJumpToPatch.rightJump = undefined
-      this.rightJumpToPatch.leftJump = undefined
-      this.leftJumpToPatch = undefined
-      this.rightJumpToPatch = undefined
-    }
+  }
+
+  // Any structural insertion invalidates the cached jump spanning its position.
+  // Traversal recreates an appropriate jump when needed.
+  if (this.leftJumpToPatch && this.rightJumpToPatch) {
+    this.leftJumpToPatch.rightJump = undefined
+    this.rightJumpToPatch.leftJump = undefined
+    this.leftJumpToPatch = undefined
+    this.rightJumpToPatch = undefined
   }
 
   // Link the incoming Strip between the resolved structural neighbours.

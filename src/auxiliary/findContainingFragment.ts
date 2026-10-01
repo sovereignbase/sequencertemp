@@ -1,4 +1,5 @@
 import type { Strip } from '../class.js'
+import { anchorsOverlap } from './anchorsOverlap.js'
 
 export function findContainingFragment<T>(
   origin: NonNullable<Strip<T>>,
@@ -24,7 +25,14 @@ export function findContainingFragment<T>(
         incomingStrip.anchorDiff === fragmentEnd &&
         incomingStrip.insertionSession === anchoringStrip.insertionSession &&
         incomingStrip.insertionStart >=
-          anchoringStrip.insertionStart + Math.abs(anchoringStrip.insertionDiff)
+          anchoringStrip.insertionStart +
+            Math.abs(anchoringStrip.insertionDiff) &&
+        !(
+          anchoringStrip.rightStep &&
+          anchoringStrip.rightStep.insertionSession !==
+            incomingStrip.insertionSession &&
+          anchorsOverlap(incomingStrip, anchoringStrip.rightStep)
+        )
       )
     ) {
       if (
