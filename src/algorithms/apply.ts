@@ -120,14 +120,16 @@ export function apply<T>(
         for (let i = pending.length - 1; i >= 0; --i)
           void queue.push(pending[i])
 
-      const acknowledgement: Acknowledgement = [
-        this.actorID,
-        incomingStrip.insertionSession,
-        incomingStrip.insertionStart - incomingStrip.insertionDiff,
-      ]
+      if (incomingStrip.insertionDiff < 0) {
+        const acknowledgement: Acknowledgement = [
+          this.actorID,
+          incomingStrip.insertionSession,
+          incomingStrip.insertionStart - incomingStrip.insertionDiff,
+        ]
 
-      void this.frontierTable.observeAcknowledgement(acknowledgement)
-      void acknowledgements.push(acknowledgement)
+        void this.frontierTable.observeAcknowledgement(acknowledgement)
+        void acknowledgements.push(acknowledgement)
+      }
     }
   }
 
