@@ -66,7 +66,13 @@ export function findContainingFragment<T>(
         incomingStrip.fragmentDiff = incomingStrip.insertionDiff + consumed
 
         if (incomingStrip.fragmentDiff === 0)
-          return [anchorDiff + consumed, consumingMask]
+          return [
+            (consumingMask.fragmentStart ?? 0) +
+              Math.abs(
+                consumingMask.fragmentDiff ?? consumingMask.insertionDiff
+              ),
+            consumingMask,
+          ]
 
         const rightStep = consumingMask.rightStep!
         return [rightStep.fragmentStart ?? 0, rightStep]
