@@ -29,26 +29,52 @@ export function findContainingFragment<T>(
     )
       break
 
-    const rightFragment = anchoringStrip.rightFragment
-    if (!rightFragment) {
-      const consumingMask = anchoringStrip.rightStep
+    const consumingMask = anchoringStrip.rightStep
 
-      if (
-        consumingMask &&
-        consumingMask.insertionDiff < 0 &&
-        consumingMask.anchorSession === origin.insertionSession &&
-        consumingMask.anchorStart === origin.insertionStart &&
-        incomingStrip.anchorDiff > consumingMask.anchorDiff &&
-        incomingStrip.anchorDiff <=
-          consumingMask.anchorDiff + Math.abs(consumingMask.insertionDiff)
-      )
+    if (
+      consumingMask &&
+      consumingMask.insertionDiff < 0 &&
+      consumingMask.anchorSession === origin.insertionSession &&
+      consumingMask.anchorStart === origin.insertionStart
+    ) {
+      const maskEnd =
+        consumingMask.anchorDiff + Math.abs(consumingMask.insertionDiff)
+      const maskContainsAnchor =
+        incomingStrip.insertionDiff < 0
+          ? incomingStrip.anchorDiff >= consumingMask.anchorDiff &&
+            incomingStrip.anchorDiff < maskEnd
+          : incomingStrip.anchorDiff > consumingMask.anchorDiff &&
+            incomingStrip.anchorDiff <= maskEnd
+
+      if (maskContainsAnchor && incomingStrip.insertionDiff > 0)
         return [
           incomingStrip.anchorDiff - consumingMask.anchorDiff,
           consumingMask,
         ]
 
-      break
+      if (
+        maskContainsAnchor &&
+        consumingMask.insertionSession !== incomingStrip.insertionSession
+      ) {
+        const anchorDiff = incomingStrip.anchorDiff - consumingMask.anchorDiff
+        const consumed = Math.min(
+          Math.abs(incomingStrip.insertionDiff),
+          Math.abs(consumingMask.insertionDiff) - anchorDiff
+        )
+
+        incomingStrip.fragmentStart = consumed
+        incomingStrip.fragmentDiff = incomingStrip.insertionDiff + consumed
+
+        if (incomingStrip.fragmentDiff === 0)
+          return [anchorDiff + consumed, consumingMask]
+
+        const rightStep = consumingMask.rightStep!
+        return [rightStep.fragmentStart ?? 0, rightStep]
+      }
     }
+
+    const rightFragment = anchoringStrip.rightFragment
+    if (!rightFragment) break
 
     anchoringStrip = rightFragment
   }

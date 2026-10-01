@@ -30,6 +30,7 @@ export function anchorStrip<T>(
 ): void {
   let leftStep: Strip<T> = anchoringStrip
   let rightStep: Strip<T>
+  const incomingDiff = incomingStrip.fragmentDiff ?? incomingStrip.insertionDiff
 
   if (anchoringStrip) {
     // Structural length of the anchoring Strip or its current fragment.
@@ -47,7 +48,7 @@ export function anchorStrip<T>(
         this,
         anchoringStrip,
         anchorDiff,
-        incomingStrip.insertionDiff
+        incomingDiff
       ) as Strip<T>
     }
   } else {
@@ -153,5 +154,5 @@ export function anchorStrip<T>(
   ++this.structuralStripCount
 
   // Projection length changes by the signed effect of this Strip or fragment.
-  this.projectionFrameCount += incomingStrip.insertionDiff
+  this.projectionFrameCount += incomingDiff
 }
