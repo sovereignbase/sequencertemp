@@ -80,7 +80,7 @@ export function apply<T>(
           anchoringStrip === this.gate &&
           (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) === 0
         ) {
-          this.gate = this.gate!.rightFragment
+          this.gate = this.gate!.rightFragment ?? incomingStrip
           gateRemoved = true
         }
 
