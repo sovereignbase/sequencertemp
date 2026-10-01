@@ -120,16 +120,6 @@ export function apply<T>(
         for (let i = pending.length - 1; i >= 0; --i)
           void queue.push(pending[i])
 
-      if (incomingStrip.insertionDiff > 0) {
-        if (incomingStrip.insertionSession === this.increaseClock[0])
-          this.increaseClock[1] = Math.max(
-            this.increaseClock[1],
-            incomingStrip.insertionStart + incomingStrip.insertionDiff
-          )
-
-        continue
-      }
-
       const acknowledgement: Acknowledgement = [
         this.actorID,
         incomingStrip.insertionSession,
