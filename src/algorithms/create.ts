@@ -17,102 +17,94 @@ export function create<T>(
   }
 
   const unsafeIDs: Set<number> = new Set()
-  const compactableIDs = new Set(this.frontierTable.getCompactableSessions())
 
-  const projectionIsArray = Array.isArray(projection)
+  if (Array.isArray(projection)) {
+    const jumpSpacing = Math.max(1, Math.round(Math.sqrt(projection.length)))
 
-  const jumpSpacing = projectionIsArray
-    ? Math.max(1, Math.round(Math.sqrt(projection.length)))
-    : 1
-
-  let jumpStart: Strip<T>
-  let jumpCursor: Strip<T>
-  let jumpFrameCount = 0
-  let jumpStripCount = 0
-
-  if (projectionIsArray)
+    let jumpStart: Strip<T>
+    let jumpCursor: Strip<T>
+    let jumpFrameCount = 0
+    let jumpStripCount = 0
     for (let index = 0; index < projection.length; ++index) {
       const incoming = projection[index]
       let incomingStrip: Strip<T>
 
-      // compact snapshot by not materializing compactable decreasing insertions
-      if (!(incoming[5] < 0 && compactableIDs.has(incoming[3]))) {
-        void unsafeIDs.add(incoming[0])
-        void unsafeIDs.add(incoming[3])
+      void unsafeIDs.add(incoming[0])
+      void unsafeIDs.add(incoming[3])
 
-        incomingStrip = {
-          anchorSession: incoming[0],
-          anchorStart: incoming[1],
-          anchorDiff: incoming[2],
-          insertionSession: incoming[3],
-          insertionStart: incoming[4],
-          insertionDiff: incoming[5],
-          footage: incoming[6],
+      incomingStrip = {
+        anchorSession: incoming[0],
+        anchorStart: incoming[1],
+        anchorDiff: incoming[2],
+        insertionSession: incoming[3],
+        insertionStart: incoming[4],
+        insertionDiff: incoming[5],
+        footage: incoming[6],
+      }
+
+      const birth =
+        incomingStrip.anchorSession === 0 &&
+        incomingStrip.anchorStart === 0 &&
+        incomingStrip.anchorDiff === 0
+
+      if (birth && this.structuralStripCount === 0) {
+        void insertFirst.call(this, incomingStrip)
+      } else {
+        let anchoringStrip: Strip<T>
+        let anchorDiff = 0
+
+        if (!birth) {
+          const origin = this.containmentTable.get(incoming)
+          if (!origin) continue
+
+          ;[anchorDiff, anchoringStrip] = findContainingFragment(
+            origin,
+            incomingStrip
+          )
         }
 
-        const birth =
-          incomingStrip.anchorSession === 0 &&
-          incomingStrip.anchorStart === 0 &&
-          incomingStrip.anchorDiff === 0
+        void anchorStrip.call(this, incomingStrip, anchoringStrip, anchorDiff)
+      }
 
-        if (birth && this.structuralStripCount === 0) {
-          void insertFirst.call(this, incomingStrip)
-        } else {
-          let anchoringStrip: Strip<T>
-          let anchorDiff = 0
+      void this.containmentTable.set(incomingStrip)
 
-          if (!birth) {
-            const origin = this.containmentTable.get(incoming)
-            if (!origin) continue
+      if (!jumpCursor) {
+        jumpStart = this.head
+        jumpCursor = this.head
+      }
 
-            ;[anchorDiff, anchoringStrip] = findContainingFragment(
-              origin,
-              incomingStrip
-            )
-          }
+      const finalizedThrough =
+        index + 1 === projection.length ? this.tail : incomingStrip
 
-          void anchorStrip.call(this, incomingStrip, anchoringStrip, anchorDiff)
-        }
+      while (
+        jumpCursor &&
+        finalizedThrough &&
+        jumpCursor !== finalizedThrough
+      ) {
+        const diff = jumpCursor.fragmentDiff ?? jumpCursor.insertionDiff
 
-        void this.containmentTable.set(incomingStrip)
+        // Negative strips do not consume length (already consumed on split).
+        jumpFrameCount += Math.max(0, diff)
+        ++jumpStripCount
 
-        if (!jumpCursor) {
-          jumpStart = this.head
-          jumpCursor = this.head
-        }
+        jumpCursor = jumpCursor.rightStep
 
-        const finalizedThrough =
-          index + 1 === projection.length ? this.tail : incomingStrip
+        if (jumpStripCount === jumpSpacing) {
+          jumpStart!.rightJump = jumpCursor
+          jumpStart!.rightJumpFrameCount = jumpFrameCount
+          jumpStart!.rightJumpStripCount = jumpStripCount
 
-        while (
-          jumpCursor &&
-          finalizedThrough &&
-          jumpCursor !== finalizedThrough
-        ) {
-          const diff = jumpCursor.fragmentDiff ?? jumpCursor.insertionDiff
+          jumpCursor!.leftJump = jumpStart
+          jumpCursor!.leftJumpFrameCount = jumpFrameCount
+          jumpCursor!.leftJumpStripCount = jumpStripCount
 
-          // Negative strips do not consume length (already consumed on split).
-          jumpFrameCount += Math.max(0, diff)
-          ++jumpStripCount
-
-          jumpCursor = jumpCursor.rightStep
-
-          if (jumpStripCount === jumpSpacing) {
-            jumpStart!.rightJump = jumpCursor
-            jumpStart!.rightJumpFrameCount = jumpFrameCount
-            jumpStart!.rightJumpStripCount = jumpStripCount
-
-            jumpCursor!.leftJump = jumpStart
-            jumpCursor!.leftJumpFrameCount = jumpFrameCount
-            jumpCursor!.leftJumpStripCount = jumpStripCount
-
-            jumpStart = jumpCursor
-            jumpFrameCount = 0
-            jumpStripCount = 0
-          }
+          jumpStart = jumpCursor
+          jumpFrameCount = 0
+          jumpStripCount = 0
         }
       }
     }
+  }
 
   const getSafeSessionID = () => {
     let sessionID
@@ -128,6 +120,4 @@ export function create<T>(
 
   this.decreaseClock[0] = getSafeSessionID()
   this.decreaseClock[1] = 0
-
-  void this.frontierTable.freeCompactedSessions(Array.from(compactableIDs))
 }
