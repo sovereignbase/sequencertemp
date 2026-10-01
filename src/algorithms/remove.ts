@@ -61,7 +61,8 @@ export function remove<T>(
 
   void this.frontierTable.observeAcknowledgement([
     this.actorID,
-    ...this.decreaseClock,
+    this.decreaseClock[0],
+    this.decreaseClock[1] - 1,
   ])
   return insertions
 }
