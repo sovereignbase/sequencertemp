@@ -45,10 +45,6 @@ export class FrontierTable {
     return frontiers
   }
 
-  freeCompactedSessions(sessions: Array<number>): void {
-    for (const sessionID of sessions) void this.sessions.delete(sessionID)
-  }
-
   getCompactableSessions(): Array<number> {
     const ids: Array<number> = []
 

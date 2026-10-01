@@ -143,13 +143,13 @@ export function sequence<T>(this: Projection<T>): Sequence<T> {
   }
 
   const frontiers = this.frontierTable.getFrontiers().map((frontier) => {
-    const compacted = [frontier[0]]
+    const acknowledgement = [frontier[0]]
 
     for (let index = 1; index < frontier.length; index += 2)
       if (!compactableIDs.has(frontier[index]))
-        compacted.push(frontier[index], frontier[index + 1])
+        acknowledgement.push(frontier[index], frontier[index + 1])
 
-    return compacted
+    return acknowledgement
   })
 
   return [frontiers, projection]
