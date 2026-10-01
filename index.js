@@ -146,5 +146,5 @@ const gossip2 = projection.remove(5, 8)
 projection.apply(peer.remove(6, 9))
 peer.apply(gossip2)
 render(
-  `remove(5, 8) \n apply(peer.remove(6, 9))\n\n${JSON.stringify(peer.values())}\n\n${peer.sequence()}`
+  `remove(5, 8) \n apply(peer.remove(6, 9))\n\n${JSON.stringify(peer.values())}\n\n${JSON.stringify(peer.sequence())}`
 )
