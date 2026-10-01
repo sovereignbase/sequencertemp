@@ -166,10 +166,16 @@ render(
 projection = new Projection(1, peer.sequence())
 peer = new Projection(2, peer.sequence())
 
-const thisContainer1 = document.createElement('div')
-thisContainer1.textContent = JSON.stringify(projection.values())
-document.body.appendChild(thisContainer1)
+const projectionContainer1 = document.createElement('div')
+projectionContainer1.replaceChildren(
+  document.createTextNode(JSON.stringify(projection.values())),
+  document.createTextNode(JSON.stringify(projection.sequence()))
+)
+document.body.appendChild(projectionContainer1)
 
 const peerContainer1 = document.createElement('div')
-peerContainer1.textContent = JSON.stringify(peer.values())
+peerContainer1.replaceChildren(
+  document.createTextNode(JSON.stringify(peer.values())),
+  document.createTextNode(JSON.stringify(peer.sequence()))
+)
 document.body.appendChild(peerContainer1)
