@@ -37,6 +37,7 @@ export function selectAnchor<T>(
   // stable right anchor point directly.
   if (of === this.projectionFrameCount) {
     anchoringStrip = this.tail!
+    // TAIL MUST NEVER BE A REDUCING STRIP NOR FRAGMENT
     anchorDiff =
       anchoringStrip.fragmentStart && anchoringStrip.fragmentDiff
         ? anchoringStrip.fragmentStart + Math.abs(anchoringStrip.fragmentDiff)
