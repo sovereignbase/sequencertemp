@@ -130,13 +130,6 @@ export function apply<T>(
         continue
       }
 
-      // Impossible
-      if (incomingStrip.insertionSession === this.decreaseClock[0])
-        this.decreaseClock[1] = Math.max(
-          this.decreaseClock[1],
-          incomingStrip.insertionStart - incomingStrip.insertionDiff
-        )
-
       const acknowledgement: Acknowledgement = [
         this.actorID,
         incomingStrip.insertionSession,
