@@ -35,6 +35,17 @@ export function apply<T>(
     while (queue.length !== 0) {
       const incoming = queue.pop()!
 
+      if (incoming[5] < 0) {
+        const acknowledgement: Acknowledgement = [
+          this.actorID,
+          incoming[3],
+          incoming[4] - incoming[5],
+        ]
+
+        void this.frontierTable.observeAcknowledgement(acknowledgement)
+        void acknowledgements.push(acknowledgement)
+      }
+
       if (this.containmentTable.has(incoming)) continue
 
       const incomingStrip: NonNullable<Strip<T>> = {
@@ -119,17 +130,6 @@ export function apply<T>(
       if (pending)
         for (let i = pending.length - 1; i >= 0; --i)
           void queue.push(pending[i])
-
-      if (incomingStrip.insertionDiff < 0) {
-        const acknowledgement: Acknowledgement = [
-          this.actorID,
-          incomingStrip.insertionSession,
-          incomingStrip.insertionStart - incomingStrip.insertionDiff,
-        ]
-
-        void this.frontierTable.observeAcknowledgement(acknowledgement)
-        void acknowledgements.push(acknowledgement)
-      }
     }
   }
 
