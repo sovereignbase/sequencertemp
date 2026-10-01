@@ -139,8 +139,18 @@ export function anchorStrip<T>(
   if (rightStep) {
     rightStep.leftStep = incomingStrip
   } else {
-    // No right neighbour means the incoming Strip becomes the structural tail.
-    this.tail = incomingStrip
+    // `tail` contains the right-most projected Frame, not the last structural Strip.
+    if (incomingDiff > 0) {
+      this.tail = incomingStrip
+    } else {
+      while (
+        leftStep &&
+        (leftStep.fragmentDiff ?? leftStep.insertionDiff) <= 0
+      ) {
+        leftStep = leftStep.leftStep
+      }
+      this.tail = leftStep
+    }
   }
 
   // A newly linked Strip starts without traversal jumps. Jumps are rebuilt
