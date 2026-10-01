@@ -11,7 +11,7 @@ export function insert<T>(
   values: Array<T>,
   at: number
 ): Gossip<T> {
-  if (this.structuralStripCount === 0) {
+  if (this.projectionFrameCount === 0) {
     const increasingStrip: NonNullable<Strip<T>> = {
       anchorSession: 0,
       anchorStart: 0,
