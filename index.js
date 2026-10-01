@@ -205,72 +205,135 @@ render(`peer.apply(projection.apply(peer.remove()))
 `)
 
 projection.insert(['a', 'b', 'c'], 0)
-render('insert([a, b, c], 0)')
-
 projection.insert(['d', 'e', 'f'], 3)
-render('insert([d, e, f], 3)')
-
 projection.insert(['g', 'h', 'i'], 0)
-render('insert([g, h, i], 0)')
-
 projection.insert(['j', 'k', 'l'], 3)
-render('insert([j, k, l], 3)')
-
 projection.insert(['m', 'n', 'o'], 5)
-render('insert([m, n, o], 5)')
-
 projection.insert(['p', 'q', 'r'], projection.length())
-render('insert([p, q, r], projection.length())')
-
 projection.insert(['s', 't', 'u'], 0)
-render('insert([s, t, u], 0)')
-
 projection.replace(['v', 'w', 'x'], 0, 2)
-render('replace([v, w, x], 0, 2)')
-
 projection.remove(0, 2)
-render('remove(0, 2)')
-
 projection.remove(5, 8)
-render('remove(5, 8)')
-
 projection.replace(['y', 'z'], 10, 11)
-render('replace([y, z], 10, 11)')
 
 peer.insert(['a', 'b', 'c'], 0)
-render('peer.insert([a, b, c], 0)')
-
 peer.insert(['d', 'e', 'f'], 3)
-render('peer.insert([d, e, f], 3)')
-
 peer.insert(['g', 'h', 'i'], 0)
-render('peer.insert([g, h, i], 0)')
-
 peer.insert(['j', 'k', 'l'], 3)
-render('peer.insert([j, k, l], 3)')
-
 peer.insert(['m', 'n', 'o'], 5)
-render('peer.insert([m, n, o], 5)')
-
 peer.insert(['p', 'q', 'r'], peer.length())
-render('peer.insert([p, q, r], peer.length())')
-
 peer.insert(['s', 't', 'u'], 0)
-render('peer.insert([s, t, u], 0)')
-
 peer.replace(['v', 'w', 'x'], 0, 2)
-render('peer.replace([v, w, x], 0, 2)')
-
 peer.remove(0, 2)
-render('peer.remove(0, 2)')
-
 peer.remove(5, 8)
-render('peer.remove(5, 8)')
-
 peer.replace(['y', 'z'], 10, 11)
-render('peer.replace([y, z], 10, 11)')
 
 projection = new Projection(1, projection.sequence())
-render('new Projection(projection.sequence())')
+
+const projectionContainer3 = document.createElement('div')
+projectionContainer3.replaceChildren(
+  document.createTextNode(JSON.stringify(projection.values())),
+  document.createTextNode(JSON.stringify(projection.sequence())),
+  document.createTextNode(`new Projection(1, projection.sequence())`)
+)
+document.body.appendChild(projectionContainer3)
+
+peer = new Projection(2, peer.sequence())
+const peerContainer3 = document.createElement('div')
+peerContainer3.replaceChildren(
+  document.createTextNode(JSON.stringify(peer.values())),
+  document.createTextNode(JSON.stringify(peer.sequence())),
+  document.createTextNode(`new Projection(2, peer.sequence())`)
+)
+document.body.appendChild(peerContainer3)
+
+peer.apply(projection.merge(peer.sequence()))
+render(`peer.apply(projection.merge(peer.sequence()))
+`)
+
+const projectionContainer4 = document.createElement('div')
+projectionContainer4.replaceChildren(
+  document.createTextNode(JSON.stringify(projection.values())),
+  document.createTextNode(JSON.stringify(projection.sequence())),
+  document.createTextNode(`peer.apply(projection.merge(peer.sequence()))`)
+)
+document.body.appendChild(projectionContainer4)
+
+projection.apply(peer.merge(projection.sequence()))
+const peerContainer4 = document.createElement('div')
+peerContainer4.replaceChildren(
+  document.createTextNode(JSON.stringify(peer.values())),
+  document.createTextNode(JSON.stringify(peer.sequence())),
+  document.createTextNode(`projection.apply(peer.merge(projection.sequence()))`)
+)
+document.body.appendChild(peerContainer4)
+
+projection.apply(peer.insert(['A', 'B', 'C'], 0))
+render('apply(peer.insert([A, B, C], 0))')
+
+projection.apply(peer.replace(['D', 'E', 'F'], 2, 3))
+render('apply(peer.replace([D, E, F], 2, 3))')
+
+const gossip5 = projection.insert(['1', '2', '3'], 8)
+projection.apply(peer.insert(['G', 'H', 'I'], 8))
+peer.apply(gossip5)
+render(`insert([1, 2, 3], 8) \n apply(peer.insert([G, H, I], 8))`)
+
+const gossip6 = projection.remove(5, 8)
+projection.apply(peer.remove(6, 9))
+peer.apply(gossip6)
+render(
+  `remove(5, 8) \n apply(peer.remove(6, 9)) \n\n ${JSON.stringify(peer.values())}`
+)
+
+const gossip7 = projection.replace(['4', '5', '6'], 0, 7)
+projection.apply(peer.replace(['J', 'K', 'L'], 5, 12))
+peer.apply(gossip7)
+render(
+  `replace([4, 5, 6], 0, 7) \n apply(peer.replace([J, K, L], 5, 12))\n\n ${JSON.stringify(peer.values())}`
+)
+
+const gossip8 = projection.replace(['7', '8', '9'], 0, 2)
+projection.apply(peer.replace(['M', 'N', 'O'], 0, 2))
+peer.apply(gossip8)
+render(
+  `replace([7, 8, 9], 0, 2) \n apply(peer.replace([M, N, O], 0, 2))\n\n ${JSON.stringify(peer.values())}`
+)
+
 projection = new Projection(1, peer.sequence())
-render('new Projection(peer.sequence())')
+peer = new Projection(2, peer.sequence())
+const projectionContainer5 = document.createElement('div')
+projectionContainer5.replaceChildren(
+  document.createTextNode(JSON.stringify(projection.values())),
+  document.createTextNode(JSON.stringify(projection.sequence())),
+  document.createTextNode(`new Projection(1, peer.sequence())`)
+)
+document.body.appendChild(projectionContainer5)
+const peerContainer5 = document.createElement('div')
+peerContainer5.replaceChildren(
+  document.createTextNode(JSON.stringify(peer.values())),
+  document.createTextNode(JSON.stringify(peer.sequence())),
+  document.createTextNode(`new Projection(2, peer.sequence())`)
+)
+document.body.appendChild(peerContainer5)
+
+peer.apply(projection.merge(peer.sequence())?.[1])
+projection.apply(peer.merge(projection.sequence())?.[1])
+
+const projectionContainer6 = document.createElement('div')
+projectionContainer6.replaceChildren(
+  document.createTextNode(JSON.stringify(projection.values())),
+  document.createTextNode(JSON.stringify(projection.sequence())),
+  document.createTextNode(`peer.apply(projection.merge(peer.sequence())?.[1])`)
+)
+
+document.body.appendChild(projectionContainer6)
+const peerContainer6 = document.createElement('div')
+peerContainer6.replaceChildren(
+  document.createTextNode(JSON.stringify(peer.values())),
+  document.createTextNode(JSON.stringify(peer.sequence())),
+  document.createTextNode(
+    `projection.apply(peer.merge(projection.sequence())?.[1])`
+  )
+)
+document.body.appendChild(peerContainer6)
