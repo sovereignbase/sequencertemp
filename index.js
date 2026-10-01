@@ -141,6 +141,6 @@ peer.apply(gossip1)
 render(`insert([1, 2, 3], 8) \n apply(peer.insert([G, H, I], 8))`)
 
 const gossip2 = projection.remove(5, 8)
-projection.apply(peer.remove(5, 8))
+projection.apply(peer.remove(6, 9))
 peer.apply(gossip2)
-render(`remove(5, 8) \n apply(peer.remove(5, 8))`)
+render(`remove(6, 9) \n apply(peer.remove(6, 9))`)
