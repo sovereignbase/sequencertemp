@@ -1,4 +1,4 @@
-# Local replace gate
+# Local gate replace
 
 A replacement removes and inserts at the same Projection boundary.
 

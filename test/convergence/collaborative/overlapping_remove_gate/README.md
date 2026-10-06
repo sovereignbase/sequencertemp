@@ -47,10 +47,6 @@ the head zero-reservation at Projection position zero. Applying remote
 operations must preserve that existing gate index; remote structural changes
 must not silently relocate the receiver's local traversal cursor.
 
-When these histories are merged, overlapping removes can produce signed remove
-debt before visible Footage. The gate may therefore remain on the head
-zero-reservation while negative structural effect exists to its right.
-
 Nothing can exist to the left of `head`, so that reservation still represents Projection position zero:
 
 ```text
