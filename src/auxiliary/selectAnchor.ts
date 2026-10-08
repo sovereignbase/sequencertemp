@@ -8,8 +8,9 @@ import { findFramePositionByProjectionPosition } from '../auxiliary/findFramePos
  *
  * A Projection position occupied by a Frame identifies the Frame that the new
  * insertion moves to the right. Its zero-based position in the original
- * insertion's zero-based Footage is also the logical anchor point immediately preceding
- * that Frame. {@link findFramePositionByProjectionPosition} therefore provides
+ * insertion's zero-based Footage identifies the preceding logical anchor point.
+ * At a nonzero fragment-start boundary, the preceding visible Frame's right
+ * anchor point is used instead. {@link findFramePositionByProjectionPosition} provides
  * `anchorDiff` directly and leaves `gate` on the anchoring Strip or fragment.
  *
  * Projection position zero follows the same rule. It resolves to the first
@@ -41,8 +42,7 @@ export function selectAnchor<T>(
       (anchoringStrip.fragmentStart ?? 0) +
       Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff)
   } else {
-    // The Frame currently at `of` moves right. Its Footage position is exactly
-    // the stable logical anchor point immediately preceding it.
+    // Resolve the insertion boundary in the original Insertion's coordinates.
     anchorDiff = findFramePositionByProjectionPosition.call(this, of, true)
     anchoringStrip = this.gate!
   }

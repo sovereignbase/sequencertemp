@@ -1,5 +1,15 @@
 import type { Strip } from '../class.js'
 
+/**
+ * Determines whether a same-anchor competitor precedes the incoming Insertion.
+ *
+ * Positive Insertions precede reducing Insertions. Within either group,
+ * larger Session identifiers precede smaller ones, then larger insertion starts.
+ *
+ * @param incomingStrip Insertion being positioned.
+ * @param competition Existing competitor at the same canonical anchor.
+ * @returns Whether the competitor sorts before the incoming Insertion.
+ */
 export function competitionIsLarger<T>(
   incomingStrip: NonNullable<Strip<T>>,
   competition: NonNullable<Strip<T>>

@@ -1,6 +1,16 @@
 import type { Strip } from '../class.js'
 import { anchorsOverlap } from './anchorsOverlap.js'
 
+/**
+ * Resolves a canonical anchor to its current materialized fragment.
+ *
+ * May adjust the incoming Strip's runtime fragment offset and effect for
+ * already consumed Frames. Canonical insertion coordinates remain unchanged.
+ *
+ * @param origin Original Strip of the anchoring Insertion.
+ * @param incomingStrip Strip whose anchor is being resolved.
+ * @returns Resolved logical anchor point and the Strip containing it.
+ */
 export function findContainingFragment<T>(
   origin: NonNullable<Strip<T>>,
   incomingStrip: NonNullable<Strip<T>>

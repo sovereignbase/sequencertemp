@@ -1,6 +1,15 @@
 import type { Projection } from '../class.js'
 import type { Insertion, Sequence, Strip } from '../types/type.js'
 
+/**
+ * Exports a Sequence with eligible removal sessions compacted.
+ *
+ * The exported anchors and Footage reflect compacted removals; the live
+ * Strips and their canonical coordinates are unchanged.
+ *
+ * @param this Projection to serialize.
+ * @returns Acknowledgement frontiers and retained Insertions.
+ */
 export function sequence<T>(this: Projection<T>): Sequence<T> {
   const insertions: Array<Insertion<T>> = []
   const included: Map<string, Insertion<T>> = new Map()

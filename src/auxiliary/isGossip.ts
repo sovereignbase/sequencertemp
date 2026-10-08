@@ -89,11 +89,10 @@ export function isAcknowledgement(data: unknown): data is Acknowledgement {
 }
 
 /**
- * Determines whether an unknown value has the runtime representation of
- * {@link Gossip}.
+ * Determines whether an unknown value represents one entry in a Gossip batch.
  *
- * Gossip is the wire-level union of {@link Insertion} and
- * {@link Acknowledgement}. Because both variants are represented as Arrays,
+ * Each entry is an {@link Insertion} or an {@link Acknowledgement}.
+ * Because both variants are represented as Arrays,
  * their tuple shape is used to discriminate between them.
  *
  * Insertion has a uniquely constrained shape:
@@ -110,7 +109,7 @@ export function isAcknowledgement(data: unknown): data is Acknowledgement {
  * Insertion footage representation.
  *
  * @param data Value to validate.
- * @returns Whether `data` has the runtime representation of valid Gossip.
+ * @returns Whether `data` represents an Insertion or Acknowledgement entry.
  */
 export function isGossip<T>(data: unknown): data is Gossip<T> {
   // Neither Gossip variant has an empty Array representation.

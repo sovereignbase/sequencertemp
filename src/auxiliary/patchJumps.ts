@@ -20,9 +20,8 @@ import type { Projection } from '../class.js'
  * Both directions of the reciprocal jump always receive identical patched
  * Frame and Strip counts.
  *
- * Cached patch points are consumed by this operation regardless of whether
- * the original reciprocal jump still exists. The structural mutation may have
- * already invalidated or rewired that jump, in which case no patch is applied.
+ * Cached patch points are consumed by this operation. Both endpoints must be
+ * present; the caller is responsible for invalidating stale patch points.
  *
  * @param this Projection whose traversal jump is being patched.
  * @param frameDiff Change in Projection Frames within the jump span.

@@ -13,6 +13,14 @@ import type {
 import { findContainingFragment } from '../auxiliary/findContainingFragment.js'
 import { findFramePositionByProjectionPosition } from '../auxiliary/findFramePositionByProjectionPosition.js'
 
+/**
+ * Applies received Gossip while preserving the cached projected position.
+ *
+ * @param this Projection receiving the Gossip.
+ * @param gossip Batch of Insertions and Acknowledgements.
+ * @returns Visible changes and optional acknowledgement Gossip, or
+ * `undefined` for invalid input. Application is not transactional.
+ */
 export function apply<T>(
   this: Projection<T>,
   gossip: unknown

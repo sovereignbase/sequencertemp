@@ -1,9 +1,16 @@
 import type { Insertion, Strip } from '../../types/type.js'
 
+/** Insertions awaiting materialization of their canonical dependency. */
 export class PendingTable<T> {
+  /** Pending buckets indexed by anchor Session and start. */
   private readonly insertions: Map<number, Map<number, Array<Insertion<T>>>> =
     new Map()
 
+  /**
+   * Queues an Insertion under its missing dependency.
+   *
+   * @param incoming Insertion to retain by reference.
+   */
   set(incoming: Insertion<T>): void {
     let sequencer = this.insertions.get(incoming[0])
 
@@ -22,6 +29,12 @@ export class PendingTable<T> {
     pending.push(incoming)
   }
 
+  /**
+   * Detaches the Insertions waiting for a newly materialized dependency.
+   *
+   * @param incomingStrip Materialized Strip identifying the dependency.
+   * @returns Its pending bucket in arrival order, or `undefined` if absent.
+   */
   take(incomingStrip: NonNullable<Strip<T>>): Array<Insertion<T>> | undefined {
     const sequencer = this.insertions.get(incomingStrip.insertionSession)
     if (!sequencer) return

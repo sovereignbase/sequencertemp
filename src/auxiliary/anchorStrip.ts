@@ -8,7 +8,7 @@ import { subtreeEnd } from './subtreeEnd.js'
 /**
  * Anchors a Strip into Structural Order.
  *
- * Places the incoming Strip immediately after the given anchor Frame,
+ * Places the incoming Strip at the given logical anchor point,
  * unless other Strips already compete for the same anchor. In that case,
  * overlap handling determines the incoming Strip's position among the
  * competing sibling subtrees.
@@ -18,9 +18,10 @@ import { subtreeEnd } from './subtreeEnd.js'
  *
  * @param this Projection receiving the Strip.
  * @param incomingStrip Strip to anchor.
- * @param anchoringStrip Strip containing the anchor Frame, or undefined for
+ * @param anchoringStrip Strip containing the logical anchor point, or undefined for
  * the virtual root anchor.
- * @param anchorDiff Canonical anchor point within the anchoring Strip's original insertion.
+ * @param anchorDiff Resolved logical anchor point within the anchoring Insertion.
+ * @returns Aggregate visible effect of the incoming Strip and its fragments.
  */
 export function anchorStrip<T>(
   this: Projection<T>,

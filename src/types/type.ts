@@ -40,7 +40,7 @@ export type Strip<T> =
       /** Next fragment belonging to the same original Insertion. */
       rightFragment?: Strip<T>
 
-      /** Logical time before the fragments first frame. */
+      /** Offset of the fragment's first Frame within the original Insertion. */
       fragmentStart?: number
 
       /** Signed Projection effect represented by this fragment. */
@@ -77,7 +77,7 @@ export type Strip<T> =
  *
  * @remarks
  * An insertion always has one of two effects on the Projection:
- * a negative `insertionDiff` decreases `visibleFrameCount`,
+ * a negative `insertionDiff` decreases `projectionFrameCount`,
  * while a positive `insertionDiff` increases it.
  *
  * The absolute value of `insertionDiff` is the Frame length of the insertion,
@@ -121,13 +121,13 @@ export type Insertion<T> = Readonly<
  * `[actorID, sessionID, sessionEnd, sessionID, sessionEnd, ...]`.
  *
  * Each `sessionID` uniquely identifies the removals issued during one
- * sequencing session, while `sessionEnd` records the greatest logical time
- * observed for that session by the acknowledging Actor.
+ * sequencing session, while `sessionEnd` records the logical frontier
+ * reported for that session by the acknowledging Actor.
  */
 export type Acknowledgement = ReadonlyArray<number>
 
 /**
- * Replication unit containing either an insertion or an acknowledgement.
+ * Replication batch containing Insertions and Acknowledgements.
  *
  * @remarks
  * An insertion is emitted as a result of a local update.
@@ -153,7 +153,8 @@ export type Sequence<T> = Readonly<
  * Consumer-facing Projection splice.
  *
  * @remarks
- * Replaces the inclusive range `[startAt, endWith]` with optional `values`.
+ * Insertion uses `[at, at, values]`; removal uses `[startAt, endWith]`
+ * with an exclusive end position.
  */
 export type Splice<T> = Readonly<
   [startAt: number, endWith: number, values?: ReadonlyArray<T | undefined>]
@@ -165,7 +166,7 @@ export type Splice<T> = Readonly<
 export type Change<T> = ReadonlyArray<Splice<T>>
 
 /**
- * Result of a mutating Projection operation.
+ * Result of applying Gossip or merging a Sequence.
  *
  * @remarks
  * `change` describes the visible Projection mutations.

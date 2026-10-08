@@ -6,6 +6,14 @@ import { insertFirst } from '../auxiliary/insertFirst.js'
 import { patchJumps } from '../auxiliary/patchJumps.js'
 import { selectAnchor } from '../auxiliary/selectAnchor.js'
 
+/**
+ * Sequences a local positive Insertion at a visible boundary.
+ *
+ * @param this Projection receiving the Insertion.
+ * @param values Nonempty values array used as the Insertion's Footage.
+ * @param at Projection boundary in `0..projectionFrameCount`, inclusive.
+ * @returns Gossip containing the canonical Insertion.
+ */
 export function insert<T>(
   this: Projection<T>,
   values: Array<T>,

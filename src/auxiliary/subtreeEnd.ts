@@ -10,7 +10,7 @@ import { containsAnchor } from '../auxiliary/containsAnchor.js'
  * A following Strip remains inside the subtree when either:
  *
  * - it is the `rightFragment` of an active ancestor Strip; or
- * - its stable anchor is contained within the active Frame range of an
+ * - its stable anchor is contained within the original logical range of an
  *   ancestor Strip.
  *
  * Right fragments remain part of their originating insertion even when other
@@ -48,8 +48,8 @@ export function subtreeEnd<T>(
     let ancestorFragmentFrame = previousFragmentFrame
 
     // While the next Strip is neither the right fragment of the candidate
-    // ancestor nor anchored within that ancestor's active fragment, walk back
-    // through the ancestor chain.
+    // ancestor nor anchored within that ancestor's original logical range,
+    // inspect earlier active ancestors.
     while (
       ancestorStrip.rightFragment !== nextStrip &&
       !containsAnchor(

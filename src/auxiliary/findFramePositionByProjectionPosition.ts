@@ -9,11 +9,14 @@ import type { Strip } from '../types/type.js'
  *
  * The returned Frame position is relative to the original insertion, not the
  * current fragment. It can therefore be used directly as an index into the
- * Footage array shared by all fragments of that insertion.
+ * Footage array shared by all fragments of that insertion. In insertion mode,
+ * a nonzero fragment-start boundary resolves to the preceding visible Frame's
+ * right logical anchor point instead.
  *
  * @param this Projection containing the requested position.
- * @param index Projection position to resolve.
- * @returns Zero-based Frame position in the containing insertion's Footage.
+ * @param index Valid visible Projection position to resolve.
+ * @param forInsertion Whether to resolve an insertion boundary; defaults to false.
+ * @returns Original Footage Frame position, or a logical anchor point in insertion mode.
  */
 export function findFramePositionByProjectionPosition<T>(
   this: Projection<T>,
@@ -93,8 +96,7 @@ export function findFramePositionByProjectionPosition<T>(
       this.rightJumpToPatch = rightJumpToPatch
 
       const fragmentStart = cursorStrip.fragmentStart
-      // Return the Frame's position in the original insertion's Footage
-      // Works, because projection positions do not land on 0 frame fragmentstart 0 positions.
+      // Original Footage position, or the following logical point in insertion mode.
       return (fragmentStart ?? 0) + index - cursorIndex + (after ? 1 : 0)
     }
 

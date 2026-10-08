@@ -2,6 +2,14 @@ import { findFramePositionByProjectionPosition } from '../auxiliary/findFramePos
 import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
+/**
+ * Returns values from an inclusive visible range.
+ *
+ * @param this Projection to read.
+ * @param startAt First included position; defaults to 0.
+ * @param endWith Last included position; defaults to the last visible position.
+ * @returns A new values array, or an empty array for an empty range.
+ */
 export function values<T>(
   this: Projection<T>,
   startAt: number = 0,

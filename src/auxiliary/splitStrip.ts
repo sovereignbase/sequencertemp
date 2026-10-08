@@ -2,28 +2,23 @@ import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
 /**
- * Splits one Strip into two fragments after a zero-based anchor point.
+ * Splits one Strip into fragments at a zero-based logical anchor point.
  *
  * The existing Strip becomes the left fragment while the newly created Strip
- * becomes its right fragment. Together, the two fragments retain the complete
- * effect and Structural Order position of the original Strip.
+ * becomes its right fragment, unless the right side is fully consumed.
  *
  * Splitting does not create a new insertion. Both fragments therefore retain
  * the original Strip's anchor and insertion identity. Only their fragment-local
  * effects and structural links differ.
  *
- * The total Projection effect remains unchanged:
+ * The retained effect accounts for any consumed Frames:
  *
- * `leftDiff + rightDiff === anchoringStripDiff`
- *
- * `after` is the largest zero-based anchor point retained by the left fragment.
- * Its sign-independent magnitude determines the left fragment's effect; the
- * Strip's effect direction determines whether that effect is increasing or
- * reducing.
+ * `leftDiff + rightDiff === anchoringStripDiff + Math.min(0, incomingDiff)`
  *
  * @param this Projection containing the Strip.
  * @param anchoringStrip Strip to split. Becomes the left fragment.
- * @param after Largest zero-based anchor point retained by the left fragment.
+ * @param anchorDiff Logical boundary in the original Insertion.
+ * @param incomingDiff Incoming fragment effect; negative values consume Frames.
  * @returns The Strip immediately to the right of the anchoring Strip. When the
  * right fragment would have no effect, it is not materialized and the
  * original right step is returned instead.

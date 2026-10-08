@@ -1,3 +1,8 @@
+/**
+ * Returns a cryptographically random unsigned 53-bit integer.
+ *
+ * @returns An integer in `0..Number.MAX_SAFE_INTEGER`, inclusive.
+ */
 export function getRandom53bitNumber(): number {
   const bytes = new Uint8Array(7)
   crypto.getRandomValues(bytes)

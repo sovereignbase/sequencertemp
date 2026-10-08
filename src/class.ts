@@ -12,6 +12,7 @@ import { sequence } from './algorithms/sequence.js'
 import { value } from './algorithms/value.js'
 import { values } from './algorithms/values.js'
 
+/** Visible Projection of a replicated Sequence. */
 export class Projection<T> {
   /** Strip containing the very left-most position of the projection (0) */
   public head: Strip<T> | undefined
@@ -20,12 +21,14 @@ export class Projection<T> {
   /** Strip containing the very right-most position of the projection (projectionFrameCount - 1) */
   public tail: Strip<T> | undefined
   //
+  /** Right endpoint of the jump awaiting a local edit's distance update. */
   public rightJumpToPatch?: Strip<T>
+  /** Left endpoint of the jump awaiting a local edit's distance update. */
   public leftJumpToPatch?: Strip<T>
   //
   /** First Strip in Structural Order, including non-visible Strips. */
   public structuralHead: Strip<T> | undefined
-  /**Strucural amount of strips in the sequence. */
+  /** Structural amount of strips in the sequence. */
   public structuralStripCount: number = 0
   /** Amount of frames in the projection. */
   public projectionFrameCount: number = 0
@@ -34,24 +37,32 @@ export class Projection<T> {
   /** First Projection position of the Strip at gate. */
   public gatePosition: number = 0
   //
+  /** Materialized Insertions indexed by their canonical identity. */
   public readonly containmentTable: ContainmentTable<T> = new ContainmentTable()
+  /** Known Actor acknowledgement frontiers used for compaction. */
   public readonly frontierTable: FrontierTable = new FrontierTable()
+  /** Insertions awaiting their anchoring Insertion. */
   public readonly pendingTable: PendingTable<T> = new PendingTable()
   //
+  /** Session identifier and next logical time for positive Insertions. */
   public readonly increaseClock: [id: number, time: number] = [0, 0]
+  /** Session identifier and next logical time for reducing Insertions. */
   public readonly decreaseClock: [id: number, time: number] = [0, 0]
   /**
-   * Applies gossiped Insertions and Acknowledgments
-   * @param gossip
-   * @returns
+   * Applies gossiped Insertions and Acknowledgements.
+   *
+   * @param gossip Batch of Insertion and Acknowledgement tuples.
+   * @returns Visible changes and optional acknowledgement Gossip, or
+   * `undefined` for invalid input. Earlier entries may already have been applied.
    */
   apply(gossip: unknown): Result<T> | undefined {
     return apply.call(this, gossip) as Result<T> | undefined
   }
   /**
    * Prepares to sequence a projection, optionally hydrating from a trusted sequence stored by the application.
-   * @param actorID
-   * @param trustedSequence
+   *
+   * @param actorID Actor identifier used in acknowledgements.
+   * @param trustedSequence Optional dependency-ordered Sequence stored by the application.
    */
   constructor(
     public readonly actorID: number,
@@ -61,44 +72,50 @@ export class Projection<T> {
   }
 
   /**
+   * Inserts values at a Projection position.
    *
-   * @param values Values you want to insert.
-   * @param at Position where you vant the values to be inserted.
-   * @returns
+   * @param values Nonempty array of values to insert.
+   * @param at Insertion position in `0..length()`, inclusive.
+   * @returns Gossip describing the insertion.
    */
   insert(values: Array<T>, at: number): Gossip<T> {
     return insert.call(this, values, at) as Gossip<T>
   }
   /**
-   * returns the length A.K.A amount of entries of this projection.
-   * @returns
+   * Returns the length, A.K.A. amount of entries of this projection.
+   *
+   * @returns Current Projection length.
    */
   length(): number {
     return this.projectionFrameCount
   }
   /**
-   * Applies relevant acknowledments and non duplicate insertions from a replica of the sequence.
-   * @param sequence
-   * @returns
+   * Applies relevant acknowledgements and nonduplicate insertions from a replica of the sequence.
+   *
+   * @param sequence Sequence to merge.
+   * @returns Visible changes and optional acknowledgement Gossip, or
+   * `undefined` if the Sequence has an invalid runtime shape.
    */
   merge(sequence: unknown): Result<T> | undefined {
     return merge.call(this, sequence) as Result<T> | undefined
   }
   /**
+   * Removes an inclusive range of Projection positions.
    *
-   * @param startAt First position you want removed.
-   * @param endWith Last position you want removed.
-   * @returns
+   * @param startAt First position to remove; defaults to 0.
+   * @param endWith Last position to remove; defaults to `length() - 1`.
+   * @returns Reducing Insertions and their acknowledgement as Gossip.
    */
   remove(startAt?: number, endWith?: number): Gossip<T> {
     return remove.call(this, startAt, endWith) as Gossip<T>
   }
   /**
+   * Replaces an inclusive range of Projection positions.
    *
-   * @param withValues Values you want the positions to be replaced with.
-   * @param startAt First position you want replaced.
-   * @param endWith Last position you want replaced.
-   * @returns
+   * @param withValues Replacement values; an empty array only removes the range.
+   * @param startAt First position to replace; defaults to 0.
+   * @param endWith Last position to replace; defaults to `length() - 1`.
+   * @returns Removal and insertion Gossip, in that order.
    */
   replace(withValues: Array<T>, startAt?: number, endWith?: number): Gossip<T> {
     return replace.call(this, withValues, startAt, endWith) as Gossip<T>
@@ -113,8 +130,7 @@ export class Projection<T> {
    * Retiring an Actor removes its acknowledgements from the FrontierTable and
    * keeps the Actor retired for the lifetime of the current session. As a result,
    * its acknowledgements are excluded from later sequenced state and are not
-   * required when compaction is performed while constructing a later Projection
-   * from that state.
+   * required when compaction is performed while sequencing that state.
    *
    * For example, an Actor managing a document could rotate keys and propagate a
    * directive telling the relevant replicas which Actors to retire.
@@ -126,25 +142,28 @@ export class Projection<T> {
     void this.frontierTable.eraseActor(actorID)
   }
   /**
-   * Sequences state in to a compact serializeable format.
-   * @returns
+   * Sequences state into a compact serializable format.
+   *
+   * @returns A Sequence with acknowledged removals compacted in the exported state.
    */
   sequence(): Sequence<T> {
     return sequence.call(this) as Sequence<T>
   }
   /**
+   * Returns the value at a Projection position.
    *
-   * @param at Projection position where the value you want is.
-   * @returns
+   * @param at Valid visible position in `0..length() - 1`.
+   * @returns The corresponding Footage value.
    */
   value(at: number): T | undefined {
     return value.call(this, at) as T | undefined
   }
   /**
+   * Returns values from an inclusive range of Projection positions.
    *
-   * @param startAt First projection position you want included in the result or first position.
-   * @param endWith Last projection position you want included in the result or last position.
-   * @returns
+   * @param startAt First included position; defaults to 0.
+   * @param endWith Last included position; defaults to `length() - 1`.
+   * @returns A new array of values, or an empty array for an empty range.
    */
   values(startAt?: number, endWith?: number): Array<T> {
     return values.call(this, startAt, endWith) as Array<T>

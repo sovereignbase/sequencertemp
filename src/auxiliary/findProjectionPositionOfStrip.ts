@@ -1,6 +1,14 @@
 import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
+/**
+ * Resolves a materialized Strip's first Projection position and updates jumps.
+ *
+ * @param this Projection containing the Strip.
+ * @param strip Strip whose visible position is required.
+ * @param gateDiff Visible edit effect used to adjust the previous gate's position.
+ * @returns First Projection position of the Strip.
+ */
 export function findProjectionPositionOfStrip<T>(
   this: Projection<T>,
   strip: NonNullable<Strip<T>>,

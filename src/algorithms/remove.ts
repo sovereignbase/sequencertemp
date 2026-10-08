@@ -4,6 +4,14 @@ import { patchJumps } from '../auxiliary/patchJumps.js'
 import type { Projection } from '../class.js'
 import type { Gossip, Strip } from '../types/type.js'
 
+/**
+ * Sequences reducing Insertions for an inclusive visible range.
+ *
+ * @param this Projection to edit.
+ * @param startAt First position to remove; defaults to 0.
+ * @param endWith Last position to remove; defaults to the last visible position.
+ * @returns Reducing Insertions followed by the local acknowledgement.
+ */
 export function remove<T>(
   this: Projection<T>,
   startAt: number = 0,

@@ -5,6 +5,12 @@ import type { Projection } from '../class.js'
 import type { Sequence, Strip } from '../types/type.js'
 import { findContainingFragment } from '../auxiliary/findContainingFragment.js'
 
+/**
+ * Initializes a Projection from optional trusted state and assigns fresh sessions.
+ *
+ * @param this Projection to initialize.
+ * @param trustedSequence Optional dependency-ordered Sequence; not shape-validated.
+ */
 export function create<T>(
   this: Projection<T>,
   trustedSequence?: unknown
