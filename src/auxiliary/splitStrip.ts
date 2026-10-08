@@ -31,6 +31,7 @@ export function splitStrip<T>(
 ): Strip<T> {
   // Remove content.
   if (incomingDiff < 0 && anchoringStrip?.footage) {
+    // Clear the consumed half-open Frame interval in place; retain the array's length and reference.
     void (anchoringStrip.footage as Array<T | undefined>).fill(
       undefined,
       anchorDiff,
@@ -46,9 +47,12 @@ export function splitStrip<T>(
 
   const anchoringStripDiff =
     anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
+  // Measure the left side from the current original offset and retain the anchoring Strip's effect direction.
   const leftFragmentDiff =
     (anchoringStripDiff < 0 ? -1 : 1) *
     (anchorDiff - (anchoringStrip.fragmentStart ?? 0))
+  // The right side is the old effect minus the left effect and any newly consumed Frames.
+  // A positive incoming Insertion adds its own Frames separately in anchorStrip.
   const rightFragmentDiff =
     anchoringStripDiff -
     leftFragmentDiff +
@@ -102,6 +106,7 @@ export function splitStrip<T>(
     // Preserve the existing fragment chain by placing the new fragment between
     // the anchoring Strip and its previous right fragment.
     rightFragment: anchoringStrip.rightFragment,
+    // A reducing edit consumes the prefix after the anchor; the retained right fragment begins after it.
     fragmentStart: anchorDiff + (incomingDiff < 0 ? Math.abs(incomingDiff) : 0),
     fragmentDiff: rightFragmentDiff,
 
@@ -137,8 +142,8 @@ export function splitStrip<T>(
 
   // Right fragment was added to structural order.
   //
-  // Fragmentation preserves the logical insertion and Projection effect, but
-  // physically adds one Strip node to Structural Order.
+  // Fragmentation retains the logical Insertion and adds one physical Strip.
+  // Visible removal effects are accounted for by anchorStrip.
   ++this.structuralStripCount
 
   return rightFragment

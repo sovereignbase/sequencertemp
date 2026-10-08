@@ -29,14 +29,19 @@ export function anchorStrip<T>(
   anchoringStrip: Strip<T>,
   anchorDiff: number
 ): number {
+  // Retain the original mask's exclusive end before splitting its runtime effect across fragments.
   const removalEnd = incomingStrip.anchorDiff - incomingStrip.insertionDiff
+  // Accumulate actual visible effects so a fragmented remote mask emits one total removal count.
   let projectionDiff = 0
 
+  // Each continuation targets a later positive fragment of the same original Insertion.
   while (true) {
   let leftStep: Strip<T> = anchoringStrip
   let rightStep: Strip<T>
   let incomingDiff = incomingStrip.fragmentDiff ?? incomingStrip.insertionDiff
 
+  // A mask targeting a positive fragment may consume only that fragment's remaining visible suffix.
+  // Clamp available length to zero when earlier overlap already consumed the requested portion.
   if (incomingStrip.insertionDiff < 0 && anchoringStrip!.insertionDiff > 0) {
     incomingDiff = -Math.min(
       -incomingDiff,
@@ -45,6 +50,8 @@ export function anchorStrip<T>(
     )
     incomingStrip.fragmentDiff = incomingDiff
   }
+  // A fully overlapped mask still needs structural placement; clamp its placement point to the
+  // current fragment's boundaries so splitting cannot create an out-of-range fragment.
   if (incomingStrip.insertionDiff < 0 && incomingDiff === 0)
     anchorDiff = Math.max(anchoringStrip!.fragmentStart ?? 0,
       Math.min(anchorDiff, (anchoringStrip!.fragmentStart ?? 0) +
@@ -86,6 +93,8 @@ export function anchorStrip<T>(
   // at the end of a fragment may encounter Strips already using that anchor.
   while (
     rightStep &&
+    // Skip zero-effect nodes only when they share the canonical parent and have an earlier
+    // anchor point; nodes at the same point must remain available for competition.
     (rightStep.fragmentDiff ?? rightStep.insertionDiff) === 0 &&
     rightStep.anchorSession === incomingStrip.anchorSession &&
     rightStep.anchorStart === incomingStrip.anchorStart &&
@@ -95,6 +104,7 @@ export function anchorStrip<T>(
     rightStep = rightStep.rightStep
   }
 
+  // Competition applies only to exact immutable anchor triples, never to overlapping fragment ranges.
   if (rightStep && anchorsOverlap(incomingStrip, rightStep)) {
     // Closest known competitor that sorts larger than the incoming Strip.
     let largerCompetitor: NonNullable<Strip<T>> | undefined
@@ -125,11 +135,13 @@ export function anchorStrip<T>(
       //
       // If a larger competitor exists, incoming follows it.
       // Otherwise incoming becomes the anchor-facing competitor.
+      // The last larger sibling is the immediate predecessor in competitor order;
+      // its complete subtree remains before the incoming sibling in structural order.
       largerCompetitor.rightCompetitor = incomingStrip
 
       // A competitor occupies its whole subtree in Structural Order.
       // Therefore the incoming competitor must be inserted after the complete
-      // subtree of the first larger competitor.
+      // subtree of the closest larger competitor.
       leftStep = subtreeEnd(largerCompetitor)
 
       // Preserve whatever structurally followed that sibling subtree.
@@ -158,6 +170,7 @@ export function anchorStrip<T>(
     this.rightJumpToPatch = undefined
   }
 
+  // A jump from the immediate predecessor crosses the new node; clear its reciprocal endpoint too.
   if (leftStep?.rightJump) {
     leftStep.rightJump.leftJump = undefined
     leftStep.rightJump = undefined
@@ -167,23 +180,30 @@ export function anchorStrip<T>(
   incomingStrip.leftStep = leftStep
   incomingStrip.rightStep = rightStep
 
+  // With a predecessor, splice into the existing graph; without one, replace structuralHead.
   if (leftStep) leftStep.rightStep = incomingStrip
   else this.structuralHead = incomingStrip
 
+  // Only an existing successor has a reciprocal leftStep to repair.
   if (rightStep) {
     rightStep.leftStep = incomingStrip
   }
 
+  // Only a Strip with positive runtime length can supply a visible boundary.
   if (incomingDiff > 0) {
+    // An unset head, structural beginning, or direct insertion before head supplies the first visible Strip.
     if (!this.head || !leftStep || rightStep === this.head)
       this.head = incomingStrip
+    // The symmetric adjacency cases supply the last visible Strip without an index traversal.
     if (!this.tail || !rightStep || leftStep === this.tail)
       this.tail = incomingStrip
   }
 
+  // Deletion can turn the old first Strip into hidden history; skip it until a positive Strip remains.
   while (this.head && (this.head.fragmentDiff ?? this.head.insertionDiff) <= 0)
     this.head = this.head.rightStep
 
+  // Likewise skip consumed suffix Strips so tail contains the last visible Frame.
   while (this.tail && (this.tail.fragmentDiff ?? this.tail.insertionDiff) <= 0)
     this.tail = this.tail.leftStep
 
@@ -202,17 +222,22 @@ export function anchorStrip<T>(
 
   // Projection length changes by the signed effect of this Strip or fragment.
   this.projectionFrameCount += incomingDiff
+  // The visible counter and returned edit effect must include the same runtime contribution.
   projectionDiff += incomingDiff
 
+  // Only a positive anchoring Insertion supplies further original Frame fragments to consume.
   const nextFragment = anchoringStrip && anchoringStrip.insertionDiff > 0
     ? anchoringStrip.rightFragment : undefined
   if (
+    // Positive Insertions need no mask continuation. A mask stops without another positive
+    // fragment, or when that fragment starts at or beyond the original exclusive removal end.
     incomingStrip.insertionDiff >= 0 ||
     !nextFragment ||
     (nextFragment.fragmentStart ?? 0) >= removalEnd
   ) return projectionDiff
 
   const fragmentStart = nextFragment.fragmentStart ?? 0
+  // Continue the same canonical mask identity; allocate runtime metadata, not new Footage.
   const nextMask: NonNullable<Strip<T>> = {
     anchorSession: incomingStrip.anchorSession,
     anchorStart: incomingStrip.anchorStart,
@@ -220,15 +245,19 @@ export function anchorStrip<T>(
     insertionSession: incomingStrip.insertionSession,
     insertionStart: incomingStrip.insertionStart,
     insertionDiff: incomingStrip.insertionDiff,
+    // Express this mask fragment's offset relative to the original mask's canonical anchor.
     fragmentStart: fragmentStart - incomingStrip.anchorDiff,
+    // Clip to the next fragment's positive length and the remaining original removal interval.
     fragmentDiff: -Math.min(
       Math.max(0, nextFragment.fragmentDiff ?? nextFragment.insertionDiff),
       removalEnd - fragmentStart
     ),
   }
+  // Preserve the mask's own fragment chain separately from the parent's fragment chain.
   incomingStrip.rightFragment = nextMask
   incomingStrip = nextMask
   anchoringStrip = nextFragment
+  // Advance placement to the next positive fragment's start; canonical anchorDiff stays unchanged.
   anchorDiff = fragmentStart
   }
 }

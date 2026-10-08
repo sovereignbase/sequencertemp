@@ -9,6 +9,8 @@ import { Projection } from '../class.js'
  * @returns The corresponding Footage value.
  */
 export function value<T>(this: Projection<T>, at: number): T | undefined {
+  // Convert the visible index to the original Footage index; the resolver also selects gate.
   const framePosition = findFramePositionByProjectionPosition.call(this, at)
+  // Read the shared array at that original index, not at a fragment-relative index.
   return this.gate?.footage?.[framePosition]
 }

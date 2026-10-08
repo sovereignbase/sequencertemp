@@ -56,6 +56,7 @@ export class Projection<T> {
    * `undefined` for invalid input. Earlier entries may already have been applied.
    */
   apply(gossip: unknown): Result<T> | undefined {
+    // Bind the algorithm to this live Projection; the type assertion does not transform the returned tuple.
     return apply.call(this, gossip) as Result<T> | undefined
   }
   /**
@@ -68,6 +69,7 @@ export class Projection<T> {
     public readonly actorID: number,
     trustedSequence?: unknown
   ) {
+    // Hydrate the graph and initialize fresh session clocks before the instance is used.
     void create.call(this, trustedSequence)
   }
 
@@ -79,6 +81,7 @@ export class Projection<T> {
    * @returns Gossip describing the insertion.
    */
   insert(values: Array<T>, at: number): Gossip<T> {
+    // Return canonical replication data for the edit already applied to this Projection.
     return insert.call(this, values, at) as Gossip<T>
   }
   /**
@@ -87,6 +90,7 @@ export class Projection<T> {
    * @returns Current Projection length.
    */
   length(): number {
+    // Read the maintained visible count; length does not traverse structural history.
     return this.projectionFrameCount
   }
   /**
@@ -97,6 +101,7 @@ export class Projection<T> {
    * `undefined` if the Sequence has an invalid runtime shape.
    */
   merge(sequence: unknown): Result<T> | undefined {
+    // Use the validated snapshot path while retaining this instance's materialized history.
     return merge.call(this, sequence) as Result<T> | undefined
   }
   /**
@@ -107,6 +112,7 @@ export class Projection<T> {
    * @returns Reducing Insertions and their acknowledgement as Gossip.
    */
   remove(startAt?: number, endWith?: number): Gossip<T> {
+    // Delegate inclusive bounds; omitted arguments receive the algorithm's whole-Projection defaults.
     return remove.call(this, startAt, endWith) as Gossip<T>
   }
   /**
@@ -118,6 +124,7 @@ export class Projection<T> {
    * @returns Removal and insertion Gossip, in that order.
    */
   replace(withValues: Array<T>, startAt?: number, endWith?: number): Gossip<T> {
+    // Keep removal and insertion sequencing in one algorithm so returned Gossip preserves operation order.
     return replace.call(this, withValues, startAt, endWith) as Gossip<T>
   } /**
    * Retires an Actor from future compaction requirements.
@@ -139,6 +146,7 @@ export class Projection<T> {
    * longer required for safe compaction.
    */
   retire(actorID: number): void {
+    // Change acknowledgement membership only; retiring an Actor does not remove its authored Insertions.
     void this.frontierTable.eraseActor(actorID)
   }
   /**
@@ -147,6 +155,7 @@ export class Projection<T> {
    * @returns A Sequence with acknowledged removals compacted in the exported state.
    */
   sequence(): Sequence<T> {
+    // Export compacted state without replacing this instance's live structural graph.
     return sequence.call(this) as Sequence<T>
   }
   /**
@@ -156,6 +165,7 @@ export class Projection<T> {
    * @returns The corresponding Footage value.
    */
   value(at: number): T | undefined {
+    // Read through visible-position resolution rather than indexing a structural Strip directly.
     return value.call(this, at) as T | undefined
   }
   /**
@@ -166,6 +176,7 @@ export class Projection<T> {
    * @returns A new array of values, or an empty array for an empty range.
    */
   values(startAt?: number, endWith?: number): Array<T> {
+    // Materialize the inclusive visible range; underlying Footage references remain in place.
     return values.call(this, startAt, endWith) as Array<T>
   }
 }

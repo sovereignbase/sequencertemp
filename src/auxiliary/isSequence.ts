@@ -29,6 +29,7 @@ export function isSequence<T>(data: unknown): data is Sequence<T> {
   // its frontiers and its Projection.
   if (!Array.isArray(data) || data.length !== 2) return false
 
+  // The outer tuple length check makes both component positions available for shape checks.
   const frontiers = data[0]
   const projection = data[1]
 
@@ -45,5 +46,6 @@ export function isSequence<T>(data: unknown): data is Sequence<T> {
   for (let i = 0; i < projection.length; ++i)
     if (!isInsertion<T>(projection[i])) return false
 
+  // All tuple shapes are valid here; dependency order and acknowledgement completeness are separate model requirements.
   return true
 }

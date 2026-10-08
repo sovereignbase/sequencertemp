@@ -41,6 +41,7 @@ export function subtreeEnd<T>(
   let previousFragmentFrame = 0
   let nextStrip = previousStrip.rightStep
 
+  // Follow rightStep only; popping ancestor metadata does not walk structural links backward.
   while (nextStrip) {
     // First attempt to interpret the next Strip as belonging under the
     // previously visited Strip.
@@ -51,11 +52,14 @@ export function subtreeEnd<T>(
     // ancestor nor anchored within that ancestor's original logical range,
     // inspect earlier active ancestors.
     while (
+      // An original right fragment belongs to its Insertion even when descendants intervene in structural order.
       ancestorStrip.rightFragment !== nextStrip &&
       !containsAnchor(
         ancestorStrip,
         nextStrip,
         0,
+        // Containment uses the original N+1 logical points 0..N, including removed Frame locations;
+        // runtime fragment bounds must not sever causal descendants.
         Math.abs(ancestorStrip.insertionDiff)
       )
     ) {
@@ -66,6 +70,7 @@ export function subtreeEnd<T>(
       // previously visited Strip.
       if (!ancestor) return previousStrip
 
+      // Restore the candidate metadata only; nextStrip stays at the same forward traversal position.
       ;[ancestorStrip, ancestorFragmentFrame] = ancestor
     }
 
@@ -84,6 +89,7 @@ export function subtreeEnd<T>(
       previousFragmentFrame = 0
     }
 
+    // Advance only after accepting the next node, so an excluded node never becomes the returned subtree end.
     previousStrip = nextStrip
     nextStrip = nextStrip.rightStep
   }

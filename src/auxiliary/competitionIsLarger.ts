@@ -20,8 +20,11 @@ export function competitionIsLarger<T>(
     // Strips with the same effect from different Sessions are sorted by their
     // Session identifiers. Within one Session, its reserved logical time range
     // tells whether the incoming insertion was authored after this competitor.
+    // Apply the numerical tie-breaks only within the same effect group; the sign rule above orders groups.
     (incomingStrip.insertionDiff < 0 === competition.insertionDiff < 0 &&
+      // Descending Session order makes same-anchor placement independent of arrival order.
       (incomingStrip.insertionSession < competition.insertionSession ||
+        // Only equal Sessions use insertionStart as the next tie-break; equal own identities are duplicates.
         (incomingStrip.insertionSession === competition.insertionSession &&
           incomingStrip.insertionStart < competition.insertionStart)))
   )

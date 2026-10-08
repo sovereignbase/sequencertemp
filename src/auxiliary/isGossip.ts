@@ -36,12 +36,15 @@ export function isInsertion<T>(data: unknown): data is Insertion<T> {
   // All structural metadata must be exactly representable integer values.
   // An insertion with zero effect is not a valid Insertion.
   if (
+    // Exact integer coordinates are required for identity lookup and deterministic numerical tie-breaks.
     !isSafeInteger(data[0]) ||
     !isSafeInteger(data[1]) ||
     !isSafeInteger(data[2]) ||
     !isSafeInteger(data[3]) ||
     !isSafeInteger(data[4]) ||
     !isSafeInteger(data[5]) ||
+    // Wire Insertions must have an original positive or negative length;
+    // zero runtime fragments are represented inside the graph, not as new zero-length Insertions.
     data[5] === 0
   )
     return false
@@ -78,6 +81,7 @@ export function isInsertion<T>(data: unknown): data is Insertion<T> {
 export function isAcknowledgement(data: unknown): data is Acknowledgement {
   // One actor identifier followed by zero or more Session/time pairs always
   // produces a non-empty tuple with an odd number of fields.
+  // After one Actor identifier, an odd total length guarantees complete Session/end pairs.
   if (!Array.isArray(data) || data.length < 1 || (data.length & 1) === 0)
     return false
 
@@ -85,6 +89,7 @@ export function isAcknowledgement(data: unknown): data is Acknowledgement {
   for (let i = 0; i < data.length; ++i)
     if (!isSafeInteger(data[i])) return false
 
+  // Shape validity does not prove that the claimed logical end has a complete set of mask payloads.
   return true
 }
 

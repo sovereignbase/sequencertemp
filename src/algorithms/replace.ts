@@ -16,8 +16,10 @@ export function replace<T>(
   startAt: number = 0,
   endWith: number = this.projectionFrameCount - 1
 ): Gossip<T> {
+  // Sequence removal before insertion so the replacement anchors into the resulting Projection.
   return [
     ...this.remove(startAt, endWith),
+    // An empty replacement is removal only; a zero-length Insertion is not valid Gossip.
     ...(withValues.length === 0 ? [] : this.insert(withValues, startAt)),
   ]
 }

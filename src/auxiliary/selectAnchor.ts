@@ -36,14 +36,17 @@ export function selectAnchor<T>(
   // The Projection end has no Frame to resolve, so use the tail fragment's
   // stable right anchor point directly.
   if (of === this.projectionFrameCount) {
+    // The nonempty local insertion path maintains a positive tail, making append an O(1) anchor lookup.
     anchoringStrip = this.tail!
     // TAIL MUST NEVER BE A REDUCING STRIP NOR FRAGMENT
+    // Use the original offset plus retained tail length; visible Projection length is a different coordinate.
     anchorDiff =
       (anchoringStrip.fragmentStart ?? 0) +
       Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff)
   } else {
     // Resolve the insertion boundary in the original Insertion's coordinates.
     anchorDiff = findFramePositionByProjectionPosition.call(this, of, true)
+    // The resolver selects the anchoring fragment as part of the same traversal.
     anchoringStrip = this.gate!
   }
 

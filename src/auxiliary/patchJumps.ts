@@ -41,6 +41,7 @@ export function patchJumps<T>(
   this.rightJumpToPatch = undefined
 
   // No jump crossed the mutation position.
+  // A missing endpoint makes the cached pair unusable; do not update only one direction.
   if (!left || !right) return
 
   // Projection distance cannot become negative. Reducing Strips remain in
@@ -55,6 +56,7 @@ export function patchJumps<T>(
   left.rightJumpFrameCount = frameCount
   left.rightJumpStripCount = stripCount
 
+  // Mirror the patched counts so a later left traversal sees exactly the same span.
   right.leftJumpFrameCount = frameCount
   right.leftJumpStripCount = stripCount
 }

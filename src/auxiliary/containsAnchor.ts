@@ -42,6 +42,7 @@ export function containsAnchor<T>(
     anchor.insertionStart === strip.anchorStart &&
     // The logical anchor point must fall within the inclusive accepted range.
     strip.anchorDiff >= startFrame &&
+    // Include the right logical boundary: an N-Frame Insertion supplies points 0 through N.
     strip.anchorDiff <= endFrame
   )
 }
