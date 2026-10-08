@@ -11,6 +11,7 @@ import type {
   Strip,
 } from '../types/type.js'
 import { findContainingFragment } from '../auxiliary/findContainingFragment.js'
+import { findFramePositionByProjectionPosition } from '../auxiliary/findFramePositionByProjectionPosition.js'
 
 export function apply<T>(
   this: Projection<T>,
@@ -18,9 +19,9 @@ export function apply<T>(
 ): Result<T> | undefined {
   if (!Array.isArray(gossip)) return
 
+  const projectedPosition = this.projectedPosition
   const changes = []
   const acknowledgements: Array<Acknowledgement> = []
-  let gateRemoved = false
 
   for (const entry of gossip) {
     if (isAcknowledgement(entry)) {
@@ -85,36 +86,23 @@ export function apply<T>(
           )
         }
 
-        void anchorStrip.call(this, incomingStrip, anchoringStrip, anchorDiff)
-
-        projectionDiff =
-          incomingStrip.fragmentDiff ?? incomingStrip.insertionDiff
-
-        if (
-          projectionDiff < 0 &&
-          anchoringStrip === this.gate &&
-          (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) === 0
-        ) {
-          this.gate = this.gate!.rightFragment ?? incomingStrip
-          gateRemoved = true
-        }
+        projectionDiff = anchorStrip.call(this, incomingStrip, anchoringStrip, anchorDiff)
 
         startAt = findProjectionPositionOfStrip.call(
           this,
           incomingStrip,
           projectionDiff
         )
-
-        if (gateRemoved && incomingStrip.insertionDiff > 0) {
-          this.gate = incomingStrip
-          this.projectedPosition = startAt
-          gateRemoved = false
-        }
+        this.gate = incomingStrip
+        this.gatePosition = startAt
       }
 
       void this.containmentTable.set(incomingStrip)
 
       if (projectionDiff > 0) {
+        if (startAt === 0) this.head = incomingStrip
+        if (startAt + projectionDiff === this.projectionFrameCount)
+          this.tail = incomingStrip
         void changes.push([
           startAt,
           startAt,
@@ -131,6 +119,19 @@ export function apply<T>(
         for (let i = pending.length - 1; i >= 0; --i)
           void queue.push(pending[i])
     }
+  }
+
+  if (changes.length !== 0) {
+    if (this.projectionFrameCount > 0) {
+      void findFramePositionByProjectionPosition.call(
+        this,
+        Math.min(projectedPosition, this.projectionFrameCount - 1)
+      )
+    } else {
+      this.gate = undefined
+      this.gatePosition = 0
+    }
+    this.projectedPosition = projectedPosition
   }
 
   return acknowledgements.length === 0

@@ -19,22 +19,7 @@ export function findContainingFragment<T>(
         : incomingStrip.anchorDiff >= fragmentStart &&
           incomingStrip.anchorDiff <= fragmentEnd
 
-    if (
-      anchorIsWithinFragment &&
-      !(
-        incomingStrip.anchorDiff === fragmentEnd &&
-        incomingStrip.insertionSession === anchoringStrip.insertionSession &&
-        incomingStrip.insertionStart >=
-          anchoringStrip.insertionStart +
-            Math.abs(anchoringStrip.insertionDiff) &&
-        !(
-          anchoringStrip.rightStep &&
-          anchoringStrip.rightStep.insertionSession !==
-            incomingStrip.insertionSession &&
-          anchorsOverlap(incomingStrip, anchoringStrip.rightStep)
-        )
-      )
-    ) {
+    if (anchorIsWithinFragment) {
       if (
         incomingStrip.insertionDiff < 0 &&
         Math.abs(incomingStrip.insertionDiff) >
@@ -46,7 +31,20 @@ export function findContainingFragment<T>(
       break
     }
 
-    const consumingMask = anchoringStrip.rightStep
+    let consumingMask = anchoringStrip.rightStep
+
+    while (
+      consumingMask &&
+      consumingMask.anchorSession === origin.insertionSession &&
+      consumingMask.anchorStart === origin.insertionStart &&
+      (consumingMask.insertionDiff > 0 ||
+        incomingStrip.anchorDiff > consumingMask.anchorDiff +
+          (consumingMask.fragmentStart ?? 0) +
+          Math.abs(consumingMask.fragmentDiff ?? consumingMask.insertionDiff))
+    )
+      consumingMask = consumingMask.insertionDiff > 0
+        ? consumingMask.rightCompetitor
+        : consumingMask.rightFragment ?? consumingMask.rightCompetitor ?? consumingMask.rightStep
 
     if (
       consumingMask &&
@@ -54,13 +52,13 @@ export function findContainingFragment<T>(
       consumingMask.anchorSession === origin.insertionSession &&
       consumingMask.anchorStart === origin.insertionStart
     ) {
-      const maskEnd =
-        consumingMask.anchorDiff + Math.abs(consumingMask.insertionDiff)
+      const maskStart = consumingMask.anchorDiff + (consumingMask.fragmentStart ?? 0)
+      const maskEnd = maskStart + Math.abs(consumingMask.fragmentDiff ?? consumingMask.insertionDiff)
       const maskContainsAnchor =
         incomingStrip.insertionDiff < 0
-          ? incomingStrip.anchorDiff >= consumingMask.anchorDiff &&
+          ? incomingStrip.anchorDiff >= maskStart &&
             incomingStrip.anchorDiff < maskEnd
-          : incomingStrip.anchorDiff > consumingMask.anchorDiff &&
+          : incomingStrip.anchorDiff > maskStart &&
             incomingStrip.anchorDiff <= maskEnd
 
       if (maskContainsAnchor && incomingStrip.insertionDiff > 0)
@@ -75,12 +73,12 @@ export function findContainingFragment<T>(
       ) {
         const anchorDiff = incomingStrip.anchorDiff - consumingMask.anchorDiff
         const consumed = Math.min(
-          Math.abs(incomingStrip.insertionDiff),
-          Math.abs(consumingMask.insertionDiff) - anchorDiff
+          Math.abs(incomingStrip.fragmentDiff ?? incomingStrip.insertionDiff),
+          maskEnd - incomingStrip.anchorDiff
         )
 
-        incomingStrip.fragmentStart = consumed
-        incomingStrip.fragmentDiff = incomingStrip.insertionDiff + consumed
+        incomingStrip.fragmentStart = (incomingStrip.fragmentStart ?? 0) + consumed
+        incomingStrip.fragmentDiff = incomingStrip.insertionDiff + incomingStrip.fragmentStart
 
         if (incomingStrip.fragmentDiff === 0)
           return [anchorDiff + consumed, consumingMask]
@@ -89,6 +87,7 @@ export function findContainingFragment<T>(
         let rightFragment = anchoringStrip.rightFragment!
 
         while (
+          rightFragment &&
           advancedAnchor >=
           (rightFragment.fragmentStart ?? 0) +
             Math.abs(
@@ -97,7 +96,19 @@ export function findContainingFragment<T>(
         )
           rightFragment = rightFragment.rightFragment!
 
-        return [advancedAnchor, rightFragment]
+        if (!rightFragment) {
+          incomingStrip.fragmentStart = Math.abs(incomingStrip.insertionDiff)
+          incomingStrip.fragmentDiff = 0
+          return [anchorDiff + consumed, consumingMask]
+        }
+
+        const resolvedAnchor = Math.max(advancedAnchor, rightFragment.fragmentStart ?? 0)
+        incomingStrip.fragmentStart = Math.min(
+          -incomingStrip.insertionDiff,
+          resolvedAnchor - incomingStrip.anchorDiff
+        )
+        incomingStrip.fragmentDiff = incomingStrip.insertionDiff + incomingStrip.fragmentStart
+        return [resolvedAnchor, rightFragment]
       }
     }
 
@@ -107,5 +118,10 @@ export function findContainingFragment<T>(
     anchoringStrip = rightFragment
   }
 
-  return [incomingStrip.anchorDiff, anchoringStrip]
+  const anchorDiff = Math.max(incomingStrip.anchorDiff, anchoringStrip.fragmentStart ?? 0)
+  if (incomingStrip.insertionDiff < 0 && anchorDiff > incomingStrip.anchorDiff) {
+    incomingStrip.fragmentStart = Math.min(-incomingStrip.insertionDiff, anchorDiff - incomingStrip.anchorDiff)
+    incomingStrip.fragmentDiff = incomingStrip.insertionDiff + incomingStrip.fragmentStart
+  }
+  return [anchorDiff, anchoringStrip]
 }

@@ -9,7 +9,7 @@ export function sequence<T>(this: Projection<T>): Sequence<T> {
     this.frontierTable.getCompactableSessions()
   )
 
-  let strip: Strip<T> = this.head
+  let strip: Strip<T> = this.structuralHead
 
   while (strip) {
     const id = `${strip.insertionSession}:${strip.insertionStart}`

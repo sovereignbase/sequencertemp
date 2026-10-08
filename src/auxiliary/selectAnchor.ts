@@ -2,7 +2,6 @@ import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
 import { findFramePositionByProjectionPosition } from '../auxiliary/findFramePositionByProjectionPosition.js'
-import { containsAnchor } from './containsAnchor.js'
 
 /**
  * Selects the stable anchor point for a local insertion.
@@ -39,29 +38,13 @@ export function selectAnchor<T>(
     anchoringStrip = this.tail!
     // TAIL MUST NEVER BE A REDUCING STRIP NOR FRAGMENT
     anchorDiff =
-      anchoringStrip.fragmentStart && anchoringStrip.fragmentDiff
-        ? anchoringStrip.fragmentStart + Math.abs(anchoringStrip.fragmentDiff)
-        : anchoringStrip.insertionDiff
+      (anchoringStrip.fragmentStart ?? 0) +
+      Math.abs(anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff)
   } else {
     // The Frame currently at `of` moves right. Its Footage position is exactly
     // the stable logical anchor point immediately preceding it.
-    anchorDiff = findFramePositionByProjectionPosition.call(this, of)
+    anchorDiff = findFramePositionByProjectionPosition.call(this, of, true)
     anchoringStrip = this.gate!
-
-    const leftStep = anchoringStrip.leftStep
-    const fragmentStart = anchoringStrip.fragmentStart ?? 0
-    // If anchorDiff 0 has already been consumed by a past boundary insertion, anchor after
-    // the insertion that consumed it by using that insertion's final Frame instead.
-    if (
-      leftStep &&
-      // Safe because traversal never lands on the -1 fragmentStart sentinel.
-      anchorDiff === fragmentStart &&
-      // The boundary anchor is already reserved by `leftStep`.
-      containsAnchor(anchoringStrip, leftStep, fragmentStart, fragmentStart)
-    ) {
-      anchoringStrip = leftStep
-      anchorDiff = Math.abs(anchoringStrip.insertionDiff)
-    }
   }
 
   return [anchorDiff, anchoringStrip]

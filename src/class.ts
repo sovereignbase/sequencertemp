@@ -23,12 +23,16 @@ export class Projection<T> {
   public rightJumpToPatch?: Strip<T>
   public leftJumpToPatch?: Strip<T>
   //
+  /** First Strip in Structural Order, including non-visible Strips. */
+  public structuralHead: Strip<T> | undefined
   /**Strucural amount of strips in the sequence. */
   public structuralStripCount: number = 0
   /** Amount of frames in the projection. */
   public projectionFrameCount: number = 0
-  /** Zero-based projection position of the strip currently projected at gate. */
+  /** Cached Projection position, preserved across remote updates. */
   public projectedPosition: number = 0
+  /** First Projection position of the Strip at gate. */
+  public gatePosition: number = 0
   //
   public readonly containmentTable: ContainmentTable<T> = new ContainmentTable()
   public readonly frontierTable: FrontierTable = new FrontierTable()
