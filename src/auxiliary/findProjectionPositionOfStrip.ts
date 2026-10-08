@@ -154,15 +154,19 @@ export function findProjectionPositionOfStrip<T>(
     }
   }
 
+  if (rightCursor === this.head && strip !== this.head) return 0
+  if (leftCursor === this.tail && strip !== this.tail)
+    return this.projectionFrameCount - Math.max(0, strip.fragmentDiff ?? strip.insertionDiff)
+
   if (knownIndex !== undefined) {
     return knownIndex
   }
 
   while (true) {
     if (leftCursor === this.head) return leftFrameDistance
-    if (rightCursor === this.head) return -rightFrameDistance
+    if (rightCursor === this.head) return 0
     if (leftCursor === this.tail)
-      return this.projectionFrameCount - Math.max(0, leftCursor.fragmentDiff ?? leftCursor.insertionDiff) + leftFrameDistance
+      return this.projectionFrameCount - Math.max(0, strip.fragmentDiff ?? strip.insertionDiff)
     if (rightCursor === this.tail)
       return this.projectionFrameCount - Math.max(0, rightCursor.fragmentDiff ?? rightCursor.insertionDiff) - rightFrameDistance
     // CHECK IF LEFT IS AT STRUCTURAL START
