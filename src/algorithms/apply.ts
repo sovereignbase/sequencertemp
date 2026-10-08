@@ -109,6 +109,9 @@ export function apply<T>(
       void this.containmentTable.set(incomingStrip)
 
       if (projectionDiff > 0) {
+        if (startAt === 0) this.head = incomingStrip
+        if (startAt + projectionDiff === this.projectionFrameCount)
+          this.tail = incomingStrip
         void changes.push([
           startAt,
           startAt,

@@ -129,6 +129,11 @@ export function anchorStrip<T>(
     this.rightJumpToPatch = undefined
   }
 
+  if (leftStep?.rightJump) {
+    leftStep.rightJump.leftJump = undefined
+    leftStep.rightJump = undefined
+  }
+
   // Link the incoming Strip between the resolved structural neighbours.
   incomingStrip.leftStep = leftStep
   incomingStrip.rightStep = rightStep

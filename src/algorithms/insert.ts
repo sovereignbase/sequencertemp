@@ -65,6 +65,9 @@ export function insert<T>(
   )
 
   void this.containmentTable.set(increasingStrip)
+  if (values.length > 0 && at === 0) this.head = increasingStrip
+  if (values.length > 0 && at + values.length === this.projectionFrameCount)
+    this.tail = increasingStrip
   this.gate = increasingStrip
   this.projectedPosition = at
   this.gatePosition = at

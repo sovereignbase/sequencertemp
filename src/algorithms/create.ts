@@ -21,11 +21,6 @@ export function create<T>(
   if (Array.isArray(projection)) {
     const jumpSpacing = Math.max(1, Math.round(Math.sqrt(projection.length)))
 
-    let jumpStart: Strip<T>
-    let jumpCursor: Strip<T>
-    let jumpFrameCount = 0
-    let jumpStripCount = 0
-
     for (let index = 0; index < projection.length; ++index) {
       const incoming = projection[index]
       let incomingStrip: Strip<T>
@@ -69,48 +64,49 @@ export function create<T>(
 
       void this.containmentTable.set(incomingStrip)
 
-      if (!jumpCursor) {
-        jumpStart = this.structuralHead
-        jumpCursor = this.structuralHead
-      }
-
-      const finalizedThrough =
-        index + 1 === projection.length ? this.tail : incomingStrip
-
-      while (
-        jumpCursor &&
-        finalizedThrough &&
-        jumpCursor !== finalizedThrough
-      ) {
-        const diff = jumpCursor.fragmentDiff ?? jumpCursor.insertionDiff
-
-        // Negative strips do not consume length (already consumed on split).
-        jumpFrameCount += Math.max(0, diff)
-        ++jumpStripCount
-
-        jumpCursor = jumpCursor.rightStep
-
-        if (jumpStripCount === jumpSpacing && jumpCursor) {
-          jumpStart!.rightJump = jumpCursor
-          jumpStart!.rightJumpFrameCount = jumpFrameCount
-          jumpStart!.rightJumpStripCount = jumpStripCount
-
-          jumpCursor!.leftJump = jumpStart
-          jumpCursor!.leftJumpFrameCount = jumpFrameCount
-          jumpCursor!.leftJumpStripCount = jumpStripCount
-
-          jumpStart = jumpCursor
-          jumpFrameCount = 0
-          jumpStripCount = 0
-        }
-      }
-
       if (incomingStrip.insertionDiff < 0) {
         void this.frontierTable.observeAcknowledgement([
           this.actorID,
           incomingStrip.insertionSession,
           incomingStrip.insertionStart - incomingStrip.insertionDiff,
         ])
+      }
+    }
+
+    let jumpStart = this.structuralHead
+    let jumpCursor = this.structuralHead
+    let jumpFrameCount = 0
+    let jumpStripCount = 0
+
+    this.head = undefined
+    this.tail = undefined
+
+    // Build jumps from the completed structure, after all splits and removals.
+    while (jumpCursor) {
+      const diff = jumpCursor.fragmentDiff ?? jumpCursor.insertionDiff
+
+      if (diff > 0) {
+        this.head ??= jumpCursor
+        this.tail = jumpCursor
+      }
+
+      jumpFrameCount += Math.max(0, diff)
+      ++jumpStripCount
+
+      jumpCursor = jumpCursor.rightStep
+
+      if (jumpStripCount === jumpSpacing && jumpCursor) {
+        jumpStart!.rightJump = jumpCursor
+        jumpStart!.rightJumpFrameCount = jumpFrameCount
+        jumpStart!.rightJumpStripCount = jumpStripCount
+
+        jumpCursor.leftJump = jumpStart
+        jumpCursor.leftJumpFrameCount = jumpFrameCount
+        jumpCursor.leftJumpStripCount = jumpStripCount
+
+        jumpStart = jumpCursor
+        jumpFrameCount = 0
+        jumpStripCount = 0
       }
     }
   }
