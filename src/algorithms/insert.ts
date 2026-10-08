@@ -67,6 +67,7 @@ export function insert<T>(
   void this.containmentTable.set(increasingStrip)
   this.gate = increasingStrip
   this.projectedPosition = at
+  this.gatePosition = at
   this.increaseClock[1] += values.length + 1
 
   return [

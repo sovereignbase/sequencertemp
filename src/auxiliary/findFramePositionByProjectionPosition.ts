@@ -20,8 +20,8 @@ export function findFramePositionByProjectionPosition<T>(
   index: number
 ): number {
   // Use gate as the default traverse start node.
-  let cursorStrip: NonNullable<Strip<T>> = this.gate!
-  let cursorIndex: number = this.projectedPosition
+  let cursorStrip: NonNullable<Strip<T>> = (this.gate ?? this.head)!
+  let cursorIndex: number = this.gatePosition
 
   let leftJumpToPatch = this.leftJumpToPatch
   let rightJumpToPatch = this.rightJumpToPatch
@@ -34,7 +34,7 @@ export function findFramePositionByProjectionPosition<T>(
   const tailDistance = Math.abs(tailIndex - index)
 
   // Length from gate to requested projection position.
-  const gateDistance = Math.abs(this.projectedPosition - index)
+  const gateDistance = Math.abs(this.gatePosition - index)
 
   if (
     // Distance to travel from head to requested projection position is shorter than distance from gate and tail.
@@ -79,6 +79,7 @@ export function findFramePositionByProjectionPosition<T>(
       // Patch gate and projection position.
       this.gate = cursorStrip
       this.projectedPosition = cursorIndex
+      this.gatePosition = cursorIndex
 
       // Set jumps to patch at top level.
       this.leftJumpToPatch = leftJumpToPatch

@@ -55,10 +55,10 @@ export function anchorStrip<T>(
       ) as Strip<T>
     }
   } else {
-    // Root competitors share the virtual `(0, 0, 0)` anchor. `head` is the
+    // Root competitors share the virtual `(0, 0, 0)` anchor. `structuralHead` is the
     // anchor-facing root competitor; sibling placement still skips complete
     // trees through `subtreeEnd` below.
-    rightStep = this.head
+    rightStep = this.structuralHead
   }
 
   // Overlap handling.
@@ -134,24 +134,24 @@ export function anchorStrip<T>(
   incomingStrip.rightStep = rightStep
 
   if (leftStep) leftStep.rightStep = incomingStrip
-  else this.head = incomingStrip
+  else this.structuralHead = incomingStrip
 
   if (rightStep) {
     rightStep.leftStep = incomingStrip
-  } else {
-    // `tail` contains the right-most projected Frame, not the last structural Strip.
-    if (incomingDiff > 0) {
-      this.tail = incomingStrip
-    } else {
-      while (
-        leftStep &&
-        (leftStep.fragmentDiff ?? leftStep.insertionDiff) <= 0
-      ) {
-        leftStep = leftStep.leftStep
-      }
-      this.tail = leftStep
-    }
   }
+
+  if (incomingDiff > 0) {
+    if (!this.head || !leftStep || rightStep === this.head)
+      this.head = incomingStrip
+    if (!this.tail || !rightStep || leftStep === this.tail)
+      this.tail = incomingStrip
+  }
+
+  while (this.head && (this.head.fragmentDiff ?? this.head.insertionDiff) <= 0)
+    this.head = this.head.rightStep
+
+  while (this.tail && (this.tail.fragmentDiff ?? this.tail.insertionDiff) <= 0)
+    this.tail = this.tail.leftStep
 
   // A newly linked Strip starts without traversal jumps. Jumps are rebuilt
   // opportunistically by traversal according to current structural spacing.

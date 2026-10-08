@@ -22,6 +22,7 @@ export function insertFirst<T>(
   strip.rightJumpFrameCount = 0
   strip.rightJumpStripCount = 0
 
+  this.structuralHead = strip
   this.head = strip
   this.gate = strip
   this.tail = strip
@@ -29,6 +30,7 @@ export function insertFirst<T>(
   this.structuralStripCount = 1
   this.projectionFrameCount += strip.fragmentDiff ?? strip.insertionDiff
   this.projectedPosition = 0
+  this.gatePosition = 0
 
   this.leftJumpToPatch = undefined
   this.rightJumpToPatch = undefined

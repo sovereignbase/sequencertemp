@@ -22,16 +22,16 @@ export function findProjectionPositionOfStrip<T>(
   let rightJumpedDistance = 0
 
   let knownIndex =
-    gateDiff === 0 && strip === this.gate ? this.projectedPosition : undefined
+    gateDiff === 0 && strip === this.gate ? this.gatePosition : undefined
 
   const optimalJumpSpacing = Math.round(Math.sqrt(this.structuralStripCount))
 
   // FIND NEAREST LEFT AND RIGHT JUMPS
   const jumpAnchor = !!(strip.leftJump || strip.rightJump)
 
-  let leftJumpFound = jumpAnchor || leftCursor === this.head
+  let leftJumpFound = jumpAnchor || !leftCursor.leftStep
 
-  let rightJumpFound = jumpAnchor || rightCursor === this.tail
+  let rightJumpFound = jumpAnchor || !rightCursor.rightStep
 
   while (!leftJumpFound || !rightJumpFound) {
     if (!leftJumpFound) {
@@ -43,7 +43,7 @@ export function findProjectionPositionOfStrip<T>(
       ++leftStripDistance
 
       if (leftCursor === this.gate) {
-        knownIndex = this.projectedPosition + leftFrameDistance
+        knownIndex = this.gatePosition + leftFrameDistance
       }
 
       if (leftStripDistance === optimalJumpSpacing) {
@@ -52,7 +52,7 @@ export function findProjectionPositionOfStrip<T>(
       }
 
       leftJumpFound =
-        leftCursor === this.head ||
+        !leftCursor.leftStep ||
         !!leftCursor.rightJump ||
         !!leftCursor.leftJump
     }
@@ -65,11 +65,11 @@ export function findProjectionPositionOfStrip<T>(
       ++rightStripDistance
 
       if (rightCursor === this.gate) {
-        this.projectedPosition = Math.max(
+        this.gatePosition = Math.max(
           0,
-          this.projectedPosition + gateDiff
+          this.gatePosition + gateDiff
         )
-        knownIndex = this.projectedPosition - rightFrameDistance
+        knownIndex = this.gatePosition - rightFrameDistance
       }
 
       if (rightStripDistance === optimalJumpSpacing) {
@@ -78,7 +78,7 @@ export function findProjectionPositionOfStrip<T>(
       }
 
       rightJumpFound =
-        rightCursor === this.tail ||
+        !rightCursor.rightStep ||
         !!rightCursor.leftJump ||
         !!rightCursor.rightJump
     }
@@ -159,39 +159,41 @@ export function findProjectionPositionOfStrip<T>(
   }
 
   while (true) {
-    // CHECK IF LEFT IS AT HEAD
-    if (leftCursor === this.head) {
+    // CHECK IF LEFT IS AT STRUCTURAL START
+    if (!leftCursor.leftStep) {
       if (
         strip !== this.gate &&
+        this.gate &&
         this.gate !== this.head &&
-        (leftFrameDistance < this.projectedPosition ||
-          (leftFrameDistance === this.projectedPosition &&
+        (leftFrameDistance < this.gatePosition ||
+          (leftFrameDistance === this.gatePosition &&
             (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) >= 0))
       )
-        this.projectedPosition = Math.max(
+        this.gatePosition = Math.max(
           0,
-          this.projectedPosition + gateDiff
+          this.gatePosition + gateDiff
         )
 
       return leftFrameDistance
     }
 
-    // CHECK IF RIGHT IS AT TAIL
-    if (rightCursor === this.tail) {
+    // CHECK IF RIGHT IS AT STRUCTURAL END
+    if (!rightCursor.rightStep) {
       const rightDiff = rightCursor.fragmentDiff ?? rightCursor.insertionDiff
       const index =
         this.projectionFrameCount - Math.max(0, rightDiff) - rightFrameDistance
 
       if (
         strip !== this.gate &&
+        this.gate &&
         this.gate !== this.head &&
-        (index < this.projectedPosition ||
-          (index === this.projectedPosition &&
+        (index < this.gatePosition ||
+          (index === this.gatePosition &&
             (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) >= 0))
       )
-        this.projectedPosition = Math.max(
+        this.gatePosition = Math.max(
           0,
-          this.projectedPosition + gateDiff
+          this.gatePosition + gateDiff
         )
 
       return index

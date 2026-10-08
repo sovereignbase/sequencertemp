@@ -70,8 +70,8 @@ export function create<T>(
       void this.containmentTable.set(incomingStrip)
 
       if (!jumpCursor) {
-        jumpStart = this.head
-        jumpCursor = this.head
+        jumpStart = this.structuralHead
+        jumpCursor = this.structuralHead
       }
 
       const finalizedThrough =
@@ -114,6 +114,8 @@ export function create<T>(
       }
     }
   }
+
+  this.gate = this.head
 
   const getSafeSessionID = () => {
     let sessionID

@@ -137,8 +137,8 @@ export function splitStrip<T>(
   // More precisely, the Strip that previously followed `anchoringStrip`
   // must now follow `rightFragment`.
   if (rightStep) rightStep.leftStep = rightFragment
-  // If there anchoring had no right step it was tail and now right fragment is new tail.
-  else this.tail = rightFragment
+  // Splitting the visible tail moves its final Frame into the right fragment.
+  if (anchoringStrip === this.tail) this.tail = rightFragment
 
   // Right fragment was added to structural order.
   //

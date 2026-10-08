@@ -25,8 +25,8 @@ import type { Projection } from '../class.js'
  * already invalidated or rewired that jump, in which case no patch is applied.
  *
  * @param this Projection whose traversal jump is being patched.
- * @param frameDiff Signed change in Projection Frames within the jump span.
- * @param stripDiff Signed change in Structural Order Strips within the jump span.
+ * @param frameDiff Change in Projection Frames within the jump span.
+ * @param stripDiff Change in Structural Order Strips within the jump span.
  */
 export function patchJumps<T>(
   this: Projection<T>,

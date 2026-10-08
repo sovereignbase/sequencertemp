@@ -1,35 +1,12 @@
 # Browser fanout
 
-The browser starts from:
+Runs the current `Projection` implementation in Chromium. Two replicas author
+concurrent insertions after the same retained `base` Frame. Two receivers apply
+the same Gossip in opposite orders and must expose the same visible Projection,
+containing `base` followed by both surviving insertions.
 
-```text
-Hello
-```
+Actor IDs do not determine the relative order of the insertions. Competing
+insertions are ordered using their Session coordinates.
 
-Two actors edit the same retained Sequence independently:
-
-```text
-Actor 2:
-Hello left
-
-Actor 3:
-Hello right
-```
-
-Two browser-side receivers ingest those concurrent edits in opposite network orders through the public TypeScript/WebAssembly API:
-
-```text
-Receiver 4:
-left -> right
-
-Receiver 5:
-right -> left
-```
-
-Actor 3 has the larger competing Clock, so both receivers must project the same deterministic result:
-
-```text
-Hello right left
-```
-
-This verifies the same delivery-order-independent ordering in the actual browser boundary used by the public API.
+Run with `npm run test:convergence`. The test bundles `src/class.ts` in memory
+and uses Playwright to launch the browser from Vitest.

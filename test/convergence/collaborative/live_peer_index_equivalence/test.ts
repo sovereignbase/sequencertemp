@@ -40,7 +40,7 @@ const gossip = <T>(
   expect_same_projection(author, receiver)
 }
 
-describe('live peer projection-position equivalence through signed jumps', () => {
+describe('live peer projection-position equivalence through jumps', () => {
   /**
    * Verifies projection-position lookup equivalence after a long sequence of
    * inserts, replacements, and removals that repeatedly create positive and
@@ -56,7 +56,7 @@ describe('live peer projection-position equivalence through signed jumps', () =>
    *
    *   same authored state + same Projection position -> same Footage
    *
-   * regardless of which signed jumps or local gate happen to be used to reach
+   * regardless of which jumps or local gate happen to be used to reach
    * that position.
    *
    * The workload repeatedly:
