@@ -1,4 +1,9 @@
-import { expect, test } from '@playwright/test'
+import { afterAll, beforeAll, expect, test } from 'vitest'
+import { browserRuntime, loadProjection } from '../../../.helpers/browser.ts'
+
+let runtime: Awaited<ReturnType<typeof browserRuntime>>
+beforeAll(async () => { runtime = await browserRuntime() })
+afterAll(async () => { await runtime?.browser.close() })
 
 /**
  * Verifies causal staging across three real browser peers.
@@ -19,69 +24,51 @@ import { expect, test } from '@playwright/test'
  * This exercises causal staging through the public browser API rather than the
  * direct Projection implementation.
  */
-test('peer gossip resolves B child at C after delayed A parent', async ({
-  browser,
-}) => {
-  const context = await browser.newContext()
+test('peer gossip resolves B child at C after delayed A parent', async () => {
+  const context = await runtime.browser.newContext()
   const [a, b, c] = await Promise.all([0, 1, 2].map(() => context.newPage()))
 
   try {
     // Create three independent browser peers.
     await Promise.all(
       [a, b, c].map(async (page, peer) => {
-        await page.goto('/test/browser/index.html')
-
-        await page.waitForFunction(
-          () => typeof (window as any).sequencer?.create === 'function'
-        )
+        await page.route('http://sequencer.test/**', route => route.fulfill({ body: '<!doctype html>' }))
+        await page.goto('http://sequencer.test/')
+        await loadProjection(page, runtime.source)
 
         await page.evaluate((actor) => {
-          const api = (window as any).sequencer
-          ;(window as any).causalPeer = { api, state: api.create(actor) }
+          ;(window as any).causalPeer = { state: new window.Projection<string>(actor) }
         }, 300 + peer)
       })
     )
 
     // A authors the parent and delivers it only to B.
     const parent = await a.evaluate(() => {
-      const { api, state } = (window as any).causalPeer
-      const delta = api.insert(state, 0, ['A:parent'])
-
-      if (delta === false) throw new Error('A rejected its local parent.')
-
-      return [Array.from(delta[0]), Array.from(delta[1]), delta[2]]
+      return (window as any).causalPeer.state.insert(['A:parent'], 0)
     })
 
     expect(
       await b.evaluate((delta) => {
-        const { api, state } = (window as any).causalPeer
-        return api.ingest(state, delta) !== false
+        return (window as any).causalPeer.state.apply(delta) !== undefined
       }, parent)
     ).toBe(true)
 
     // B authors a child after A's parent. C has never seen the parent, so this
     // operation must be accepted into pending rather than partially projected.
     const child = await b.evaluate(() => {
-      const { api, state } = (window as any).causalPeer
-      const delta = api.insert(state, 1, ['B:child'])
-
-      if (delta === false) throw new Error('B rejected its local child.')
-
-      return [Array.from(delta[0]), Array.from(delta[1]), delta[2]]
+      return (window as any).causalPeer.state.insert(['B:child'], 1)
     })
 
     expect(
       await c.evaluate((delta) => {
-        const { api, state } = (window as any).causalPeer
-        return api.ingest(state, delta) !== false
+        return (window as any).causalPeer.state.apply(delta) !== undefined
       }, child)
     ).toBe(true)
 
     // The unresolved child remains invisible until its missing parent arrives.
     expect(
       await c.evaluate(() => {
-        const { api, state } = (window as any).causalPeer
-        return api.values(state)
+        return (window as any).causalPeer.state.values()
       })
     ).toEqual([])
 
@@ -89,24 +76,21 @@ test('peer gossip resolves B child at C after delayed A parent', async ({
     // child itself is not redelivered.
     expect(
       await c.evaluate((delta) => {
-        const { api, state } = (window as any).causalPeer
-        return api.ingest(state, delta) !== false
+        return (window as any).causalPeer.state.apply(delta) !== undefined
       }, parent)
     ).toBe(true)
 
     // Complete A's view by delivering B's child back to A.
     expect(
       await a.evaluate((delta) => {
-        const { api, state } = (window as any).causalPeer
-        return api.ingest(state, delta) !== false
+        return (window as any).causalPeer.state.apply(delta) !== undefined
       }, child)
     ).toBe(true)
 
     const values = await Promise.all(
       [a, b, c].map((page) =>
         page.evaluate(() => {
-          const { api, state } = (window as any).causalPeer
-          return api.values(state)
+          return (window as any).causalPeer.state.values()
         })
       )
     )
@@ -147,14 +131,12 @@ test('peer gossip resolves B child at C after delayed A parent', async ({
  * - every remote update must have been accepted;
  * - every local mutation must have been accepted.
  *
- * This exercises live peer convergence through the browser TypeScript/WASM API,
+ * This exercises live peer convergence through the browser Projection API,
  * real browser event loops, timers, BroadcastChannel delivery, and independent
  * network reordering.
  */
-test('peer browsers converge with independent reordering and editor timers', async ({
-  browser,
-}) => {
-  const context = await browser.newContext()
+test('peer browsers converge with independent reordering and editor timers', async () => {
+  const context = await runtime.browser.newContext()
   const pages = await Promise.all([0, 1, 2].map(() => context.newPage()))
   const channelName = `sequencer-p2p-${Date.now()}`
 
@@ -162,21 +144,17 @@ test('peer browsers converge with independent reordering and editor timers', asy
     // Initialize three independent live peers sharing one BroadcastChannel.
     await Promise.all(
       pages.map(async (page, editor) => {
-        await page.goto('/test/browser/index.html')
-
-        await page.waitForFunction(
-          () => typeof (window as any).sequencer?.create === 'function'
-        )
+        await page.route('http://sequencer.test/**', route => route.fulfill({ body: '<!doctype html>' }))
+        await page.goto('http://sequencer.test/')
+        await loadProjection(page, runtime.source)
 
         await page.evaluate(
           ({ actor, channelName, editor }) => {
-            const api = (window as any).sequencer
             const channel = new BroadcastChannel(channelName)
 
             const runtime = {
               actor,
-              api,
-              state: api.create(actor),
+              state: new window.Projection<string>(actor),
               channel,
               received: 0,
               rejected: 0,
@@ -194,7 +172,7 @@ test('peer browsers converge with independent reordering and editor timers', asy
               const delay = (editor * 11 + source * 7 + ordinal * 3) % 19
 
               setTimeout(() => {
-                if (api.ingest(runtime.state, delta) === false)
+                if (runtime.state.apply(delta) === undefined)
                   ++runtime.rejected
 
                 ++runtime.received
@@ -220,9 +198,9 @@ test('peer browsers converge with independent reordering and editor timers', asy
               setTimeout(() => {
                 const runtime = (window as any).peerRuntime
 
-                const delta = runtime.api.insert(runtime.state, 0, [
+                const delta = runtime.state.insert([
                   `root:${editor}`,
-                ])
+                ], 0)
 
                 if (delta === false) ++runtime.localRejected
                 else
@@ -264,15 +242,15 @@ test('peer browsers converge with independent reordering and editor timers', asy
               for (let edit = editor; edit < 9; edit += 3)
                 setTimeout(
                   () => {
-                    const { api, state, channel } = runtime
-                    const size = api.length(state)
+                    const { state, channel } = runtime
+                    const size = state.projectionFrameCount
 
                     const delta =
                       edit % 3 === 0
-                        ? api.insert(state, size, [`insert:${edit}`])
+                        ? state.insert([`insert:${edit}`], size)
                         : edit % 3 === 1
-                          ? api.replace(state, edit % size, [`replace:${edit}`])
-                          : api.remove(state, edit % size, (edit % size) + 1)
+                          ? state.replace([`replace:${edit}`], edit % size, edit % size)
+                          : state.remove(edit % size, edit % size)
 
                     if (delta === false) ++runtime.localRejected
                     else
@@ -308,7 +286,7 @@ test('peer browsers converge with independent reordering and editor timers', asy
           runtime.channel.close()
 
           return {
-            values: runtime.api.values(runtime.state),
+            values: runtime.state.values(),
             received: runtime.received,
             rejected: runtime.rejected,
             localRejected: runtime.localRejected,

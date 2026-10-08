@@ -6,15 +6,15 @@ import { deliver, expect_converged } from '../../../.helpers/replica.ts'
 describe('overlapping remove gate', () => {
   /**
    * Verifies that remote overlapping reducing operations preserve the
-   * receiver's existing gate index. In this scenario the receiver begins with
-   * its gate on the head zero-reservation at Projection position zero.
+   * receiver's projected position. The receiver begins at Projection position
+   * zero; the Strip containing that position may change during remote apply.
    *
    * Three replicas begin from the same retained two-Frame Sequence. They then
    * independently author overlapping removals, a replacement, and additional
    * insertions around the same original region.
    *
    * The resulting Structural Order contains positive insertions together with
-   * multiple signed remove debts covering overlapping historical Frames.
+   * multiple removals covering overlapping historical Frames.
    *
    * The complete operation set is reconstructed twice:
    *
@@ -23,11 +23,11 @@ describe('overlapping remove gate', () => {
    *   sequence beginning with later removals.
    *
    * Both receivers must converge to the same Projection. In addition, remote
-   * application must not move the unordered receiver's locally cached gate:
+   * application must not move the unordered receiver's projected position:
    * because its pre-apply position is zero, its post-apply position must still
-   * be zero despite signed remove debt around the head.
+   * be zero despite overlapping removals around the head.
    */
-  it('keeps a head zero-reservation gate stable across signed remove debt', () => {
+  it('keeps the projected position stable across overlapping removals', () => {
     // Establish the retained two-Frame origin shared by all replicas.
     const seed = new Projection<string>(1)
     seed.insert(['base-0', 'base-1'], 0)
@@ -74,11 +74,10 @@ describe('overlapping remove gate', () => {
       mutations[1],
     ])
 
+    // Check remote position stability before lookups move the local gate.
+    expect(unordered.projectedPosition).toBe(0)
+
     // Delivery order must not change the visible Projection.
     expect_converged(ordered, unordered)
-
-    // Remote application must preserve the receiver's existing gate index.
-    // This receiver began on the head zero-reservation, so that index is zero.
-    expect(unordered.projectedPosition).toBe(0)
   })
 })

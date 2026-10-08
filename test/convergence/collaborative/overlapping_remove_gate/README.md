@@ -42,18 +42,13 @@ old middle draft
 tail content
 ```
 
-Before the remote histories are applied, the receiver's local gate is cached on
-the head zero-reservation at Projection position zero. Applying remote
-operations must preserve that existing gate index; remote structural changes
-must not silently relocate the receiver's local traversal cursor.
+Before the remote histories are applied, the receiver's `projectedPosition` is
+zero. Remote operations must preserve that position while `gate` follows the
+Strip containing the current visible Frame at that position.
 
-Nothing can exist to the left of `head`, so that reservation still represents Projection position zero:
+`head` contains the first visible Frame. Non-visible structural Strips may
+precede it.
 
-```text
-head | visible content
-     ↑
-projectedPosition = 0
-```
-
-Every delivery order must converge to the same Projection while preserving the
-receiver's pre-apply cached gate position, which is zero in this scenario.
+The position is checked before convergence lookups, because local `value()`
+calls may move the gate and update `projectedPosition`. Every delivery order
+must then resolve to the same visible Projection.
