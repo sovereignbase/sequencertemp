@@ -86,24 +86,15 @@ export function apply<T>(
           )
         }
 
-        void anchorStrip.call(this, incomingStrip, anchoringStrip, anchorDiff)
-
-        projectionDiff =
-          incomingStrip.fragmentDiff ?? incomingStrip.insertionDiff
-
-        if (
-          projectionDiff < 0 &&
-          anchoringStrip === this.gate &&
-          (this.gate!.fragmentDiff ?? this.gate!.insertionDiff) === 0
-        ) {
-          this.gate = incomingStrip
-        }
+        projectionDiff = anchorStrip.call(this, incomingStrip, anchoringStrip, anchorDiff)
 
         startAt = findProjectionPositionOfStrip.call(
           this,
           incomingStrip,
           projectionDiff
         )
+        this.gate = incomingStrip
+        this.gatePosition = startAt
       }
 
       void this.containmentTable.set(incomingStrip)

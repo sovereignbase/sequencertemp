@@ -55,9 +55,8 @@ export function subtreeEnd<T>(
       !containsAnchor(
         ancestorStrip,
         nextStrip,
-        ancestorFragmentFrame,
-        ancestorFragmentFrame +
-          Math.abs(ancestorStrip.fragmentDiff ?? ancestorStrip.insertionDiff)
+        0,
+        Math.abs(ancestorStrip.insertionDiff)
       )
     ) {
       // Try an earlier active ancestor.

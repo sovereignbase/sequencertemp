@@ -27,10 +27,27 @@ export function anchorStrip<T>(
   incomingStrip: NonNullable<Strip<T>>,
   anchoringStrip: Strip<T>,
   anchorDiff: number
-): void {
+): number {
+  const removalEnd = incomingStrip.anchorDiff - incomingStrip.insertionDiff
+  let projectionDiff = 0
+
+  while (true) {
   let leftStep: Strip<T> = anchoringStrip
   let rightStep: Strip<T>
-  const incomingDiff = incomingStrip.fragmentDiff ?? incomingStrip.insertionDiff
+  let incomingDiff = incomingStrip.fragmentDiff ?? incomingStrip.insertionDiff
+
+  if (incomingStrip.insertionDiff < 0 && anchoringStrip!.insertionDiff > 0) {
+    incomingDiff = -Math.min(
+      -incomingDiff,
+      Math.max(0, (anchoringStrip!.fragmentStart ?? 0) +
+        (anchoringStrip!.fragmentDiff ?? anchoringStrip!.insertionDiff) - anchorDiff)
+    )
+    incomingStrip.fragmentDiff = incomingDiff
+  }
+  if (incomingStrip.insertionDiff < 0 && incomingDiff === 0)
+    anchorDiff = Math.max(anchoringStrip!.fragmentStart ?? 0,
+      Math.min(anchorDiff, (anchoringStrip!.fragmentStart ?? 0) +
+        Math.abs(anchoringStrip!.fragmentDiff ?? anchoringStrip!.insertionDiff)))
 
   if (anchoringStrip) {
     // Structural length of the anchoring Strip or its current fragment.
@@ -173,4 +190,33 @@ export function anchorStrip<T>(
 
   // Projection length changes by the signed effect of this Strip or fragment.
   this.projectionFrameCount += incomingDiff
+  projectionDiff += incomingDiff
+
+  const nextFragment = anchoringStrip && anchoringStrip.insertionDiff > 0
+    ? anchoringStrip.rightFragment : undefined
+  if (
+    incomingStrip.insertionDiff >= 0 ||
+    !nextFragment ||
+    (nextFragment.fragmentStart ?? 0) >= removalEnd
+  ) return projectionDiff
+
+  const fragmentStart = nextFragment.fragmentStart ?? 0
+  const nextMask: NonNullable<Strip<T>> = {
+    anchorSession: incomingStrip.anchorSession,
+    anchorStart: incomingStrip.anchorStart,
+    anchorDiff: incomingStrip.anchorDiff,
+    insertionSession: incomingStrip.insertionSession,
+    insertionStart: incomingStrip.insertionStart,
+    insertionDiff: incomingStrip.insertionDiff,
+    fragmentStart: fragmentStart - incomingStrip.anchorDiff,
+    fragmentDiff: -Math.min(
+      Math.max(0, nextFragment.fragmentDiff ?? nextFragment.insertionDiff),
+      removalEnd - fragmentStart
+    ),
+  }
+  incomingStrip.rightFragment = nextMask
+  incomingStrip = nextMask
+  anchoringStrip = nextFragment
+  anchorDiff = fragmentStart
+  }
 }

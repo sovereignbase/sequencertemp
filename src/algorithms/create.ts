@@ -77,6 +77,7 @@ export function create<T>(
     let jumpCursor = this.structuralHead
     let jumpFrameCount = 0
     let jumpStripCount = 0
+    let tailJumpStart: Strip<T>
 
     this.head = undefined
     this.tail = undefined
@@ -86,8 +87,14 @@ export function create<T>(
       const diff = jumpCursor.fragmentDiff ?? jumpCursor.insertionDiff
 
       if (diff > 0) {
-        this.head ??= jumpCursor
+        if (!this.head) {
+          this.head = jumpCursor
+          jumpStart = jumpCursor
+          jumpFrameCount = 0
+          jumpStripCount = 0
+        }
         this.tail = jumpCursor
+        tailJumpStart = jumpStart
       }
 
       jumpFrameCount += Math.max(0, diff)
@@ -108,6 +115,10 @@ export function create<T>(
         jumpFrameCount = 0
         jumpStripCount = 0
       }
+    }
+    if (tailJumpStart && tailJumpStart !== this.tail && tailJumpStart.rightJump) {
+      tailJumpStart.rightJump.leftJump = undefined
+      tailJumpStart.rightJump = undefined
     }
   }
 

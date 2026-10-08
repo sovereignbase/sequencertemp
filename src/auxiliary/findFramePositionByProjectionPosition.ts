@@ -17,8 +17,10 @@ import type { Strip } from '../types/type.js'
  */
 export function findFramePositionByProjectionPosition<T>(
   this: Projection<T>,
-  index: number
+  index: number,
+  forInsertion = false
 ): number {
+  let after = false
   // Use gate as the default traverse start node.
   let cursorStrip: NonNullable<Strip<T>> = (this.gate ?? this.head)!
   let cursorIndex: number = this.gatePosition
@@ -69,6 +71,11 @@ export function findFramePositionByProjectionPosition<T>(
 
     // If cursor contains requested projection position.
     if (cursorIndex <= index && index < cursorIndex + stripLength) {
+      if (forInsertion && !after && index > 0 && index === cursorIndex && cursorStrip.fragmentStart !== undefined) {
+        --index
+        after = true
+        continue
+      }
       // If cursor strip was left jump to patch (see below).
       if (!leftJumpToPatch && !rightJumpToPatch && cursorStrip.rightJump) {
         // Set patch points if missing and cursor has one to right.
@@ -88,7 +95,7 @@ export function findFramePositionByProjectionPosition<T>(
       const fragmentStart = cursorStrip.fragmentStart
       // Return the Frame's position in the original insertion's Footage
       // Works, because projection positions do not land on 0 frame fragmentstart 0 positions.
-      return (fragmentStart ?? 0) + index - cursorIndex
+      return (fragmentStart ?? 0) + index - cursorIndex + (after ? 1 : 0)
     }
 
     // Absolute distance from cursor to requested projection position.
@@ -108,6 +115,7 @@ export function findFramePositionByProjectionPosition<T>(
 
         if (
           rightJumpStripCount < optimalJumpSpacing &&
+          rightJump !== this.head &&
           rightJump !== this.tail
         ) {
           const nextRightJump = rightJump.rightJump
@@ -182,7 +190,7 @@ export function findFramePositionByProjectionPosition<T>(
         let leftJumpFrameCount = cursorStrip.leftJumpFrameCount!
         let leftJumpStripCount = cursorStrip.leftJumpStripCount!
 
-        if (leftJumpStripCount < optimalJumpSpacing && leftJump !== this.head) {
+        if (leftJumpStripCount < optimalJumpSpacing && leftJump !== this.head && leftJump !== this.tail) {
           const nextLeftJump = leftJump.leftJump
 
           if (
