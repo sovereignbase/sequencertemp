@@ -37,14 +37,26 @@ export function findContainingFragment<T>(
       consumingMask &&
       consumingMask.anchorSession === origin.insertionSession &&
       consumingMask.anchorStart === origin.insertionStart &&
-      (consumingMask.insertionDiff > 0 ||
-        incomingStrip.anchorDiff > consumingMask.anchorDiff +
-          (consumingMask.fragmentStart ?? 0) +
-          Math.abs(consumingMask.fragmentDiff ?? consumingMask.insertionDiff))
+      ((consumingMask.fragmentDiff ?? consumingMask.insertionDiff) === 0 ||
+        consumingMask.insertionDiff > 0 ||
+        (incomingStrip.insertionDiff < 0
+          ? incomingStrip.anchorDiff >= consumingMask.anchorDiff +
+            (consumingMask.fragmentStart ?? 0) +
+            Math.abs(consumingMask.fragmentDiff ?? consumingMask.insertionDiff)
+          : incomingStrip.anchorDiff > consumingMask.anchorDiff +
+            (consumingMask.fragmentStart ?? 0) +
+            Math.abs(consumingMask.fragmentDiff ?? consumingMask.insertionDiff)))
     )
       consumingMask = consumingMask.insertionDiff > 0
         ? consumingMask.rightCompetitor
-        : consumingMask.rightFragment ?? consumingMask.rightCompetitor ?? consumingMask.rightStep
+        : consumingMask.rightFragment &&
+          (incomingStrip.insertionDiff < 0
+            ? incomingStrip.anchorDiff >= consumingMask.anchorDiff +
+              (consumingMask.rightFragment.fragmentStart ?? 0)
+            : incomingStrip.anchorDiff > consumingMask.anchorDiff +
+              (consumingMask.rightFragment.fragmentStart ?? 0))
+          ? consumingMask.rightFragment
+          : consumingMask.rightCompetitor ?? consumingMask.rightStep
 
     if (
       consumingMask &&
