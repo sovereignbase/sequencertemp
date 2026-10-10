@@ -1,5 +1,5 @@
 import { serialize } from 'node:v8'
-import type { Sequence } from '../dist/class.js'
+import type { Sequence } from '../../dist/class.js'
 import type {
   MemoryResult,
   ProcessMemoryResult,

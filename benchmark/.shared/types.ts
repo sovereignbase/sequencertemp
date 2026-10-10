@@ -1,16 +1,20 @@
 export const operation_names = [
-  'tailInsert',
-  'headInsert',
-  'headRemove',
-  'tailRemove',
-  'randomFind',
-  'randomRemove',
-  'randomReplace',
-  'randomInsert',
-  'randomIngest',
+  'apply.random',
+  'insert.head',
+  'insert.random',
+  'insert.tail',
+  'remove.head',
+  'remove.random',
+  'remove.tail',
+  'replace.head',
+  'replace.random',
+  'replace.tail',
+  'value.head',
+  'value.random',
+  'value.tail',
 ] as const
 
-export const management_names = ['values', 'sequence', 'create'] as const
+export const management_names = ['create', 'sequence', 'values'] as const
 
 export type Direction = 'up' | 'down'
 export type ReplicaName = 'A'
@@ -140,7 +144,7 @@ export type AggregateMetric = {
 }
 
 export type BenchmarkReport = {
-  schemaVersion: 2
+  schemaVersion: 3
   generatedAt: string
   environment: {
     node: string

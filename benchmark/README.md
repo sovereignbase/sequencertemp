@@ -11,6 +11,10 @@ npm run bench:throughput
 ```
 
 Both default to three runs and produce JSON and Markdown reports under
-`benchmark/results`. `npm run bench` retains the lifecycle default.
+`benchmark/.results`. `npm run bench` retains the lifecycle default.
 Both report calls per second and average latency, with separate memory usage
 and disk usage tables. Run `npm run bench -- --help` for shared options.
+
+Default settings are collected at the top of `index.ts`. Command-line options
+override them. Shared measurement helpers and types live in `.shared`;
+each benchmark keeps its reporting code alongside its workload.

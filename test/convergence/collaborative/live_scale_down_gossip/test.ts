@@ -6,7 +6,7 @@ import {
   Random,
   seedFromString,
   StripIndex,
-} from '../../../../benchmark/support.ts'
+} from '../../../../benchmark/.shared/support.ts'
 
 type Runtime = {
   state: Projection<number>

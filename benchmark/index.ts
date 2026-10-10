@@ -1,14 +1,25 @@
-import { arch, cpus, platform } from 'node:os'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { aggregateRuns, runLifecycles, warmUp } from './lifecycle/index.ts'
-import { printSummary, writeReports } from './report/index.ts'
+import { runBenchmark } from './lifecycle/index.ts'
+import { printSummary, writeReports } from './lifecycle/report.ts'
 import { runThroughput } from './throughput/index.ts'
 import { writeThroughputReport } from './throughput/report.ts'
-import type { BenchmarkConfig, BenchmarkReport } from './types.ts'
+import type { BenchmarkConfig } from './.shared/types.ts'
 
-// POWERS OF 10 (^0 ^1 ^2 ^3 ^4 ^5 ^6)
-const defaultCheckpoints = [1, 10, 100, 1_000, 10_000, 100_000, 1_000_000]
+const defaults = {
+  suite: 'lifecycle' as BenchmarkConfig['suite'],
+  runs: 3,
+  maximumStripCount: { lifecycle: 10_000, throughput: 10_000 },
+  initialStripCount: 100,
+  burstMilliseconds: 100,
+  maximumCalls: 10_000,
+  warmupCycles: 64,
+  minimumStripFrameLength: 1,
+  maximumStripFrameLength: 100,
+  baseSeed: 'sequencer-lifecycle-v1',
+  outputDirectory: 'benchmark/.results',
+  checkpoints: [1, 10, 100, 1_000, 10_000, 100_000, 1_000_000],
+}
 
 const usage = [
   'Sequencer TypeScript API benchmarks',
@@ -17,17 +28,17 @@ const usage = [
   '  npm run bench -- [options]',
   '',
   'Options:',
-  '  --suite <name>        lifecycle (default) or throughput',
-  '  --start-strips <n>    Throughput starting size (default: 100)',
-  '  --burst-ms <n>        Throughput burst duration (default: 100)',
-  '  --max-calls <n>       Throughput call limit per burst (default: 10_000)',
-  '  --runs <n>            Complete runs (default: 3)',
-  '  --max-strips <n>      Maximum Strip count (lifecycle: 1_000; throughput: 10_000)',
-  '  --seed <text>          Reproducible base seed (default: sequencer-lifecycle-v1)',
-  '  --warmup-cycles <n>    Unreported lifecycle cycles / throughput calls (default: 64)',
-  '  --strip-length <n>     Use one fixed Strip length instead of 1...100',
-  '  --min-strip-length <n> Minimum generated Strip length (default: 1)',
-  '  --max-strip-length <n> Maximum generated Strip length (default: 100)',
+  `  --suite <name>        lifecycle or throughput (default: ${defaults.suite})`,
+  `  --start-strips <n>    Throughput starting size (default: ${defaults.initialStripCount})`,
+  `  --burst-ms <n>        Throughput burst duration (default: ${defaults.burstMilliseconds})`,
+  `  --max-calls <n>       Throughput call limit per burst (default: ${defaults.maximumCalls})`,
+  `  --runs <n>            Complete runs (default: ${defaults.runs})`,
+  `  --max-strips <n>      Maximum Strip count (lifecycle: ${defaults.maximumStripCount.lifecycle}; throughput: ${defaults.maximumStripCount.throughput})`,
+  `  --seed <text>         Reproducible base seed (default: ${defaults.baseSeed})`,
+  `  --warmup-cycles <n>   Unreported lifecycle cycles / throughput calls (default: ${defaults.warmupCycles})`,
+  '  --strip-length <n>    Use one fixed Strip length',
+  `  --min-strip-length <n> Minimum generated Strip length (default: ${defaults.minimumStripFrameLength})`,
+  `  --max-strip-length <n> Maximum generated Strip length (default: ${defaults.maximumStripFrameLength})`,
   '  --output <path>        JSON output path; Markdown uses the same basename',
   '  --no-output            Run without writing report files',
   '  --help                 Show this help',
@@ -42,16 +53,18 @@ const readInteger = (name: string, value: string | undefined): number => {
 }
 
 export function parseConfig(arguments_: Array<string>): BenchmarkConfig {
-  let suite: BenchmarkConfig['suite'] = 'lifecycle'
-  let initialStripCount = 100
-  let burstMilliseconds = 100
-  let maximumCalls = 10_000
-  let runs = 3
+  let {
+    suite,
+    initialStripCount,
+    burstMilliseconds,
+    maximumCalls,
+    runs,
+    warmupCycles,
+    minimumStripFrameLength,
+    maximumStripFrameLength,
+    baseSeed,
+  } = defaults
   let maximumStripCount: number | undefined
-  let warmupCycles = 64
-  let minimumStripFrameLength = 1
-  let maximumStripFrameLength = 100
-  let baseSeed = 'sequencer-lifecycle-v1'
   let outputPath: string | null | undefined
 
   for (let index = 0; index < arguments_.length; index++) {
@@ -96,9 +109,11 @@ export function parseConfig(arguments_: Array<string>): BenchmarkConfig {
     else throw new TypeError('Unknown benchmark option: ' + argument)
   }
 
-  maximumStripCount ??= suite === 'throughput' ? 10_000 : 1_000
+  maximumStripCount ??= defaults.maximumStripCount[suite]
   outputPath =
-    outputPath === undefined ? `benchmark/results/${suite}.json` : outputPath
+    outputPath === undefined
+      ? `${defaults.outputDirectory}/${suite}.json`
+      : outputPath
   if (initialStripCount <= 0 || burstMilliseconds <= 0 || maximumCalls <= 0)
     throw new RangeError(
       '--start-strips, --burst-ms and --max-calls must be greater than zero.'
@@ -122,7 +137,7 @@ export function parseConfig(arguments_: Array<string>): BenchmarkConfig {
   const checkpoints = Array.from(
     new Set([
       suite === 'throughput' ? initialStripCount : 0,
-      ...defaultCheckpoints.filter(
+      ...defaults.checkpoints.filter(
         (checkpoint) =>
           checkpoint <= maximumStripCount &&
           (suite !== 'throughput' || checkpoint >= initialStripCount)
@@ -144,46 +159,6 @@ export function parseConfig(arguments_: Array<string>): BenchmarkConfig {
     warmupCycles,
     baseSeed,
     outputPath,
-  }
-}
-
-export async function runBenchmark(
-  config: BenchmarkConfig
-): Promise<BenchmarkReport> {
-  console.log(
-    'Warming TypeScript API (' +
-      config.warmupCycles.toLocaleString('en-US') +
-      ' cycles)...'
-  )
-  await warmUp(config)
-  const runs = await runLifecycles(config)
-  return {
-    schemaVersion: 2,
-    generatedAt: new Date().toISOString(),
-    environment: {
-      node: process.versions.node,
-      v8: process.versions.v8,
-      platform: platform(),
-      architecture: arch(),
-      cpu: cpus()[0]?.model ?? 'Unknown CPU',
-    },
-    config,
-    methodology: {
-      implementation: 'TypeScript Projection class public API',
-      timer: 'process.hrtime.bigint',
-      stripCount:
-        'Scale is the number of visible logical Strips maintained by the benchmark model. Every mutation targets a complete Strip boundary; retained Mask structures are reported separately.',
-      ingest:
-        'The workload has two peers editing the same document. Every local Gossip is applied by the receiver and every acknowledgement returned by apply is gossiped back to the sender. randomIngest times only the measured peer applying the remote replacement Gossip.',
-      average:
-        'Operation averages are calculated directly from count and total measured nanoseconds; checkpoint averages are never averaged together.',
-      memory:
-        'Per-Replica retained bytes after restart are estimated as four bytes per Sequence metadata word plus eight bytes per JavaScript Footage array slot. Process RSS is shared and reported at checkpoint scope.',
-      storage:
-        'Persistent representation size is the byte length of node:v8.serialize over the automatically collected public Sequence.',
-    },
-    runs,
-    aggregates: aggregateRuns(runs),
   }
 }
 

@@ -1,5 +1,5 @@
-import { writeReportFiles } from '../report/index.ts'
-import { caseColumns, type ThroughputReport } from './index.ts'
+import { caseColumns, writeReportFiles } from '../.shared/report.ts'
+import type { ThroughputReport } from './index.ts'
 
 const row = (cells: Array<string | number>) => '| ' + cells.join(' | ') + ' |'
 const decimal = (value: number | null) =>

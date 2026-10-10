@@ -14,7 +14,7 @@ npm run bench:throughput -- --runs 1 --max-strips 100 --burst-ms 10 --max-calls 
 `--start-strips` controls the first size, `--max-strips` the last. Checkpoints
 include powers of ten within that range and both exact endpoints. `--runs`,
 `--seed`, Strip length options, `--warmup-cycles`, `--output` and `--no-output`
-are shared with lifecycle. Reports default to `benchmark/results/throughput.{json,md}`.
+are shared with lifecycle. Reports default to `benchmark/.results/throughput.{json,md}`.
 
 Each burst ends after approximately `--burst-ms` (default 100 ms), at
 `--max-calls` (default 10,000), or when a removal empties the document.

@@ -1,12 +1,13 @@
+import { caseColumns } from '../.shared/report.ts'
 import { arch, cpus, platform } from 'node:os'
 import { Projection, type Gossip, type Sequence } from '../../dist/class.js'
-import { deriveSeed, Random, seedFromString } from '../support.ts'
-import { measureProcessMemory, measureSpace } from '../space.ts'
+import { deriveSeed, Random, seedFromString } from '../.shared/support.ts'
+import { measureProcessMemory, measureSpace } from '../.shared/space.ts'
 import type {
   BenchmarkConfig,
   BenchmarkReport,
   MetricResult,
-} from '../types.ts'
+} from '../.shared/types.ts'
 
 export const throughputCases = [
   'apply.duplicate',
@@ -38,10 +39,6 @@ export const throughputCases = [
 ] as const
 export type ThroughputCase = (typeof throughputCases)[number]
 
-export function caseColumns(operation: ThroughputCase) {
-  const [method, variant = '—'] = operation.split('.')
-  return { method, case: variant }
-}
 type Observation = ReturnType<typeof measureSpace> & {
   stripCount: number
   frameCount: number

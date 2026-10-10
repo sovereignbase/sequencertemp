@@ -17,15 +17,19 @@ Every scale-up step grows the visible Strip count by exactly one and every
 scale-down step shrinks it by exactly one. The timed operations are:
 
 ```text
-tailInsert
-headInsert
-headRemove
-tailRemove
-randomFind
-randomRemove
-randomReplace
-randomInsert
-randomIngest
+apply.random
+insert.head
+insert.random
+insert.tail
+remove.head
+remove.random
+remove.tail
+replace.head
+replace.random
+replace.tail
+value.head
+value.random
+value.tail
 ```
 
 The benchmark calls `Projection.insert`, `Projection.remove`, and
@@ -33,10 +37,16 @@ The benchmark calls `Projection.insert`, `Projection.remove`, and
 peer with `apply`. If `apply` returns acknowledgements, those acknowledgements
 are immediately gossiped back to the sender with another `apply` call.
 
-For `randomIngest`, the peer performs an equal-length replacement outside the
+Results use `method.case` names and alphabetical method/case order, matching
+throughput. Console and Markdown tables separate `method` and `case` columns.
+
+Each step reads the first, a random, and the last visible Frame, and replaces
+the first, a random, and the last Strip with an equal-length Strip.
+
+For `apply.random`, the peer performs an equal-length replacement outside the
 timed region. The measured Projection then applies the remote Gossip inside the
 timed region, after which any acknowledgements are sent back outside it. The
-final scale-down step has no `randomIngest` sample because no visible Strip
+final scale-down step has no `apply.random` sample because no visible Strip
 remains to replace.
 
 ## Checkpoints
@@ -44,9 +54,9 @@ remains to replace.
 At each checkpoint the benchmark validates the public Frame count and measures:
 
 ```text
-values
-sequence
 create(sequence)
+sequence
+values
 ```
 
 Sequence construction is measured with a temporary Projection; the two active
@@ -99,6 +109,6 @@ Memory usage and disk usage are reported in separate tables. Memory estimates
 describe exported state; process RSS and heap include the entire benchmark.
 Disk usage measures serialized Sequence bytes, excluding filesystem metadata.
 
-The default run count is three and the default maximum is 1,000 visible
+The default run count is three and the default maximum is 10,000 visible
 Strips. JSON and Markdown reports are written to
-`benchmark/results/lifecycle.{json,md}` unless `--no-output` is supplied.
+`benchmark/.results/lifecycle.{json,md}` unless `--no-output` is supplied.

@@ -1,5 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises'
-import { dirname, extname, resolve } from 'node:path'
+import { caseColumns, writeReportFiles } from '../.shared/report.ts'
 import {
   management_names,
   operation_names,
@@ -7,7 +6,7 @@ import {
   type ManagementResult,
   type MetricScope,
   type ReplicaName,
-} from '../types.ts'
+} from '../.shared/types.ts'
 
 const replicas: Array<ReplicaName> = ['A']
 const scopes: Array<MetricScope> = ['scaleUp', 'scaleDown', 'fullLifecycle']
@@ -59,19 +58,19 @@ const makeMarkdown = (report: BenchmarkReport): string => {
     '',
     '## Aggregate operation latency',
     '',
-    '| Replica | scope | operation | calls | ops/sec | weighted avg | mean run avg | median run avg | std. dev. | minimum run | maximum run |',
-    '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |',
+    '| Method | case | Replica | scope | calls | ops/sec | weighted avg | mean run avg | median run avg | std. dev. | minimum run | maximum run |',
+    '| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |',
   ]
 
   for (const replica of replicas)
-    for (const scope of scopes)
-      for (const operation of operation_names) {
+    for (const operation of operation_names)
+      for (const scope of scopes) {
         const aggregate = report.aggregates[replica][scope][operation]
         lines.push(
           row([
+            ...Object.values(caseColumns(operation)),
             replica,
             scope,
-            operation,
             aggregate.totalSampleCount.toLocaleString('en-US'),
             aggregate.sampleWeightedOperationsPerSecond === null
               ? '—'
@@ -102,22 +101,22 @@ const makeMarkdown = (report: BenchmarkReport): string => {
     '',
     'Checkpoint values are cumulative full-lifecycle averages at that point and are never reset.',
     '',
-    '| Run | direction | Strips | Frames | Replica | operation | calls | ops/sec | avg | min | max |',
-    '| ---: | --- | ---: | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: |'
+    '| Method | case | Run | direction | Strips | Frames | Replica | calls | ops/sec | avg | min | max |',
+    '| --- | --- | ---: | --- | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: |'
   )
-  for (const run of report.runs)
-    for (const checkpoint of run.checkpoints)
-      for (const replica of replicas)
-        for (const operation of operation_names) {
+  for (const operation of operation_names)
+    for (const run of report.runs)
+      for (const checkpoint of run.checkpoints)
+        for (const replica of replicas) {
           const metric = checkpoint.replicas[replica].operations[operation]
           lines.push(
             row([
+              ...Object.values(caseColumns(operation)),
               run.run,
               checkpoint.direction,
               checkpoint.stripCount.toLocaleString('en-US'),
               checkpoint.frameCount.toLocaleString('en-US'),
               replica,
-              operation,
               metric.count.toLocaleString('en-US'),
               metric.operationsPerSecond === null
                 ? '—'
@@ -135,21 +134,21 @@ const makeMarkdown = (report: BenchmarkReport): string => {
     '',
     '## Management performance',
     '',
-    '| Run | direction | Strips | Replica | operation | calls | ops/sec | avg |',
-    '| ---: | --- | ---: | --- | --- | ---: | ---: | ---: |'
+    '| Method | case | Run | direction | Strips | Replica | calls | ops/sec | avg |',
+    '| --- | --- | ---: | --- | ---: | --- | ---: | ---: | ---: |'
   )
-  for (const run of report.runs)
-    for (const checkpoint of run.checkpoints)
-      for (const replica of replicas)
-        for (const operation of management_names) {
+  for (const operation of management_names)
+    for (const run of report.runs)
+      for (const checkpoint of run.checkpoints)
+        for (const replica of replicas) {
           const metric = checkpoint.replicas[replica].management[operation]
           lines.push(
             row([
+              ...Object.values(caseColumns(operation)),
               run.run,
               checkpoint.direction,
               checkpoint.stripCount.toLocaleString('en-US'),
               replica,
-              operation,
               metricCount(metric),
               metric.operationsPerSecond === null
                 ? '—'
@@ -264,7 +263,7 @@ export function printSummary(report: BenchmarkReport): void {
         const metric = report.aggregates[replica].fullLifecycle[operation]
         return {
           replica,
-          operation,
+          ...caseColumns(operation),
           calls: metric.totalSampleCount,
           'ops/sec':
             metric.sampleWeightedOperationsPerSecond === null
@@ -291,24 +290,4 @@ export async function writeReports(
     report,
     makeMarkdown(report)
   )
-}
-
-export async function writeReportFiles(
-  outputPath: string | null,
-  report: unknown,
-  markdown: string
-): Promise<{ jsonPath: string; markdownPath: string } | null> {
-  if (outputPath === null) return null
-  const requestedPath = resolve(outputPath)
-  const jsonPath =
-    extname(requestedPath).toLowerCase() === '.json'
-      ? requestedPath
-      : requestedPath + '.json'
-  const markdownPath = jsonPath.slice(0, -5) + '.md'
-  await mkdir(dirname(jsonPath), { recursive: true })
-  await Promise.all([
-    writeFile(jsonPath, JSON.stringify(report, null, 2) + '\n'),
-    writeFile(markdownPath, markdown),
-  ])
-  return { jsonPath, markdownPath }
 }

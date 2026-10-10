@@ -6,7 +6,7 @@ import {
   Random,
   seedFromString,
   StripIndex,
-} from '../../../../benchmark/support.ts'
+} from '../../../../benchmark/.shared/support.ts'
 
 /**
  * Materializes the visible Projection into a plain array.

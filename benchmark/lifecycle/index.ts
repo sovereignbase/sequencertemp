@@ -1,5 +1,7 @@
+import { arch, cpus, platform } from 'node:os'
 import { Projection } from '../../dist/class.js'
-import { measureProcessMemory, measureSpace } from '../space.ts'
+import { caseColumns } from '../.shared/report.ts'
+import { measureProcessMemory, measureSpace } from '../.shared/space.ts'
 import type { Gossip, Result } from '../../dist/class.js'
 import {
   deriveSeed,
@@ -11,7 +13,7 @@ import {
   seedFromString,
   SpaceAccumulator,
   StripIndex,
-} from '../support.ts'
+} from '../.shared/support.ts'
 import {
   operation_names,
   type BenchmarkConfig,
@@ -25,7 +27,7 @@ import {
   type ReplicaName,
   type ReplicaRunResult,
   type RunResult,
-} from '../types.ts'
+} from '../.shared/types.ts'
 
 type Runtime = {
   name: ReplicaName
@@ -105,7 +107,7 @@ const insertAt = (
   runtime: Runtime,
   config: BenchmarkConfig,
   direction: Direction,
-  operationName: 'tailInsert' | 'headInsert' | 'randomInsert',
+  operationName: 'insert.tail' | 'insert.head' | 'insert.random',
   stripIndex: number
 ): void => {
   const frameIndex = runtime.strips.frameOffsetAt(stripIndex)
@@ -121,7 +123,7 @@ const removeAt = (
   runtime: Runtime,
   config: BenchmarkConfig,
   direction: Direction,
-  operationName: 'headRemove' | 'tailRemove' | 'randomRemove',
+  operationName: 'remove.head' | 'remove.tail' | 'remove.random',
   stripIndex: number
 ): void => {
   const frameIndex = runtime.strips.frameOffsetAt(stripIndex)
@@ -133,38 +135,42 @@ const removeAt = (
   runtime.strips.remove(stripIndex)
 }
 
-const randomFind = (runtime: Runtime, direction: Direction): void => {
-  const frameIndex = runtime.random.integer(runtime.strips.frameCount)
-  const value = timeOperation(runtime, direction, 'randomFind', () =>
+const valueAt = (
+  runtime: Runtime,
+  direction: Direction,
+  operationName: 'value.head' | 'value.random' | 'value.tail',
+  frameIndex: number
+): void => {
+  const value = timeOperation(runtime, direction, operationName, () =>
     runtime.state.value(frameIndex)
   )
   if (value === undefined)
-    throw new TypeError('Random lookup did not resolve a projected Frame.')
+    throw new TypeError(`${operationName} did not resolve a projected Frame.`)
 }
 
-const randomReplace = (
+const replaceAt = (
   runtime: Runtime,
-  config: BenchmarkConfig,
-  direction: Direction
+  direction: Direction,
+  operationName: 'replace.head' | 'replace.random' | 'replace.tail',
+  stripIndex: number
 ): void => {
-  const stripIndex = runtime.random.integer(runtime.strips.count)
   const frameIndex = runtime.strips.frameOffsetAt(stripIndex)
   const replaced = runtime.strips.at(stripIndex)
   // The public replace operation removes exactly values.length Frames. Keeping
   // the selected Strip's length preserves Strip boundaries and scale.
   const strip = createReplacementStrip(runtime, replaced.length)
-  const mutation = timeOperation(runtime, direction, 'randomReplace', () =>
+  const mutation = timeOperation(runtime, direction, operationName, () =>
     runtime.state.replace(
       strip.values,
       frameIndex,
       frameIndex + replaced.length - 1
     )
   )
-  gossip(runtime.state, runtime.peer, mutation, 'randomReplace')
+  gossip(runtime.state, runtime.peer, mutation, operationName)
   runtime.strips.replace(stripIndex, strip)
 }
 
-const randomIngest = (runtime: Runtime, direction: Direction): void => {
+const randomApply = (runtime: Runtime, direction: Direction): void => {
   const stripIndex = runtime.random.integer(runtime.strips.count)
   const frameIndex = runtime.strips.frameOffsetAt(stripIndex)
   const replaced = runtime.strips.at(stripIndex)
@@ -174,38 +180,52 @@ const randomIngest = (runtime: Runtime, direction: Direction): void => {
     frameIndex,
     frameIndex + replaced.length - 1
   )
-  const result = timeOperation(runtime, direction, 'randomIngest', () =>
-    applyUpdate(runtime.state, mutation, 'randomIngest peer replacement')
+  const result = timeOperation(runtime, direction, 'apply.random', () =>
+    applyUpdate(runtime.state, mutation, 'randomApply peer replacement')
   )
   const acknowledgements = result[1]
   if (acknowledgements?.length)
     void applyUpdate(
       runtime.peer,
       acknowledgements,
-      'randomIngest acknowledgements'
+      'randomApply acknowledgements'
     )
   runtime.strips.replace(stripIndex, strip)
 }
 
-const runPrimaryRandomWorkload = (
+const runPrimaryWorkload = (
   runtime: Runtime,
   config: BenchmarkConfig,
   direction: Direction
 ): void => {
-  randomFind(runtime, direction)
-  randomReplace(runtime, config, direction)
+  valueAt(runtime, direction, 'value.head', 0)
+  valueAt(
+    runtime,
+    direction,
+    'value.random',
+    runtime.random.integer(runtime.strips.frameCount)
+  )
+  valueAt(runtime, direction, 'value.tail', runtime.strips.frameCount - 1)
+  replaceAt(runtime, direction, 'replace.head', 0)
+  replaceAt(
+    runtime,
+    direction,
+    'replace.random',
+    runtime.random.integer(runtime.strips.count)
+  )
+  replaceAt(runtime, direction, 'replace.tail', runtime.strips.count - 1)
   removeAt(
     runtime,
     config,
     direction,
-    'randomRemove',
+    'remove.random',
     runtime.random.integer(runtime.strips.count)
   )
   insertAt(
     runtime,
     config,
     direction,
-    'randomInsert',
+    'insert.random',
     runtime.random.integer(runtime.strips.count + 1)
   )
 }
@@ -216,24 +236,24 @@ const runScaleUpStep = (runtime: Runtime, config: BenchmarkConfig): void => {
     runtime,
     config,
     'up',
-    tail ? 'tailInsert' : 'headInsert',
+    tail ? 'insert.tail' : 'insert.head',
     tail ? runtime.strips.count : 0
   )
-  runPrimaryRandomWorkload(runtime, config, 'up')
-  randomIngest(runtime, 'up')
+  runPrimaryWorkload(runtime, config, 'up')
+  randomApply(runtime, 'up')
 }
 
 const runScaleDownStep = (runtime: Runtime, config: BenchmarkConfig): void => {
-  runPrimaryRandomWorkload(runtime, config, 'down')
+  runPrimaryWorkload(runtime, config, 'down')
   const head = runtime.strips.count % 2 === 0
   removeAt(
     runtime,
     config,
     'down',
-    head ? 'headRemove' : 'tailRemove',
+    head ? 'remove.head' : 'remove.tail',
     head ? 0 : runtime.strips.count - 1
   )
-  if (runtime.strips.count > 0) randomIngest(runtime, 'down')
+  if (runtime.strips.count > 0) randomApply(runtime, 'down')
 }
 
 const managementMetric = <T>(operation: () => T): [MetricResult, T] => {
@@ -282,9 +302,9 @@ const observeReplica = (
   const checkpoint: ReplicaCheckpoint = {
     operations: runtime.metrics.snapshot(),
     management: {
-      values: valuesMetric,
-      sequence: sequenceResult,
       create: createMetric,
+      sequence: sequenceResult,
+      values: valuesMetric,
     },
     memory,
     storage,
@@ -352,7 +372,7 @@ const printCheckpoint = (checkpoint: CheckpointResult): void => {
         const metric = checkpoint.replicas[replica].operations[operation]
         return {
           replica,
-          operation,
+          ...caseColumns(operation),
           calls: metric.count,
           'ops/sec':
             metric.operationsPerSecond === null
@@ -370,7 +390,7 @@ const printCheckpoint = (checkpoint: CheckpointResult): void => {
       Object.entries(checkpoint.replicas[replica].management).map(
         ([operation, metric]) => ({
           replica,
-          operation,
+          ...caseColumns(operation),
           calls: metric.count,
           'ops/sec':
             metric.operationsPerSecond === null
@@ -623,6 +643,46 @@ export function aggregateRuns(
       ),
     ])
   ) as BenchmarkReport['aggregates']
+}
+
+export async function runBenchmark(
+  config: BenchmarkConfig
+): Promise<BenchmarkReport> {
+  console.log(
+    'Warming TypeScript API (' +
+      config.warmupCycles.toLocaleString('en-US') +
+      ' cycles)...'
+  )
+  await warmUp(config)
+  const runs = await runLifecycles(config)
+  return {
+    schemaVersion: 3,
+    generatedAt: new Date().toISOString(),
+    environment: {
+      node: process.versions.node,
+      v8: process.versions.v8,
+      platform: platform(),
+      architecture: arch(),
+      cpu: cpus()[0]?.model ?? 'Unknown CPU',
+    },
+    config,
+    methodology: {
+      implementation: 'TypeScript Projection class public API',
+      timer: 'process.hrtime.bigint',
+      stripCount:
+        'Scale is the number of visible logical Strips maintained by the benchmark model. Every mutation targets a complete Strip boundary; retained Mask structures are reported separately.',
+      ingest:
+        'The workload has two peers editing the same document. Every local Gossip is applied by the receiver and every acknowledgement returned by apply is gossiped back to the sender. apply.random times only the measured peer applying the remote replacement Gossip.',
+      average:
+        'Operation averages are calculated directly from count and total measured nanoseconds; checkpoint averages are never averaged together.',
+      memory:
+        'Per-Replica retained bytes after restart are estimated as four bytes per Sequence metadata word plus eight bytes per JavaScript Footage array slot. Process RSS is shared and reported at checkpoint scope.',
+      storage:
+        'Persistent representation size is the byte length of node:v8.serialize over the automatically collected public Sequence.',
+    },
+    runs,
+    aggregates: aggregateRuns(runs),
+  }
 }
 
 void resultSink
