@@ -41,22 +41,23 @@ export function selectAnchor<T>(
   const rightStep = gate?.rightStep
 
   if (
-    of > 0 &&
     of === this.gatePosition &&
     gate &&
     gate.insertionDiff < 0 &&
     removed &&
     rightStep &&
-    rightStep.fragmentStart !== undefined &&
+    // At the Projection head, the mask must directly precede visible content.
+    (of > 0 || (rightStep.fragmentDiff ?? rightStep.insertionDiff) > 0) &&
+    (rightStep.fragmentStart !== undefined || rightStep.fragmentDiff === 0) &&
     removed.insertionSession === gate.anchorSession &&
     removed.insertionStart === gate.anchorStart &&
-    // A zero-offset successor may belong to another insertion; its boundary still follows this mask.
-    (rightStep.fragmentStart === 0 ||
+    // A fully removed whole successor also retains its original zero boundary.
+    ((rightStep.fragmentStart ?? 0) === 0 ||
       containsAnchor(
         rightStep,
         removed,
-        rightStep.fragmentStart,
-        rightStep.fragmentStart
+        rightStep.fragmentStart!,
+        rightStep.fragmentStart!
       ))
   ) {
     // The removed insertion reserved the next fragment's boundary; use its fresh mask's free end.

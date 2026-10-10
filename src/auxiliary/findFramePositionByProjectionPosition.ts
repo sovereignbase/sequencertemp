@@ -11,8 +11,9 @@ import { linkJumps } from './linkJumps.js'
  * The returned Frame position is relative to the original insertion, not the
  * current fragment. It can therefore be used directly as an index into the
  * Footage array shared by all fragments of that insertion. In insertion mode,
- * a nonzero fragment-start boundary resolves to the preceding visible Frame's
- * right logical anchor point instead.
+ * an interior Projection boundary at a fragment's start resolves to the
+ * preceding mask's free end for a zero-offset fragment, or the preceding
+ * visible Frame's right logical anchor point instead.
  *
  * @param this Projection containing the requested position.
  * @param index Valid visible Projection position to resolve.
@@ -24,8 +25,8 @@ export function findFramePositionByProjectionPosition<T>(
   index: number,
   forInsertion = false
 ): number {
-  // Insertion mode may resolve the preceding visible Frame once, then return its right logical point.
-  let after = false
+  // Insertion mode offsets the resolved Frame to a free logical boundary.
+  let after = 0
   // Use gate as the default traverse start node.
   let cursorStrip: NonNullable<Strip<T>> = (this.gate ?? this.head)!
   // Track the Strip's visible start separately from its original Footage offset.
@@ -91,14 +92,21 @@ export function findFramePositionByProjectionPosition<T>(
     // Visible Frame intervals are half-open: an index at the right end belongs to a later Strip.
     // A zero-length node cannot satisfy this condition and is traversed structurally instead.
     if (cursorIndex <= index && index < cursorIndex + stripLength) {
-      // Only insertion mode at a nonzero fragment-start boundary uses the preceding Frame.
-      // The after flag prevents repeating the adjustment; index > 0 ensures that Frame exists.
+      // A fragment-start boundary can already be occupied in its original Insertion.
+      // A preceding mask supplies a free end without crossing its removed child subtree.
       if (forInsertion && !after && index > 0 && index === cursorIndex && cursorStrip.fragmentStart !== undefined) {
-        // Continue the same traversal toward the preceding visible Frame rather than performing a second lookup.
-        --index
-        // The returned original offset will add one to select this preceding Frame's right anchor point.
-        after = true
-        continue
+        const mask = cursorStrip.leftStep
+        if (cursorStrip.fragmentStart === 0 && mask && mask.insertionDiff < 0) {
+          after = Math.abs(mask.fragmentDiff ?? mask.insertionDiff)
+          // Enter this adjacent hidden node using the distance already measured by this lookup.
+          jumpSteps = mask.leftJump || mask.rightJump ? 0 : jumpSteps - 1
+          cursorStrip = mask
+        } else {
+          // Resolve the preceding visible Frame once when no adjacent mask supplies the boundary.
+          --index
+          after = 1
+          continue
+        }
       }
       // Make gate an endpoint using only the gap traversed by this lookup.
       if (jumpSteps > 0) {
@@ -146,7 +154,7 @@ export function findFramePositionByProjectionPosition<T>(
       // Adding the original fragment offset preserves Footage coordinates despite removed visible prefixes.
       const fragmentStart = cursorStrip.fragmentStart
       // Original Footage position, or the following logical point in insertion mode.
-      return (fragmentStart ?? 0) + index - cursorIndex + (after ? 1 : 0)
+      return (fragmentStart ?? 0) + index - cursorIndex + after
     }
 
     // Containment failed above, so the target is at or beyond this Strip's visible right boundary.
