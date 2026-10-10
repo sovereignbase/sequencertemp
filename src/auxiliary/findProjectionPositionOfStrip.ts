@@ -130,7 +130,9 @@ export function findProjectionPositionOfStrip<T>(
     (leftStripDistance >= optimalJumpSpacing ||
       rightStripDistance >= optimalJumpSpacing ||
       strip === this.head || strip === this.tail ||
-      leftCursor === this.head || rightCursor === this.tail)
+      leftCursor === this.head || rightCursor === this.tail ||
+      // A shifted head or tail can stop the search inside an older span; replace that crossing link.
+      rightCursor === this.head || leftCursor === this.tail)
   ) {
     const link = (
       left: NonNullable<Strip<T>>,

@@ -164,8 +164,11 @@ export function anchorStrip<T>(
   // Any structural insertion invalidates the cached jump spanning its position.
   // Traversal recreates an appropriate jump when needed.
   if (this.leftJumpToPatch && this.rightJumpToPatch) {
-    this.leftJumpToPatch.rightJump = undefined
-    this.rightJumpToPatch.leftJump = undefined
+    // Traversal may have replaced the cached span; detach only its original reciprocal pair.
+    if (this.leftJumpToPatch.rightJump === this.rightJumpToPatch) {
+      this.leftJumpToPatch.rightJump = undefined
+      this.rightJumpToPatch.leftJump = undefined
+    }
     this.leftJumpToPatch = undefined
     this.rightJumpToPatch = undefined
   }
