@@ -44,18 +44,18 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
-    "@playwright/test": "^1.62.1",
-    "@types/node": "^26.6.2",
-    "@types/ws": "^8.18.1",
-    "@vitest/coverage-v8": "^5.0.1",
+    "@playwright/test": "^1.64.0",
+    "@types/node": "^26.6.5",
+    "@types/ws": "^8.18.2",
+    "@vitest/coverage-v8": "^5.0.3",
     "fast-check": "^4.10.2",
     "husky": "^9.1.7",
-    "playwright": "^1.63.0",
-    "prettier": "^3.9.9",
+    "playwright": "^1.64.0",
+    "prettier": "^3.9.10",
     "tsdown": "^0.23.0",
-    "typescript": "^6.0.3",
-    "vitest": "^5.0.1",
-    "ws": "^8.21.3"
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3",
+    "ws": "^8.22.0"
   },
   "repository": {
     "type": "git",
