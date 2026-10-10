@@ -127,7 +127,8 @@ function prepare(
     for (const payload of payloads) {
       updates.push(sender.insert(payload, sender.length()))
     }
-  }
+  } else if (operation === 'apply.duplicate' || operation === 'merge.duplicate')
+    updates.push([snapshot[1].at(-1)!])
   if (operation === 'retire')
     // Establish distinct active Actors outside the measured retirement calls.
     state.apply(
@@ -188,9 +189,9 @@ function prepare(
       case 'merge.insert':
         return state.merge([[[2]], updates[index]])
       case 'apply.duplicate':
-        return state.apply(snapshot[1])
+        return state.apply(updates[0])
       case 'merge.duplicate':
-        return state.merge(snapshot)
+        return state.merge([[[2]], updates[0]])
       case 'retire':
         return state.retire(index + 2)
     }

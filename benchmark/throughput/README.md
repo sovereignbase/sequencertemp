@@ -31,7 +31,9 @@ and middle removal and replacement; boundary, middle, fixed and random value loo
 `values`, `length`, `sequence`, hydrated and empty construction; fresh and
 duplicate `apply`/`merge`; and retirement of distinct active Actors.
 `merge` receives incremental Sequences whose earlier parents are already known.
-Duplicate cases measure validation and deduplication explicitly.
+Duplicate cases repeatedly receive one already materialized insertion, matching
+the one-insertion batches of the fresh cases. Both merge cases include the same
+actor-only frontier. Duplicate cases measure validation and deduplication.
 
 The entire API-call loop is timed, including dispatch, target selection and result
 assignment. Preparation, payload generation, snapshots, serialization and logging
