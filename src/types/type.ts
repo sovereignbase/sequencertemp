@@ -34,17 +34,29 @@ export type Strip<T> =
       /** Optional Footage carried by a positive Insertion. */
       readonly footage?: ReadonlyArray<T | undefined>
 
-      /** Next lexicographically smaller concurrent Insertion competing for the same anchor point. */
-      rightCompetitor?: Strip<T>
-
-      /** Next fragment belonging to the same original Insertion. */
-      rightFragment?: Strip<T>
-
       /** Offset of the fragment's first Frame within the original Insertion. */
-      fragmentStart?: number
+      thisFragmentStart?: number
 
       /** Signed Projection effect represented by this fragment. */
-      fragmentDiff?: number
+      thisFragmentDiff?: number
+
+      /** Next fragment belonging to the same original Insertion. */
+      rightFragmentJump?: Strip<T>
+
+      /** Number of Projection Frames crossed by jumping to a fragment to the right. */
+      rightFragmentJumpFrameCount?: number
+
+      /** Number of Sequence Strips crossed by jumping to a fragment to the right. */
+      rightFragmentJumpStripCount?: number
+
+      /** Next lexicographically smaller concurrent Insertion competing for the same anchor point. */
+      rightCompetitorJump?: Strip<T>
+
+      /** Number of Projection Frames crossed by jumping to a fragment to the right. */
+      rightCompetitorJumpFrameCount?: number
+
+      /** Number of Sequence Strips crossed by jumping to a fragment to the right. */
+      rightCompetitorJumpStripCount?: number
 
       /** Immediately preceding Strip in Sequence. */
       leftStep?: Strip<T>

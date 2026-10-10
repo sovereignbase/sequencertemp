@@ -3,7 +3,7 @@ import type { Gossip, Strip } from '../types/type.js'
 
 import { anchorStrip } from '../auxiliary/anchorStrip.js'
 import { insertFirst } from '../auxiliary/insertFirst.js'
-import { patchJumps } from '../auxiliary/patchJumps.js'
+import { patchJumps } from '../auxiliary/patchCursors.js'
 import { selectAnchor } from '../auxiliary/selectAnchor.js'
 
 /**

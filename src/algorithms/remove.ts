@@ -1,6 +1,6 @@
 import { findFramePositionByProjectionPosition } from '../auxiliary/findFramePositionByProjectionPosition.js'
 import { anchorStrip } from '../auxiliary/anchorStrip.js'
-import { patchJumps } from '../auxiliary/patchJumps.js'
+import { patchJumps } from '../auxiliary/patchCursors.js'
 import type { Projection } from '../class.js'
 import type { Gossip, Strip } from '../types/type.js'
 
