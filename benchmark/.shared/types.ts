@@ -15,6 +15,7 @@ export const operation_names = [
 ] as const
 
 export const management_names = ['create', 'sequence', 'values'] as const
+export const aggregate_names = [...operation_names, ...management_names].sort()
 
 export type Direction = 'up' | 'down'
 export type ReplicaName = 'A'
@@ -166,6 +167,7 @@ export type BenchmarkReport = {
   runs: Array<RunResult>
   aggregates: Record<
     ReplicaName,
-    Record<MetricScope, Record<OperationName, AggregateMetric>>
+    Record<MetricScope, Record<OperationName | ManagementName, AggregateMetric>>
   >
+  spaceAggregates: Record<ReplicaName, Record<MetricScope, SpaceAverages>>
 }

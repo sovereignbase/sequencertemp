@@ -77,6 +77,12 @@ process RSS. The retained-state estimate is:
 Serialization uses `node:v8.serialize` and is kept outside timed API regions.
 Checkpoint logging never resets cumulative operation metrics.
 
+The final aggregate includes checkpoint `create`, `sequence`, and `values`
+calls; `create` also includes initial creation. Throughput uses total calls
+divided by total measured time. Separate memory and disk aggregates combine
+nonempty checkpoints across runs; bytes per unit use total bytes divided by
+total Strips or Frames.
+
 ## Timing and warmup
 
 Only the selected public API call is inside each timed region. Random
@@ -109,6 +115,6 @@ Memory usage and disk usage are reported in separate tables. Memory estimates
 describe exported state; process RSS and heap include the entire benchmark.
 Disk usage measures serialized Sequence bytes, excluding filesystem metadata.
 
-The default run count is three and the default maximum is 10,000 visible
+The default run count is three and the default maximum is 1,000 visible
 Strips. JSON and Markdown reports are written to
 `benchmark/.results/lifecycle.{json,md}` unless `--no-output` is supplied.

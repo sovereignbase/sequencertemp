@@ -1,5 +1,6 @@
 import { caseColumns, writeReportFiles } from '../.shared/report.ts'
 import {
+  aggregate_names,
   management_names,
   operation_names,
   type BenchmarkReport,
@@ -25,6 +26,33 @@ const metricCount = (metric: ManagementResult): string =>
 
 const row = (cells: Array<string | number>): string =>
   '| ' + cells.join(' | ') + ' |'
+
+const spaceRows = (report: BenchmarkReport, kind: 'memory' | 'storage') =>
+  replicas.flatMap((replica) =>
+    scopes.map((scope) => {
+      const space = report.spaceAggregates[replica][scope]
+      const strips =
+        kind === 'memory'
+          ? space.memoryBytesPerStrip
+          : space.storageBytesPerStrip
+      const frames =
+        kind === 'memory'
+          ? space.memoryBytesPerFrame
+          : space.storageBytesPerFrame
+      return {
+        replica,
+        scope,
+        observations: strips.observationCount,
+        'avg bytes': decimal(
+          strips.observationCount === 0
+            ? null
+            : strips.totalBytes / strips.observationCount
+        ),
+        'B/Strip': decimal(strips.averageBytesPerUnit),
+        'B/Frame': decimal(frames.averageBytesPerUnit),
+      }
+    })
+  )
 
 const makeMarkdown = (report: BenchmarkReport): string => {
   const lines: Array<string> = [
@@ -63,7 +91,7 @@ const makeMarkdown = (report: BenchmarkReport): string => {
   ]
 
   for (const replica of replicas)
-    for (const operation of operation_names)
+    for (const operation of aggregate_names)
       for (const scope of scopes) {
         const aggregate = report.aggregates[replica][scope][operation]
         lines.push(
@@ -94,6 +122,19 @@ const makeMarkdown = (report: BenchmarkReport): string => {
           ])
         )
       }
+
+  for (const kind of ['memory', 'storage'] as const) {
+    lines.push(
+      '',
+      '## Aggregate ' + (kind === 'memory' ? 'memory usage' : 'disk usage'),
+      '',
+      'Nonempty checkpoint observations across all runs. Bytes per unit use total bytes divided by total units.',
+      '',
+      '| Replica | scope | observations | avg bytes | B/Strip | B/Frame |',
+      '| --- | --- | ---: | ---: | ---: | ---: |',
+      ...spaceRows(report, kind).map((space) => row(Object.values(space)))
+    )
+  }
 
   lines.push(
     '',
@@ -259,7 +300,7 @@ export function printSummary(report: BenchmarkReport): void {
   console.log('\nFull-lifecycle aggregate (µs/op)')
   console.table(
     replicas.flatMap((replica) =>
-      operation_names.map((operation) => {
+      aggregate_names.map((operation) => {
         const metric = report.aggregates[replica].fullLifecycle[operation]
         return {
           replica,
@@ -277,6 +318,18 @@ export function printSummary(report: BenchmarkReport): void {
           'max run': metric.maximumRun?.run ?? '—',
         }
       })
+    )
+  )
+  console.log('Full-lifecycle memory usage (estimated Sequence memory)')
+  console.table(
+    spaceRows(report, 'memory').filter(
+      (space) => space.scope === 'fullLifecycle'
+    )
+  )
+  console.log('Full-lifecycle disk usage (serialized Sequence)')
+  console.table(
+    spaceRows(report, 'storage').filter(
+      (space) => space.scope === 'fullLifecycle'
     )
   )
 }

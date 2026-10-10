@@ -15,11 +15,13 @@ import {
   StripIndex,
 } from '../.shared/support.ts'
 import {
+  aggregate_names,
   operation_names,
   type BenchmarkConfig,
   type BenchmarkReport,
   type CheckpointResult,
   type Direction,
+  type ManagementName,
   type MetricResult,
   type MetricScope,
   type OperationName,
@@ -566,13 +568,33 @@ export function aggregateRuns(
         scopes.map((scope) => [
           scope,
           Object.fromEntries(
-            operation_names.map((operationName) => {
+            aggregate_names.map((operationName) => {
               const samples = runs
-                .map((run) => ({
-                  run: run.run,
-                  metric:
-                    run.replicas[replicaName].operations[scope][operationName],
-                }))
+                .map((run) => {
+                  if (operationName.includes('.'))
+                    return {
+                      run: run.run,
+                      metric:
+                        run.replicas[replicaName].operations[scope][
+                          operationName as OperationName
+                        ],
+                    }
+                  const metric = new MetricAccumulator()
+                  for (const checkpoint of run.checkpoints)
+                    if (
+                      scope === 'fullLifecycle' ||
+                      checkpoint.direction ===
+                        (scope === 'scaleUp' ? 'up' : 'down')
+                    )
+                      metric.add(
+                        checkpoint.replicas[replicaName].management[
+                          operationName as ManagementName
+                        ].totalNanoseconds
+                      )
+                  if (operationName === 'create' && scope !== 'scaleDown')
+                    metric.add(run.initialization[replicaName].totalNanoseconds)
+                  return { run: run.run, metric: metric.snapshot() }
+                })
                 .filter((sample) => sample.metric.averageNanoseconds !== null)
               const ordered = samples
                 .map((sample) => ({
@@ -682,6 +704,28 @@ export async function runBenchmark(
     },
     runs,
     aggregates: aggregateRuns(runs),
+    spaceAggregates: {
+      A: Object.fromEntries(
+        (['scaleUp', 'scaleDown', 'fullLifecycle'] as const).map((scope) => {
+          const space = new SpaceAccumulator()
+          for (const run of runs)
+            for (const checkpoint of run.checkpoints)
+              if (
+                scope === 'fullLifecycle' ||
+                checkpoint.direction === (scope === 'scaleUp' ? 'up' : 'down')
+              ) {
+                const observed = checkpoint.replicas.A
+                space.add(
+                  observed.memory.bytes,
+                  observed.storage.sequenceBytes,
+                  observed.strips.stripCount,
+                  observed.strips.frameCount
+                )
+              }
+          return [scope, space.snapshot()]
+        })
+      ) as BenchmarkReport['spaceAggregates']['A'],
+    },
   }
 }
 

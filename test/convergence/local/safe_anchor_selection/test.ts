@@ -3,6 +3,38 @@ import { Projection } from '../../../../src/class.ts'
 import type { Gossip } from '../../../../src/types/type.ts'
 
 describe('safe local anchor selection', () => {
+  it('uses a free mask boundary before a zero-offset fragment of another insertion', () => {
+    const author = new Projection<string>(1)
+    const editor = new Projection<string>(2)
+    author.increaseClock[0] = 1_001
+    editor.increaseClock[0] = 2_001
+
+    const deliver = (
+      sender: Projection<string>,
+      receiver: Projection<string>,
+      update: Gossip<string>
+    ) => {
+      const result = receiver.apply(update)!
+      if (result[1]) sender.apply(result[1])
+    }
+
+    deliver(author, editor, author.insert(['a'], 0))
+    deliver(author, editor, author.insert(['b'], 0))
+    deliver(author, editor, author.insert(['c'], 0))
+    deliver(editor, author, editor.insert(['x'], 2))
+    deliver(author, editor, author.remove(0, 0))
+    expect(editor.values()).toEqual(['b', 'x', 'a'])
+
+    const update = editor.replace(['y'], 1, 1)
+    const removal = update[0]
+    expect(update.at(-1)!.slice(0, 3)).toEqual([
+      removal[3], removal[4], -removal[5]!,
+    ])
+    expect(editor.values()).toEqual(['b', 'y', 'a'])
+    deliver(editor, author, update)
+    expect(author.values()).toEqual(['b', 'y', 'a'])
+  })
+
   it('uses the anchored insertion end when a boundary is already reserved', () => {
     const projection = new Projection<string>(1)
     projection.insert(['a', 'c'], 0)

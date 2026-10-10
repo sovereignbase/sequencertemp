@@ -129,6 +129,8 @@ export function findProjectionPositionOfStrip<T>(
     !strip.rightJump &&
     (leftStripDistance >= optimalJumpSpacing ||
       rightStripDistance >= optimalJumpSpacing ||
+      // A positive incoming Strip may become head or tail after its index is published by apply.
+      gateDiff > 0 ||
       strip === this.head || strip === this.tail ||
       leftCursor === this.head || rightCursor === this.tail ||
       // A shifted head or tail can stop the search inside an older span; replace that crossing link.

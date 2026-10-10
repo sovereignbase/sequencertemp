@@ -7,9 +7,9 @@ import { writeThroughputReport } from './throughput/report.ts'
 import type { BenchmarkConfig } from './.shared/types.ts'
 
 const defaults = {
-  suite: 'lifecycle' as BenchmarkConfig['suite'],
+  suites: ['lifecycle', 'throughput'] as const,
   runs: 3,
-  maximumStripCount: { lifecycle: 10_000, throughput: 10_000 },
+  maximumStripCount: { lifecycle: 1_000, throughput: 10_000 },
   initialStripCount: 100,
   burstMilliseconds: 100,
   maximumCalls: 10_000,
@@ -28,7 +28,7 @@ const usage = [
   '  npm run bench -- [options]',
   '',
   'Options:',
-  `  --suite <name>        lifecycle or throughput (default: ${defaults.suite})`,
+  '  --suite <name>        lifecycle or throughput (default: both)',
   `  --start-strips <n>    Throughput starting size (default: ${defaults.initialStripCount})`,
   `  --burst-ms <n>        Throughput burst duration (default: ${defaults.burstMilliseconds})`,
   `  --max-calls <n>       Throughput call limit per burst (default: ${defaults.maximumCalls})`,
@@ -53,8 +53,8 @@ const readInteger = (name: string, value: string | undefined): number => {
 }
 
 export function parseConfig(arguments_: Array<string>): BenchmarkConfig {
+  let suite: BenchmarkConfig['suite'] = defaults.suites[0]
   let {
-    suite,
     initialStripCount,
     burstMilliseconds,
     maximumCalls,
@@ -163,22 +163,35 @@ export function parseConfig(arguments_: Array<string>): BenchmarkConfig {
 }
 
 async function main(): Promise<void> {
-  const config = parseConfig(process.argv.slice(2))
-  if (config.suite === 'throughput') {
-    const report = await runThroughput(config)
-    const paths = await writeThroughputReport(report)
+  const arguments_ = process.argv.slice(2)
+  const configs = arguments_.includes('--suite')
+    ? [parseConfig(arguments_)]
+    : defaults.suites.map((suite) =>
+        parseConfig([...arguments_, '--suite', suite])
+      )
+  for (const config of configs) {
+    if (
+      configs.length > 1 &&
+      arguments_.includes('--output') &&
+      config.outputPath
+    )
+      config.outputPath = config.outputPath.replace(
+        /(\.json)?$/i,
+        `.${config.suite}.json`
+      )
+    let paths
+    if (config.suite === 'throughput') {
+      const report = await runThroughput(config)
+      paths = await writeThroughputReport(report)
+    } else {
+      const report = await runBenchmark(config)
+      printSummary(report)
+      paths = await writeReports(report)
+    }
     if (paths) {
       console.log('\nJSON report: ' + paths.jsonPath)
       console.log('Markdown report: ' + paths.markdownPath)
     }
-    return
-  }
-  const report = await runBenchmark(config)
-  printSummary(report)
-  const paths = await writeReports(report)
-  if (paths) {
-    console.log('\nJSON report: ' + paths.jsonPath)
-    console.log('Markdown report: ' + paths.markdownPath)
   }
 }
 

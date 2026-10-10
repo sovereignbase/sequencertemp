@@ -203,12 +203,24 @@ export function anchorStrip<T>(
   }
 
   // Deletion can turn the old first Strip into hidden history; skip it until a positive Strip remains.
-  while (this.head && (this.head.fragmentDiff ?? this.head.insertionDiff) <= 0)
+  while (this.head && (this.head.fragmentDiff ?? this.head.insertionDiff) <= 0) {
+    // A jump starting here may cross the new visible head; clear it during the existing boundary walk.
+    if (this.head.rightJump && this.head.rightJumpFrameCount! > 0) {
+      this.head.rightJump.leftJump = undefined
+      this.head.rightJump = undefined
+    }
     this.head = this.head.rightStep
+  }
 
   // Likewise skip consumed suffix Strips so tail contains the last visible Frame.
-  while (this.tail && (this.tail.fragmentDiff ?? this.tail.insertionDiff) <= 0)
+  while (this.tail && (this.tail.fragmentDiff ?? this.tail.insertionDiff) <= 0) {
+    // Likewise detach a jump ending beyond the new visible tail.
+    if (this.tail.leftJump && this.tail.leftJumpFrameCount! > 0) {
+      this.tail.leftJump.rightJump = undefined
+      this.tail.leftJump = undefined
+    }
     this.tail = this.tail.leftStep
+  }
 
   // A newly linked Strip starts without traversal jumps. Jumps are rebuilt
   // opportunistically by traversal according to current structural spacing.
