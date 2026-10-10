@@ -1,62 +1,76 @@
 import type { Projection } from '../class.js'
+import type { Strip } from '../types/type.js'
+import { linkJumps } from './linkJumps.js'
 
 /**
  * Patches the traversal jump spanning a structural mutation.
  *
- * Traversals cache the jump crossing the mutation position in
- * `leftJumpToPatch` and `rightJumpToPatch`. After the mutation, this helper
- * adjusts the cached distances of that jump to reflect the changed span.
- *
- * `frameDiff` is applied to the number of Projection Frames crossed by the
- * jump. Reducing Strips may decrease this distance, but cannot make it
- * negative: negative Strip lengths have already been consumed by splitting
- * and do not consume additional Projection Frames during traversal.
- * Consequently, the resulting Frame count is clamped to zero.
- *
- * `stripDiff` is applied independently to the number of Structural Order
- * Strips crossed by the jump. All Strips, including reducing Strips, remain
- * part of Structural Order and therefore contribute to this count.
- *
- * Both directions of the reciprocal jump always receive identical patched
- * Frame and Strip counts.
- *
- * Cached patch points are consumed by this operation. Both endpoints must be
- * present; the caller is responsible for invalidating stale patch points.
+ * The preceding lookup makes the anchoring Strip a jump endpoint. Its
+ * outgoing span receives the edit's visible and structural effects, then
+ * is divided at the incoming Strip without another traversal.
  *
  * @param this Projection whose traversal jump is being patched.
  * @param frameDiff Change in Projection Frames within the jump span.
  * @param stripDiff Change in Structural Order Strips within the jump span.
+ * @param incoming Strip placed at the resolved local boundary.
  */
 export function patchJumps<T>(
   this: Projection<T>,
   frameDiff: number,
-  stripDiff: number
+  stripDiff: number,
+  incoming: NonNullable<Strip<T>>
 ): void {
-  // Consume the cached jump span selected by the traversal preceding the
-  // structural mutation.
+  // Without a predecessor there is no left span to patch.
+  const predecessor = incoming.leftStep
+  if (!predecessor) return
+  // Competition can place the edit inside the selected span, beyond its left endpoint.
+  // Only that span loses its shortcut; ordinary edits retain and divide their distances.
   const left = this.leftJumpToPatch
   const right = this.rightJumpToPatch
+  if (
+    !predecessor.leftJump &&
+    !predecessor.rightJump &&
+    left &&
+    right &&
+    left.rightJump === right
+  ) {
+    left.rightJump = undefined
+    right.leftJump = undefined
+  }
+  const rightJump = predecessor.rightJump
+  const leftFrames = Math.max(
+    0,
+    predecessor.fragmentDiff ?? predecessor.insertionDiff
+  )
 
-  this.leftJumpToPatch = undefined
-  this.rightJumpToPatch = undefined
-
-  // No jump crossed the mutation position.
-  // A missing endpoint makes the cached pair unusable; do not update only one direction.
-  if (!left || !right) return
-
-  // Projection distance cannot become negative. Reducing Strips remain in
-  // Structural Order but do not consume additional Projection Frames.
-  const frameCount = Math.max(0, left.rightJumpFrameCount! + frameDiff)
-
-  // Every Strip within the span contributes to Structural Order distance,
-  // regardless of its Projection effect.
-  const stripCount = left.rightJumpStripCount! + stripDiff
-
-  // Patch both directions of the reciprocal jump with identical distances.
-  left.rightJumpFrameCount = frameCount
-  left.rightJumpStripCount = stripCount
-
-  // Mirror the patched counts so a later left traversal sees exactly the same span.
-  right.leftJumpFrameCount = frameCount
-  right.leftJumpStripCount = stripCount
+  // Add the edit once, then divide at the predecessor's retained visible length.
+  // Structural growth includes the incoming Strip and any new right fragment.
+  if (rightJump)
+    linkJumps(
+      incoming,
+      rightJump,
+      predecessor.rightJumpFrameCount! + frameDiff - leftFrames,
+      predecessor.rightJumpStripCount! + stripDiff - 1
+    )
+  linkJumps(predecessor, incoming, leftFrames, 1)
+  // A split can move the visible boundary into the adjacent right fragment.
+  const boundary = incoming.rightStep
+  if (
+    boundary &&
+    (boundary === this.head || boundary === this.tail) &&
+    incoming.rightJump !== boundary
+  ) {
+    const right = incoming.rightJump
+    const frames = Math.max(0, incoming.fragmentDiff ?? incoming.insertionDiff)
+    if (right)
+      linkJumps(
+        boundary,
+        right,
+        incoming.rightJumpFrameCount! - frames,
+        incoming.rightJumpStripCount! - 1
+      )
+    linkJumps(incoming, boundary, frames, 1)
+  }
+  this.leftJumpToPatch = incoming
+  this.rightJumpToPatch = incoming.rightJump
 }

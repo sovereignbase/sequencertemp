@@ -142,7 +142,7 @@ export function anchorStrip<T>(
       // A competitor occupies its whole subtree in Structural Order.
       // Therefore the incoming competitor must be inserted after the complete
       // subtree of the closest larger competitor.
-      leftStep = subtreeEnd(largerCompetitor)
+      leftStep = subtreeEnd.call(this, largerCompetitor) as NonNullable<Strip<T>>
 
       // Preserve whatever structurally followed that sibling subtree.
       // This may be another competitor or undefined at the tail.
@@ -159,24 +159,6 @@ export function anchorStrip<T>(
       leftStep = smallerCompetitor.leftStep!
     }
 
-  }
-
-  // Any structural insertion invalidates the cached jump spanning its position.
-  // Traversal recreates an appropriate jump when needed.
-  if (this.leftJumpToPatch && this.rightJumpToPatch) {
-    // Traversal may have replaced the cached span; detach only its original reciprocal pair.
-    if (this.leftJumpToPatch.rightJump === this.rightJumpToPatch) {
-      this.leftJumpToPatch.rightJump = undefined
-      this.rightJumpToPatch.leftJump = undefined
-    }
-    this.leftJumpToPatch = undefined
-    this.rightJumpToPatch = undefined
-  }
-
-  // A jump from the immediate predecessor crosses the new node; clear its reciprocal endpoint too.
-  if (leftStep?.rightJump) {
-    leftStep.rightJump.leftJump = undefined
-    leftStep.rightJump = undefined
   }
 
   // Link the incoming Strip between the resolved structural neighbours.

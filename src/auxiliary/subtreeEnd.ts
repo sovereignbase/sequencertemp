@@ -1,4 +1,5 @@
 import type { Strip } from '../types/type.js'
+import type { Projection } from '../class.js'
 import { containsAnchor } from '../auxiliary/containsAnchor.js'
 
 /**
@@ -23,10 +24,12 @@ import { containsAnchor } from '../auxiliary/containsAnchor.js'
  * ancestor contains the next Strip, the subtree has ended and the previously
  * visited Strip is returned.
  *
+ * @param this Projection whose edit-spanning jump is selected during traversal.
  * @param rootStrip Root Strip of the subtree.
  * @returns Final Strip belonging to the subtree.
  */
 export function subtreeEnd<T>(
+  this: Projection<T>,
   rootStrip: NonNullable<Strip<T>>
 ): NonNullable<Strip<T>> {
   // Active ancestor chain. `fragmentFrame` identifies the first stable Frame
@@ -40,6 +43,10 @@ export function subtreeEnd<T>(
   let previousStrip = rootStrip
   let previousFragmentFrame = 0
   let nextStrip = previousStrip.rightStep
+  if (rootStrip.rightJump) {
+    this.leftJumpToPatch = rootStrip
+    this.rightJumpToPatch = rootStrip.rightJump
+  }
 
   // Follow rightStep only; popping ancestor metadata does not walk structural links backward.
   while (nextStrip) {
@@ -91,6 +98,14 @@ export function subtreeEnd<T>(
 
     // Advance only after accepting the next node, so an excluded node never becomes the returned subtree end.
     previousStrip = nextStrip
+    // Keep the span at the actual insertion boundary, using the existing subtree walk.
+    if (previousStrip.rightJump) {
+      this.leftJumpToPatch = previousStrip
+      this.rightJumpToPatch = previousStrip.rightJump
+    } else if (previousStrip === this.rightJumpToPatch) {
+      this.leftJumpToPatch = undefined
+      this.rightJumpToPatch = undefined
+    }
     nextStrip = nextStrip.rightStep
   }
 

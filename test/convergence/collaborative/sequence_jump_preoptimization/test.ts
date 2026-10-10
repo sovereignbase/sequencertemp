@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Projection } from '../../../../src/class.ts'
+import type { Strip } from '../../../../src/types/type.ts'
 
 describe('sequence jump preoptimization', () => {
   /**
@@ -57,5 +58,59 @@ describe('sequence jump preoptimization', () => {
 
     // Jump preoptimization must not change any visible Footage.
     expect(recreated.values()).toEqual(source.values())
+  })
+
+  it('retains valid jumps through local and remote edits inside prebuilt spans', () => {
+    const source = new Projection<number>(1)
+    const expected: number[] = []
+    for (let i = 0; i < 16; ++i) {
+      const frames = Array.from({ length: 8 }, (_, j) => i * 8 + j)
+      source.insert(frames, source.length())
+      expected.push(...frames)
+    }
+    const sequence = source.sequence()
+    const local = new Projection<number>(2, sequence)
+    const remote = new Projection<number>(3, sequence)
+
+    for (let i = 0; i < 64; ++i) {
+      const index = (i * 37) % expected.length
+      const removing = i % 3 === 0
+      const update = removing
+        ? local.remove(index, index)
+        : local.insert([-i], index)
+      expected.splice(index, removing ? 1 : 0, ...(removing ? [] : [-i]))
+      const result = remote.apply(update)!
+      if (result[1]) local.apply(result[1])
+
+      for (const projection of [local, remote]) {
+        expect(projection.value(index)).toBe(expected[index])
+        expect(projection.values()).toEqual(expected)
+        const positions = new Map<
+          NonNullable<Strip<number>>,
+          [number, number]
+        >()
+        let frames = 0
+        for (
+          let strip = projection.structuralHead;
+          strip;
+          strip = strip.rightStep
+        ) {
+          positions.set(strip, [frames, positions.size])
+          frames += Math.max(0, strip.fragmentDiff ?? strip.insertionDiff)
+        }
+        let jumps = 0
+        for (const [strip, [frame, order]] of positions) {
+          if (!strip.rightJump) continue
+          const [rightFrame, rightOrder] = positions.get(strip.rightJump)!
+          expect(strip.rightJumpFrameCount).toBe(rightFrame - frame)
+          expect(strip.rightJumpStripCount).toBe(rightOrder - order)
+          expect(strip.rightJump.leftJump).toBe(strip)
+          expect(strip.rightJump.leftJumpFrameCount).toBe(rightFrame - frame)
+          expect(strip.rightJump.leftJumpStripCount).toBe(rightOrder - order)
+          ++jumps
+        }
+        expect(jumps).toBeGreaterThan(0)
+      }
+    }
   })
 })

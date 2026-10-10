@@ -1,5 +1,6 @@
 import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
+import { linkJumps } from './linkJumps.js'
 
 /**
  * Resolves a materialized Strip's first Projection position and updates jumps.
@@ -108,73 +109,24 @@ export function findProjectionPositionOfStrip<T>(
     }
   }
 
-  // Patch jumps affected by remote apply.
-  // Repair a spanning jump only if its endpoints still form the same direct link.
-  // The two measured half-spans give current distances after the remote mutation.
-  if (rightCursor !== strip && leftCursor.rightJump === rightCursor) {
-    const frameCount = leftFrameDistance + rightFrameDistance
-    const stripCount = leftStripDistance + rightStripDistance
-
-    leftCursor.rightJumpFrameCount = frameCount
-    leftCursor.rightJumpStripCount = stripCount
-    rightCursor.leftJumpFrameCount = frameCount
-    rightCursor.leftJumpStripCount = stripCount
-  }
-
   // CREATE JUMPS TOWARDS OPTIMAL SPACING
-  if (
-    // Create local jump links only for a Strip without existing endpoints, when a gap is
-    // large enough or a visible boundary needs to remain directly reachable.
-    !strip.leftJump &&
-    !strip.rightJump &&
-    (leftStripDistance >= optimalJumpSpacing ||
-      rightStripDistance >= optimalJumpSpacing ||
-      // A positive incoming Strip may become head or tail after its index is published by apply.
-      gateDiff > 0 ||
-      strip === this.head || strip === this.tail ||
-      leftCursor === this.head || rightCursor === this.tail ||
-      // A shifted head or tail can stop the search inside an older span; replace that crossing link.
-      rightCursor === this.head || leftCursor === this.tail)
-  ) {
-    const link = (
-      left: NonNullable<Strip<T>>,
-      right: NonNullable<Strip<T>>,
-      frames: number,
-      strips: number
-    ) => {
-      // Replacing a different outgoing jump must detach that old destination's reciprocal link.
-      if (left.rightJump && left.rightJump !== right)
-        left.rightJump.leftJump = undefined
-
-      // Likewise detach a different incoming jump's old source before installing the new pair.
-      if (right.leftJump && right.leftJump !== left)
-        right.leftJump.rightJump = undefined
-
-      // Write identical distances on both endpoints so either traversal direction crosses the same span.
-      left.rightJump = right
-      left.rightJumpFrameCount = frames
-      left.rightJumpStripCount = strips
-
-      right.leftJump = left
-      right.leftJumpFrameCount = frames
-      right.leftJumpStripCount = strips
-    }
-
+  // The resolved Strip becomes gate, so it must delimit its own spans even in a short gap.
+  if (!strip.leftJump && !strip.rightJump) {
     // Never create a self-jump; the left side must have a distinct endpoint.
     if (leftCursor !== strip) {
       // At least two target spacings justify using the recorded intermediate anchor;
       // subtract its measured distance to obtain the remaining span without another walk.
       if (leftStripDistance >= optimalJumpSpacing * 2) {
-        link(
+        linkJumps(
           leftCursor,
           leftJump!,
           leftFrameDistance - leftJumpedDistance,
           leftStripDistance - optimalJumpSpacing
         )
 
-        link(leftJump!, strip, leftJumpedDistance, optimalJumpSpacing)
+        linkJumps(leftJump!, strip, leftJumpedDistance, optimalJumpSpacing)
       } else {
-        link(leftCursor, strip, leftFrameDistance, leftStripDistance)
+        linkJumps(leftCursor, strip, leftFrameDistance, leftStripDistance)
       }
     }
 
@@ -182,19 +134,23 @@ export function findProjectionPositionOfStrip<T>(
     if (rightCursor !== strip) {
       // Split a sufficiently long right gap into the recorded spacing and the remaining distance.
       if (rightStripDistance >= optimalJumpSpacing * 2) {
-        link(strip, rightJump!, rightJumpedDistance, optimalJumpSpacing)
+        linkJumps(strip, rightJump!, rightJumpedDistance, optimalJumpSpacing)
 
-        link(
+        linkJumps(
           rightJump!,
           rightCursor,
           rightFrameDistance - rightJumpedDistance,
           rightStripDistance - optimalJumpSpacing
         )
       } else {
-        link(strip, rightCursor, rightFrameDistance, rightStripDistance)
+        linkJumps(strip, rightCursor, rightFrameDistance, rightStripDistance)
       }
     }
   }
+
+  // Cache only the span containing this newly resolved gate, not an earlier remote edit.
+  this.leftJumpToPatch = strip
+  this.rightJumpToPatch = strip.rightJump
 
   // If strip precedes the known first visible Strip, no visible Frames precede its start.
   if (rightCursor === this.head && strip !== this.head) return 0
@@ -258,16 +214,7 @@ export function findProjectionPositionOfStrip<T>(
           leftJumpStripCount += leftJump.leftJumpStripCount!
 
           // Reconnect both ends with summed distances before detaching the intermediate anchor.
-          leftCursor.leftJump = nextLeftJump
-          leftCursor.leftJumpFrameCount = leftJumpFrameCount
-          leftCursor.leftJumpStripCount = leftJumpStripCount
-
-          nextLeftJump.rightJump = leftCursor
-          nextLeftJump.rightJumpFrameCount = leftJumpFrameCount
-          nextLeftJump.rightJumpStripCount = leftJumpStripCount
-
-          leftJump.leftJump = undefined
-          leftJump.rightJump = undefined
+          linkJumps(nextLeftJump, leftCursor, leftJumpFrameCount, leftJumpStripCount)
 
           leftCursor = nextLeftJump
         } else {
@@ -311,16 +258,7 @@ export function findProjectionPositionOfStrip<T>(
           rightJumpStripCount += rightJump.rightJumpStripCount!
 
           // Install matching forward and reverse counts before clearing both links of the bypassed anchor.
-          rightCursor.rightJump = nextRightJump
-          rightCursor.rightJumpFrameCount = rightJumpFrameCount
-          rightCursor.rightJumpStripCount = rightJumpStripCount
-
-          nextRightJump.leftJump = rightCursor
-          nextRightJump.leftJumpFrameCount = rightJumpFrameCount
-          nextRightJump.leftJumpStripCount = rightJumpStripCount
-
-          rightJump.leftJump = undefined
-          rightJump.rightJump = undefined
+          linkJumps(rightCursor, nextRightJump, rightJumpFrameCount, rightJumpStripCount)
 
           rightCursor = nextRightJump
         } else {

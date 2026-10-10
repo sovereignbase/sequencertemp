@@ -57,7 +57,8 @@ export function remove<T>(
     void patchJumps.call(
       this,
       decreasingStrip.insertionDiff,
-      this.structuralStripCount - previousStructuralStripCount
+      this.structuralStripCount - previousStructuralStripCount,
+      decreasingStrip
     )
 
     // Retain the mask identity even though it has no visible Frames, for deduplication and dependencies.

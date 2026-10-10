@@ -77,7 +77,8 @@ export function insert<T>(
   void patchJumps.call(
     this,
     increasingStrip.insertionDiff,
-    this.structuralStripCount - previousStructuralStripCount
+    this.structuralStripCount - previousStructuralStripCount,
+    increasingStrip
   )
 
   void this.containmentTable.set(increasingStrip)

@@ -1,5 +1,6 @@
 import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
+import { linkJumps } from './linkJumps.js'
 
 /**
  * Finds the Frame at a Projection position.
@@ -70,8 +71,17 @@ export function findFramePositionByProjectionPosition<T>(
   // Calculate optimal jump distance that allows for an average minimum strips traversed
   // (<= sqrt(structuralStripCount) * 2)
   const optimalJumpSpacing = Math.round(Math.sqrt(this.structuralStripCount))
+  let jumpStart = cursorStrip
+  let jumpStartIndex = cursorIndex
+  let jumpSteps = 0
 
   while (true) {
+    // Existing endpoints reset the measured gap; no node is revisited to discover a span.
+    if (cursorStrip.leftJump || cursorStrip.rightJump) {
+      jumpStart = cursorStrip
+      jumpStartIndex = cursorIndex
+      jumpSteps = 0
+    }
     // Length of the (strip | fragment) being traversed.
     const cursorDiff = cursorStrip.fragmentDiff ?? cursorStrip.insertionDiff
     // Negative strips do not consume length (already consumed on split).
@@ -90,12 +100,38 @@ export function findFramePositionByProjectionPosition<T>(
         after = true
         continue
       }
-      // If cursor strip was left jump to patch (see below).
-      // Adopt the resolved Strip's outgoing span only when no crossing pair was already selected.
-      if (!leftJumpToPatch && !rightJumpToPatch && cursorStrip.rightJump) {
-        // Set patch points if missing and cursor has one to right.
+      // Make gate an endpoint using only the gap traversed by this lookup.
+      if (jumpSteps > 0) {
+        const right = jumpStart.rightJump
+        const frames = cursorIndex - jumpStartIndex
+        if (right)
+          linkJumps(
+            cursorStrip,
+            right,
+            jumpStart.rightJumpFrameCount! - frames,
+            jumpStart.rightJumpStripCount! - jumpSteps
+          )
+        linkJumps(jumpStart, cursorStrip, frames, jumpSteps)
+      } else if (jumpSteps < 0) {
+        const left = jumpStart.leftJump
+        const frames = jumpStartIndex - cursorIndex
+        if (left)
+          linkJumps(
+            left,
+            cursorStrip,
+            jumpStart.leftJumpFrameCount! - frames,
+            jumpStart.leftJumpStripCount! + jumpSteps
+          )
+        linkJumps(cursorStrip, jumpStart, frames, -jumpSteps)
+      }
+      // An edit changes the resolved endpoint's outgoing span, not the span ending there.
+      if (cursorStrip.rightJump) {
         leftJumpToPatch = cursorStrip
         rightJumpToPatch = cursorStrip.rightJump
+      } else if (cursorStrip === rightJumpToPatch) {
+        // An edit in this endpoint lies beyond the span ending here.
+        leftJumpToPatch = undefined
+        rightJumpToPatch = undefined
       }
 
       // Patch gate and projection position.
@@ -113,16 +149,12 @@ export function findFramePositionByProjectionPosition<T>(
       return (fragmentStart ?? 0) + index - cursorIndex + (after ? 1 : 0)
     }
 
-    // Absolute distance from cursor to requested projection position.
-    const currentDistance = Math.abs(cursorIndex - index)
-
     // Containment failed above, so the target is at or beyond this Strip's visible right boundary.
     if (cursorIndex <= index) {
       // Traverse right
       const walkStrip = cursorStrip.rightStep!
       // Moving right crosses the current Strip's visible length; hidden nodes change only the structural cursor.
       const walkIndex = cursorIndex + stripLength
-      const walkDistance = Math.abs(walkIndex - index)
 
       let rightJump = cursorStrip.rightJump
 
@@ -150,17 +182,7 @@ export function findFramePositionByProjectionPosition<T>(
             rightJumpStripCount += rightJump.rightJumpStripCount!
 
             // Bypass the intermediate jump anchor and give both surviving endpoints identical summed distances.
-            cursorStrip.rightJump = nextRightJump
-            cursorStrip.rightJumpFrameCount = rightJumpFrameCount
-            cursorStrip.rightJumpStripCount = rightJumpStripCount
-
-            nextRightJump.leftJump = cursorStrip
-            nextRightJump.leftJumpFrameCount = rightJumpFrameCount
-            nextRightJump.leftJumpStripCount = rightJumpStripCount
-
-            // The bypassed anchor must lose both old reciprocal links, leaving no obsolete traversal shortcut.
-            rightJump.leftJump = undefined
-            rightJump.rightJump = undefined
+            linkJumps(cursorStrip, nextRightJump, rightJumpFrameCount, rightJumpStripCount)
 
             rightJump = nextRightJump
           }
@@ -174,17 +196,16 @@ export function findFramePositionByProjectionPosition<T>(
           rightJumpToPatch = rightJump
         }
 
-        const jumpDistance = Math.abs(jumpIndex - index)
-
         if (
-          // A right jump must not pass the target and must beat both staying here and taking one step.
+          // Stay before the target and skip at least two structural steps, including hidden nodes.
           jumpIndex <= index &&
-          jumpDistance < currentDistance &&
-          jumpDistance < walkDistance
+          rightJumpStripCount > 1
         ) {
           // Advance both cursor and known visible start together; the next iteration tests the destination.
           cursorStrip = rightJump
           cursorIndex = jumpIndex
+          leftJumpToPatch = undefined
+          rightJumpToPatch = undefined
           continue
         }
       }
@@ -197,6 +218,7 @@ export function findFramePositionByProjectionPosition<T>(
 
       cursorStrip = walkStrip
       cursorIndex = walkIndex
+      ++jumpSteps
 
       // Reaching the right endpoint leaves this span's interior; clear it before resolving another span.
       if (cursorStrip === rightJumpToPatch) {
@@ -211,7 +233,6 @@ export function findFramePositionByProjectionPosition<T>(
       const walkLength = walkDiff > 0 ? walkDiff : 0
       // Moving left crosses the predecessor's positive length, not the current Strip's length.
       const walkIndex = cursorIndex - walkLength
-      const walkDistance = Math.abs(walkIndex - index)
 
       let leftJump = cursorStrip.leftJump
 
@@ -233,17 +254,7 @@ export function findFramePositionByProjectionPosition<T>(
             leftJumpStripCount += leftJump.leftJumpStripCount!
 
             // The summed left jump and its reverse must describe the same Frame and Strip distances.
-            cursorStrip.leftJump = nextLeftJump
-            cursorStrip.leftJumpFrameCount = leftJumpFrameCount
-            cursorStrip.leftJumpStripCount = leftJumpStripCount
-
-            nextLeftJump.rightJump = cursorStrip
-            nextLeftJump.rightJumpFrameCount = leftJumpFrameCount
-            nextLeftJump.rightJumpStripCount = leftJumpStripCount
-
-            // Detach both links on the intermediate anchor after redirecting the surviving endpoints.
-            leftJump.leftJump = undefined
-            leftJump.rightJump = undefined
+            linkJumps(nextLeftJump, cursorStrip, leftJumpFrameCount, leftJumpStripCount)
 
             leftJump = nextLeftJump
           }
@@ -257,17 +268,16 @@ export function findFramePositionByProjectionPosition<T>(
           rightJumpToPatch = cursorStrip
         }
 
-        const jumpDistance = Math.abs(jumpIndex - index)
-
         if (
-          // A left jump may land at or to the right of the target, and only if it improves on the single step.
+          // Stay at or after the target and skip at least two structural steps.
           index <= jumpIndex &&
-          jumpDistance < currentDistance &&
-          jumpDistance < walkDistance
+          leftJumpStripCount > 1
         ) {
           // Move the cursor and visible start by the same cached span; no original Frame coordinates change.
           cursorStrip = leftJump
           cursorIndex = jumpIndex
+          leftJumpToPatch = undefined
+          rightJumpToPatch = undefined
           continue
         }
       }
@@ -279,6 +289,7 @@ export function findFramePositionByProjectionPosition<T>(
 
       cursorStrip = walkStrip
       cursorIndex = walkIndex
+      --jumpSteps
 
       // At the left endpoint the old crossing span is exhausted and must not be patched for a later position.
       if (cursorStrip === leftJumpToPatch) {

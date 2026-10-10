@@ -69,6 +69,9 @@ export function selectAnchor<T>(
     // stable right anchor point directly.
     // The nonempty local insertion path maintains a positive tail, making append an O(1) anchor lookup.
     anchoringStrip = this.tail!
+    // Only the outgoing span can contain an append displaced by existing competitors.
+    this.leftJumpToPatch = anchoringStrip
+    this.rightJumpToPatch = anchoringStrip.rightJump
     // TAIL MUST NEVER BE A REDUCING STRIP NOR FRAGMENT
     // Use the original offset plus retained tail length; visible Projection length is a different coordinate.
     anchorDiff =

@@ -40,10 +40,8 @@ export function splitStrip<T>(
   }
   // Cache (used more than once).
   //
-  // These links belong to the original Strip's right boundary. After the
-  // split, that boundary belongs to the newly created right fragment.
+  // After the split, the original right neighbour follows the new right fragment.
   const rightStep = anchoringStrip.rightStep
-  const rightJump = anchoringStrip.rightJump
 
   const anchoringStripDiff =
     anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff
@@ -61,14 +59,6 @@ export function splitStrip<T>(
   // The existing Strip always becomes the left side of the split.
   anchoringStrip.fragmentDiff = leftFragmentDiff
 
-  // Its previous right jump crosses the insertion position and is no longer
-  // valid, whether or not a right fragment needs to be materialized.
-  anchoringStrip.rightJump = undefined
-  anchoringStrip.rightJumpFrameCount = 0
-  anchoringStrip.rightJumpStripCount = 0
-
-  if (rightJump) rightJump.leftJump = undefined
-
   // A fully consumed right side has no structural identity of its own. Keep
   // the existing fragment chain and structural links intact and let the
   // caller insert directly before the original right step.
@@ -84,8 +74,8 @@ export function splitStrip<T>(
    *
    *   anchoringStrip <-> rightFragment <-> rightStep
    *
-   * Jump links are intentionally cleared because the split changes Structural
-   * Order distances around this position.
+   * The original Strip retains its outgoing jump until the edit patches or
+   * divides that span. The new fragment starts without jump links.
    */
   const rightFragment: NonNullable<Strip<T>> = {
     anchorSession: anchoringStrip.anchorSession,
@@ -113,7 +103,7 @@ export function splitStrip<T>(
     // The newly created fragment immediately follows the anchoring Strip.
     leftStep: anchoringStrip,
 
-    // Jump information is invalidated around the structural modification.
+    // The new fragment has not yet been selected as a jump endpoint.
     leftJump: undefined,
     leftJumpFrameCount: 0,
     leftJumpStripCount: 0,
@@ -121,7 +111,7 @@ export function splitStrip<T>(
     // Preserve the original immediate right neighbour.
     rightStep,
 
-    // Jump information is invalidated around the structural modification.
+    // Its original left fragment still owns the outgoing jump span.
     rightJump: undefined,
     rightJumpFrameCount: 0,
     rightJumpStripCount: 0,
