@@ -2,9 +2,13 @@ import type { Projection } from '../class.js'
 import type { Strip } from '../types/type.js'
 
 import { findFramePositionByProjectionPosition } from '../auxiliary/findFramePositionByProjectionPosition.js'
+import { containsAnchor } from './containsAnchor.js'
 
 /**
  * Selects the stable anchor point for a local insertion.
+ *
+ * A cached local removal at a reserved fragment boundary supplies its mask's
+ * right logical anchor point.
  *
  * A Projection position occupied by a Frame identifies the Frame that the new
  * insertion moves to the right. Its zero-based position in the original
@@ -32,10 +36,35 @@ export function selectAnchor<T>(
 ): [number, Strip<T>] {
   let anchorDiff: number
   let anchoringStrip: NonNullable<Strip<T>>
+  const gate = this.gate
+  const removed = gate?.leftStep
+  const rightStep = gate?.rightStep
 
-  // The Projection end has no Frame to resolve, so use the tail fragment's
-  // stable right anchor point directly.
-  if (of === this.projectionFrameCount) {
+  if (
+    of > 0 &&
+    of === this.gatePosition &&
+    gate &&
+    gate.insertionDiff < 0 &&
+    removed &&
+    rightStep &&
+    rightStep.fragmentStart !== undefined &&
+    removed.insertionSession === gate.anchorSession &&
+    removed.insertionStart === gate.anchorStart &&
+    containsAnchor(
+      rightStep,
+      removed,
+      rightStep.fragmentStart,
+      rightStep.fragmentStart
+    )
+  ) {
+    // The removed insertion reserved the next fragment's boundary; use its fresh mask's free end.
+    anchoringStrip = gate
+    anchorDiff =
+      (anchoringStrip.fragmentStart ?? 0) -
+      (anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff)
+  } else if (of === this.projectionFrameCount) {
+    // The Projection end has no Frame to resolve, so use the tail fragment's
+    // stable right anchor point directly.
     // The nonempty local insertion path maintains a positive tail, making append an O(1) anchor lookup.
     anchoringStrip = this.tail!
     // TAIL MUST NEVER BE A REDUCING STRIP NOR FRAGMENT

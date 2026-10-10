@@ -63,6 +63,9 @@ export function remove<T>(
     // Retain the mask identity even though it has no visible Frames, for deduplication and dependencies.
     void this.containmentTable.set(decreasingStrip)
 
+    // At the fragment's start, its new mask retains the same known visible boundary.
+    if (startAt === this.gatePosition) this.gate = decreasingStrip
+
     // Emit the original mask tuple; remote peers resolve their own runtime fragment ownership.
     void insertions.push([
       decreasingStrip.anchorSession,
