@@ -21,8 +21,13 @@ Each burst ends after approximately `--burst-ms` (default 100 ms), at
 The clock is checked every 64 calls, so a slow final batch can exceed the
 requested duration. Warmup uses a separate fixture for each case.
 
-Cases include head, tail, middle and fixed-index insertion; head, tail and middle
-removal and replacement; boundary, middle, fixed and random value lookup;
+Results are grouped alphabetically by method and then case in console, JSON and
+Markdown reports. Case names use `method.case`, for example `insert.head`,
+`insert.random`, `insert.tail`, `value.head`, `value.random` and `value.tail`.
+Tables separate the method and case into their own columns.
+
+Cases include head, tail, middle, random and fixed-index insertion; head, tail
+and middle removal and replacement; boundary, middle, fixed and random value lookup;
 `values`, `length`, `sequence`, hydrated and empty construction; fresh and
 duplicate `apply`/`merge`; and retirement of distinct active Actors.
 `merge` receives incremental Sequences whose earlier parents are already known.

@@ -1,5 +1,5 @@
 import { writeReportFiles } from '../report/index.ts'
-import type { ThroughputReport } from './index.ts'
+import { caseColumns, type ThroughputReport } from './index.ts'
 
 const row = (cells: Array<string | number>) => '| ' + cells.join(' | ') + ' |'
 const decimal = (value: number | null) =>
@@ -22,14 +22,14 @@ export async function writeThroughputReport(report: ThroughputReport) {
     '',
     'Averages are weighted by call count across runs, using total burst time / total calls.',
     '',
-    '| Initial Strips | operation | calls | ops/sec | avg µs |',
-    '| ---: | --- | ---: | ---: | ---: |',
+    '| Method | case | initial Strips | calls | ops/sec | avg µs |',
+    '| --- | --- | ---: | ---: | ---: | ---: |',
   ]
   for (const { initialStripCount, operation, metric } of report.aggregates)
     lines.push(
       row([
+        ...Object.values(caseColumns(operation)),
         initialStripCount,
-        operation,
         metric.count,
         Math.round(metric.operationsPerSecond!),
         decimal(metric.averageNanoseconds! / 1_000),
@@ -39,8 +39,8 @@ export async function writeThroughputReport(report: ThroughputReport) {
     '',
     '## Bursts',
     '',
-    '| Run | initial Strips | operation | calls | elapsed ms | ops/sec | avg µs | initial Frames | final Frames |',
-    '| ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |'
+    '| Method | case | run | initial Strips | calls | elapsed ms | ops/sec | avg µs | initial Frames | final Frames |',
+    '| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
   )
   for (const {
     run,
@@ -52,9 +52,9 @@ export async function writeThroughputReport(report: ThroughputReport) {
   } of report.samples)
     lines.push(
       row([
+        ...Object.values(caseColumns(operation)),
         run + 1,
         initialStripCount,
-        operation,
         metric.count,
         decimal(metric.totalNanoseconds / 1_000_000),
         Math.round(metric.operationsPerSecond!),
@@ -69,8 +69,8 @@ export async function writeThroughputReport(report: ThroughputReport) {
     '',
     'Estimated bytes describe the exported Sequence representation. Process memory is shared by all fixtures, inputs and temporary results; it is not attributable to one Projection. Use `node --expose-gc benchmark/index.ts --suite throughput` to collect garbage between bursts.',
     '',
-    '| Run | initial Strips | operation | visible Strips | structural Strips | initial estimated bytes | final estimated bytes | memory B/Strip | memory B/Frame | initial process RSS | final process RSS | final process heap used |',
-    '| ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
+    '| Method | case | run | initial Strips | visible Strips | structural Strips | initial estimated bytes | final estimated bytes | memory B/Strip | memory B/Frame | initial process RSS | final process RSS | final process heap used |',
+    '| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
   )
   for (const {
     run,
@@ -81,9 +81,9 @@ export async function writeThroughputReport(report: ThroughputReport) {
   } of report.samples)
     lines.push(
       row([
+        ...Object.values(caseColumns(operation)),
         run + 1,
         initialStripCount,
-        operation,
         after.stripCount,
         after.structuralStripCount,
         before.memory.bytes,
@@ -101,8 +101,8 @@ export async function writeThroughputReport(report: ThroughputReport) {
     '',
     'Disk bytes are the size of `node:v8.serialize(sequence)`, excluding filesystem metadata; no disk I/O is timed.',
     '',
-    '| Run | initial Strips | operation | retained insertions | initial sequence bytes | final sequence bytes | disk B/Strip | disk B/Frame |',
-    '| ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: |'
+    '| Method | case | run | initial Strips | retained insertions | initial sequence bytes | final sequence bytes | disk B/Strip | disk B/Frame |',
+    '| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
   )
   for (const {
     run,
@@ -113,9 +113,9 @@ export async function writeThroughputReport(report: ThroughputReport) {
   } of report.samples)
     lines.push(
       row([
+        ...Object.values(caseColumns(operation)),
         run + 1,
         initialStripCount,
-        operation,
         after.retainedInsertionCount,
         before.storage.sequenceBytes,
         after.storage.sequenceBytes,
@@ -130,9 +130,9 @@ export async function writeThroughputReport(report: ThroughputReport) {
     '- Each operation and checkpoint has an independent Projection and independent Footage. Starting data, payload generation, warmup, snapshots, serialization and reporting are excluded from burst timing.',
     '- The timer includes the call loop, dispatch, target selection, and result assignment. Time is checked every 64 calls; slow batches can exceed the requested duration. Individual-call min/max are not measured.',
     '- Inserts carry generated Strip payloads; removes consume one visible Frame per call; replacements replace one visible Frame with one Frame. Mutating bursts retain history and are not reset between calls. Removes stop at the empty Projection.',
-    '- middleInsert tracks the moving middle; sameIndexInsert always uses the original middle index. Read cases distinguish boundaries, moving middle, fixed position and deterministic random positions.',
-    '- apply and merge receive one fresh causally ordered tail insertion per call; merge uses an incremental Sequence whose parent is already materialized. Duplicate cases deliberately reapply the complete initial Gossip or Sequence.',
-    '- create hydrates the complete initial Sequence; createEmpty constructs an empty Projection. Their temporary results are discarded before memory observation; before/after sizes describe the retained source fixture.',
+    '- insert.middle tracks the moving middle; insert.sameIndex always uses the original middle index. Read cases distinguish boundaries, moving middle, fixed position and deterministic random positions.',
+    '- apply.insert and merge.insert receive one fresh causally ordered tail insertion per call; merge uses an incremental Sequence whose parent is already materialized. Duplicate cases deliberately reapply the complete initial Gossip or Sequence.',
+    '- create.sequence hydrates the complete initial Sequence; create.empty constructs an empty Projection. Their temporary results are discarded before memory observation; before/after sizes describe the retained source fixture.',
     '- retire removes distinct active Actors established before timing. length reads the maintained count. values and sequence process the entire document.',
     '- Memory estimate: four bytes per Sequence metadata word plus eight bytes per JavaScript Footage slot. Visible Strip counts after a burst count positive runtime fragments, not hidden Masks.',
     ''

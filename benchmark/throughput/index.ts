@@ -9,33 +9,39 @@ import type {
 } from '../types.ts'
 
 export const throughputCases = [
-  'headInsert',
-  'tailInsert',
-  'middleInsert',
-  'sameIndexInsert',
-  'headRemove',
-  'tailRemove',
-  'middleRemove',
-  'headReplace',
-  'tailReplace',
-  'middleReplace',
-  'headValue',
-  'tailValue',
-  'middleValue',
-  'sameIndexValue',
-  'randomValue',
-  'values',
+  'apply.duplicate',
+  'apply.insert',
+  'create.empty',
+  'create.sequence',
+  'insert.head',
+  'insert.middle',
+  'insert.random',
+  'insert.sameIndex',
+  'insert.tail',
   'length',
-  'sequence',
-  'create',
-  'createEmpty',
-  'apply',
-  'applyDuplicate',
-  'merge',
-  'mergeDuplicate',
+  'merge.duplicate',
+  'merge.insert',
+  'remove.head',
+  'remove.middle',
+  'remove.tail',
+  'replace.head',
+  'replace.middle',
+  'replace.tail',
   'retire',
+  'sequence',
+  'value.head',
+  'value.middle',
+  'value.random',
+  'value.sameIndex',
+  'value.tail',
+  'values',
 ] as const
 export type ThroughputCase = (typeof throughputCases)[number]
+
+export function caseColumns(operation: ThroughputCase) {
+  const [method, variant = '—'] = operation.split('.')
+  return { method, case: variant }
+}
 type Observation = ReturnType<typeof measureSpace> & {
   stripCount: number
   frameCount: number
@@ -52,7 +58,7 @@ export type ThroughputSample = {
   after: Observation
 }
 export type ThroughputReport = {
-  schemaVersion: 1
+  schemaVersion: 2
   suite: 'throughput'
   generatedAt: string
   environment: BenchmarkReport['environment']
@@ -94,10 +100,10 @@ function prepare(
   const state = new Projection<number>(1, snapshot)
   const fixedIndex = Math.floor(state.length() / 2)
   const inserting =
-    operation.endsWith('Insert') ||
-    operation === 'apply' ||
-    operation === 'merge'
-  const replacing = operation.endsWith('Replace')
+    operation.startsWith('insert.') ||
+    operation === 'apply.insert' ||
+    operation === 'merge.insert'
+  const replacing = operation.startsWith('replace.')
   const payloads =
     inserting || replacing
       ? Array.from({ length: config.maximumCalls }, (_, index) =>
@@ -111,14 +117,15 @@ function prepare(
           ).fill(index)
         )
       : []
-  const positions =
-    operation === 'randomValue'
-      ? Array.from({ length: config.maximumCalls }, () =>
-          random.integer(state.length())
-        )
-      : []
+  const positions = operation.endsWith('.random')
+    ? Array.from({ length: config.maximumCalls }, () =>
+        operation === 'value.random'
+          ? random.integer(state.length())
+          : random.nextUint32() / 0x1_0000_0000
+      )
+    : []
   const updates: Array<Gossip<number>> = []
-  if (operation === 'apply' || operation === 'merge') {
+  if (operation === 'apply.insert' || operation === 'merge.insert') {
     const sender = new Projection<number>(2, snapshot)
     for (const payload of payloads) {
       updates.push(sender.insert(payload, sender.length()))
@@ -130,57 +137,62 @@ function prepare(
       Array.from({ length: config.maximumCalls }, (_, index) => [index + 2])
     )
 
-  const position = (kind: string, insertion = false) =>
-    kind.startsWith('head')
+  const position = (kind: string, index: number, insertion = false) =>
+    kind.endsWith('.head')
       ? 0
-      : kind.startsWith('tail')
+      : kind.endsWith('.tail')
         ? state.length() - (insertion ? 0 : 1)
-        : Math.floor(state.length() / 2)
+        : kind.endsWith('.random')
+          ? Math.floor(
+              positions[index] * (state.length() + (insertion ? 1 : 0))
+            )
+          : Math.floor(state.length() / 2)
   const call = (index: number): unknown => {
     switch (operation) {
-      case 'headInsert':
-      case 'tailInsert':
-      case 'middleInsert':
-        return state.insert(payloads[index], position(operation, true))
-      case 'sameIndexInsert':
+      case 'insert.head':
+      case 'insert.tail':
+      case 'insert.middle':
+      case 'insert.random':
+        return state.insert(payloads[index], position(operation, index, true))
+      case 'insert.sameIndex':
         return state.insert(payloads[index], fixedIndex)
-      case 'headRemove':
-      case 'tailRemove':
-      case 'middleRemove': {
-        const at = position(operation)
+      case 'remove.head':
+      case 'remove.tail':
+      case 'remove.middle': {
+        const at = position(operation, index)
         return state.remove(at, at)
       }
-      case 'headReplace':
-      case 'tailReplace':
-      case 'middleReplace': {
-        const at = position(operation)
+      case 'replace.head':
+      case 'replace.tail':
+      case 'replace.middle': {
+        const at = position(operation, index)
         return state.replace(payloads[index], at, at)
       }
-      case 'headValue':
-      case 'tailValue':
-      case 'middleValue':
-        return state.value(position(operation))
-      case 'sameIndexValue':
-        return state.value(fixedIndex)
-      case 'randomValue':
+      case 'value.head':
+      case 'value.tail':
+      case 'value.middle':
+        return state.value(position(operation, index))
+      case 'value.random':
         return state.value(positions[index])
+      case 'value.sameIndex':
+        return state.value(fixedIndex)
       case 'values':
         return state.values()
       case 'length':
         return state.length()
       case 'sequence':
         return state.sequence()
-      case 'create':
+      case 'create.sequence':
         return new Projection<number>(1, snapshot)
-      case 'createEmpty':
+      case 'create.empty':
         return new Projection<number>(1)
-      case 'apply':
+      case 'apply.insert':
         return state.apply(updates[index])
-      case 'merge':
+      case 'merge.insert':
         return state.merge([[[2]], updates[index]])
-      case 'applyDuplicate':
+      case 'apply.duplicate':
         return state.apply(snapshot[1])
-      case 'mergeDuplicate':
+      case 'merge.duplicate':
         return state.merge(snapshot)
       case 'retire':
         return state.retire(index + 2)
@@ -218,7 +230,7 @@ function burst(
   config: BenchmarkConfig
 ): MetricResult {
   let count = 0
-  const removing = operation.endsWith('Remove')
+  const removing = operation.startsWith('remove.')
   const limit = removing
     ? Math.min(config.maximumCalls, work.state.length())
     : config.maximumCalls
@@ -279,19 +291,19 @@ export async function runThroughput(
         const before = observe(work.state)
         const metric = burst(work, operation, config)
         if (
-          (operation === 'apply' || operation === 'merge') &&
+          (operation === 'apply.insert' || operation === 'merge.insert') &&
           resultSink === undefined
         )
           throw new TypeError('Throughput remote input was rejected.')
         const expected =
           before.frameCount +
-          (operation.endsWith('Insert') ||
-          operation === 'apply' ||
-          operation === 'merge'
+          (operation.startsWith('insert.') ||
+          operation === 'apply.insert' ||
+          operation === 'merge.insert'
             ? work.payloads
                 .slice(0, metric.count)
                 .reduce((sum, payload) => sum + payload.length, 0)
-            : operation.endsWith('Remove')
+            : operation.startsWith('remove.')
               ? -metric.count
               : 0)
         if (work.state.length() !== expected)
@@ -316,8 +328,14 @@ export async function runThroughput(
       )
     }
   }
-  const aggregates = config.checkpoints.flatMap((initialStripCount) =>
-    throughputCases.map((operation) => {
+  samples.sort(
+    (left, right) =>
+      left.operation.localeCompare(right.operation) ||
+      left.initialStripCount - right.initialStripCount ||
+      left.run - right.run
+  )
+  const aggregates = throughputCases.flatMap((operation) =>
+    config.checkpoints.map((initialStripCount) => {
       const metrics = samples
         .filter(
           (sample) =>
@@ -348,7 +366,7 @@ export async function runThroughput(
   console.table(
     aggregates.map(({ initialStripCount, operation, metric }) => ({
       'initial Strips': initialStripCount,
-      operation,
+      ...caseColumns(operation),
       calls: metric.count,
       'ops/sec': Math.round(metric.operationsPerSecond!).toLocaleString(
         'en-US'
@@ -357,7 +375,7 @@ export async function runThroughput(
     }))
   )
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     suite: 'throughput',
     generatedAt: new Date().toISOString(),
     config,
@@ -376,7 +394,7 @@ export async function runThroughput(
 function printCheckpoint(samples: Array<ThroughputSample>): void {
   console.table(
     samples.map(({ operation, metric, before, after }) => ({
-      operation,
+      ...caseColumns(operation),
       calls: metric.count,
       'ops/sec': Math.round(metric.operationsPerSecond!).toLocaleString(
         'en-US'
@@ -389,7 +407,7 @@ function printCheckpoint(samples: Array<ThroughputSample>): void {
   console.log('Memory usage')
   console.table(
     samples.map(({ operation, before, after }) => ({
-      operation,
+      ...caseColumns(operation),
       'visible Strips': after.stripCount,
       'structural Strips': after.structuralStripCount,
       'initial estimated bytes': before.memory.bytes,
@@ -402,7 +420,7 @@ function printCheckpoint(samples: Array<ThroughputSample>): void {
   console.log('Disk usage (serialized Sequence)')
   console.table(
     samples.map(({ operation, before, after }) => ({
-      operation,
+      ...caseColumns(operation),
       'retained insertions': after.retainedInsertionCount,
       'initial sequence bytes': before.storage.sequenceBytes,
       'final sequence bytes': after.storage.sequenceBytes,
