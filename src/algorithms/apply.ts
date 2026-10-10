@@ -12,9 +12,10 @@ import type {
 } from '../types/type.js'
 import { findContainingFragment } from '../auxiliary/findContainingFragment.js'
 import { findFramePositionByProjectionPosition } from '../auxiliary/findFramePositionByProjectionPosition.js'
+import { linkJumps } from '../auxiliary/linkJumps.js'
 
 /**
- * Applies received Gossip while preserving the cached projected position.
+ * Applies received Gossip while retaining the local traversal Strip.
  *
  * @param this Projection receiving the Gossip.
  * @param gossip Batch of Insertions and Acknowledgements.
@@ -28,8 +29,6 @@ export function apply<T>(
   // Reject a missing batch before iterating; individual tuples are checked below.
   if (!Array.isArray(gossip)) return
 
-  // Save the consumer's numeric position before remote edits move traversal caches.
-  const projectedPosition = this.projectedPosition
   // Changes use the visible coordinates after each preceding entry has applied.
   const changes = []
   const acknowledgements: Array<Acknowledgement> = []
@@ -117,18 +116,96 @@ export function apply<T>(
           )
         }
 
+        // Local removal may have left gate on a mask; resolve only that hidden boundary.
+        if (this.projectionFrameCount === 0) {
+          this.gate = undefined
+          this.gatePosition = 0
+        } else if (
+          this.gate &&
+          (this.gate.fragmentDiff ?? this.gate.insertionDiff) <= 0
+        )
+          void findFramePositionByProjectionPosition.call(
+            this,
+            Math.min(this.gatePosition, this.projectionFrameCount - 1)
+          )
+
         // Apply the structural edit before resolving the Change's visible position.
-        projectionDiff = anchorStrip.call(this, incomingStrip, anchoringStrip, anchorDiff)
+        projectionDiff = anchorStrip.call(
+          this,
+          incomingStrip,
+          anchoringStrip,
+          anchorDiff
+        )
+
+        let gateDiff = projectionDiff
+        // A fragmented mask can remove Frames on both sides of a surviving local Strip.
+        if (projectionDiff < 0 && incomingStrip.rightFragment && this.gate) {
+          let parent: Strip<T> = this.gate
+          while (
+            parent &&
+            !(
+              parent.insertionSession === incomingStrip.anchorSession &&
+              parent.insertionStart === incomingStrip.anchorStart
+            ) &&
+            !(
+              parent.anchorSession === incomingStrip.anchorSession &&
+              parent.anchorStart === incomingStrip.anchorStart
+            )
+          )
+            parent = this.containmentTable.get([
+              parent.anchorSession,
+              parent.anchorStart,
+              parent.anchorDiff,
+              parent.insertionSession,
+              parent.insertionStart,
+              parent.insertionDiff,
+            ])
+          if (parent) {
+            const boundary =
+              parent.insertionSession === incomingStrip.anchorSession &&
+              parent.insertionStart === incomingStrip.anchorStart
+                ? (parent.fragmentStart ?? 0)
+                : parent.anchorDiff
+            gateDiff = 0
+            // Count only this mask's actual consumed prefix before the local canonical boundary.
+            for (
+              let mask: Strip<T> = incomingStrip;
+              mask && mask.anchorDiff + (mask.fragmentStart ?? 0) < boundary;
+              mask = mask.rightFragment
+            )
+              gateDiff -= Math.min(
+                -(mask.fragmentDiff ?? mask.insertionDiff),
+                Math.max(
+                  0,
+                  boundary - mask.anchorDiff - (mask.fragmentStart ?? 0)
+                )
+              )
+          }
+        }
 
         // Resolve once from the incoming Strip; gateDiff accounts for the old gate's shift.
         startAt = findProjectionPositionOfStrip.call(
           this,
           incomingStrip,
-          projectionDiff
+          gateDiff
         )
-        // Cache this edit's known position for subsequent entries in the same batch.
-        this.gate = incomingStrip
-        this.gatePosition = startAt
+        // Preserve the local Strip; only edits preceding it move its visible start.
+        if (startAt <= this.gatePosition)
+          this.gatePosition = Math.max(startAt, this.gatePosition + gateDiff)
+        // Splitting at its start retains the local content in the original right fragment.
+        if (projectionDiff > 0 && this.gate?.fragmentDiff === 0) {
+          this.gate = this.gate.rightFragment
+          // Promote the retained fragment so later lookups cannot lose its crossing span.
+          const right = incomingStrip.rightJump
+          if (right && right !== this.gate)
+            linkJumps(
+              this.gate!,
+              right,
+              incomingStrip.rightJumpFrameCount! - projectionDiff,
+              incomingStrip.rightJumpStripCount! - 1
+            )
+          linkJumps(incomingStrip, this.gate!, projectionDiff, 1)
+        }
       }
 
       // Publish the identity only after placement, so released dependents can find it.
@@ -153,6 +230,26 @@ export function apply<T>(
         void changes.push([startAt, startAt - projectionDiff])
       }
 
+      // A removed gate follows the surviving content at its visible boundary.
+      if (this.projectionFrameCount === 0) {
+        this.gate = undefined
+        this.gatePosition = 0
+      } else if (!this.gate) {
+        this.gate = this.head
+        this.gatePosition = 0
+      } else if ((this.gate.fragmentDiff ?? this.gate.insertionDiff) <= 0) {
+        void findFramePositionByProjectionPosition.call(
+          this,
+          Math.min(this.gatePosition, this.projectionFrameCount - 1)
+        )
+      }
+      this.projectedPosition = this.gatePosition
+      // Keep the local gate's outgoing span available to the next local edit.
+      if (this.gate?.rightJump) {
+        this.leftJumpToPatch = this.gate
+        this.rightJumpToPatch = this.gate.rightJump
+      }
+
       // Detach only the bucket keyed by this newly materialized Insertion's identity.
       const pending = this.pendingTable.take(incomingStrip)
 
@@ -161,23 +258,6 @@ export function apply<T>(
         for (let i = pending.length - 1; i >= 0; --i)
           void queue.push(pending[i])
     }
-  }
-
-  // Acknowledgement-only and pending-only batches do not require a visible gate refresh.
-  if (changes.length !== 0) {
-    // A Frame resolver needs a visible Frame; the empty branch clears the gate instead.
-    if (this.projectionFrameCount > 0) {
-      void findFramePositionByProjectionPosition.call(
-        this,
-        // Shortening may remove the saved index; resolve the last remaining Frame in that case.
-        Math.min(projectedPosition, this.projectionFrameCount - 1)
-      )
-    } else {
-      this.gate = undefined
-      this.gatePosition = 0
-    }
-    // Restore the number after resolution; remote edits change its occupant, not the number.
-    this.projectedPosition = projectedPosition
   }
 
   // Omit the reply slot when no reducing Insertion generated acknowledgement Gossip.

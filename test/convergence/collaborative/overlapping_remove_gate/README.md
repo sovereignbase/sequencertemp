@@ -42,9 +42,10 @@ old middle draft
 tail content
 ```
 
-Before the remote histories are applied, the receiver's `projectedPosition` is
-zero. Remote operations must preserve that position while `gate` follows the
-Strip containing the current visible Frame at that position.
+Before the remote histories are applied, the receiver's gate is at the original
+head. Remote operations retain that Strip while it is visible. If it is removed,
+the gate follows neighbouring surviving content. `projectedPosition` and
+`gatePosition` follow the gate's visible start rather than preserving index zero.
 
 `head` contains the first visible Frame. Non-visible structural Strips may
 precede it.

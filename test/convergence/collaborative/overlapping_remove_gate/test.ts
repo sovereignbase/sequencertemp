@@ -5,9 +5,8 @@ import { deliver, expect_converged } from '../../../.helpers/replica.ts'
 
 describe('overlapping remove gate', () => {
   /**
-   * Verifies that remote overlapping reducing operations preserve the
-   * receiver's projected position. The receiver begins at Projection position
-   * zero; the Strip containing that position may change during remote apply.
+   * Verifies that remote overlapping reducing operations keep the receiver's
+   * gate on surviving content with the correct visible index.
    *
    * Three replicas begin from the same retained two-Frame Sequence. They then
    * independently author overlapping removals, a replacement, and additional
@@ -22,12 +21,10 @@ describe('overlapping remove gate', () => {
    * - `unordered` receives exactly the same mutations in a deliberately reordered
    *   sequence beginning with later removals.
    *
-   * Both receivers must converge to the same Projection. In addition, remote
-   * application must not move the unordered receiver's projected position:
-   * because its pre-apply position is zero, its post-apply position must still
-   * be zero despite overlapping removals around the head.
+   * Both receivers must converge to the same Projection. If a removal consumes
+   * the unordered receiver's gate, it follows neighbouring surviving content.
    */
-  it('keeps the projected position stable across overlapping removals', () => {
+  it('keeps the gate index correct across overlapping removals', () => {
     // Establish the retained two-Frame origin shared by all replicas.
     const seed = new Projection<string>(1)
     seed.insert(['base-0', 'base-1'], 0)
@@ -74,8 +71,17 @@ describe('overlapping remove gate', () => {
       mutations[1],
     ])
 
-    // Check remote position stability before lookups move the local gate.
-    expect(unordered.projectedPosition).toBe(0)
+    // Check the retained cursor before convergence lookups move the local gate.
+    let position = 0
+    let strip = unordered.structuralHead
+    while (strip && strip !== unordered.gate) {
+      position += Math.max(0, strip.fragmentDiff ?? strip.insertionDiff)
+      strip = strip.rightStep
+    }
+    expect(strip).toBeDefined()
+    expect(strip!.fragmentDiff ?? strip!.insertionDiff).toBeGreaterThan(0)
+    expect(unordered.gatePosition).toBe(position)
+    expect(unordered.projectedPosition).toBe(position)
 
     // Delivery order must not change the visible Projection.
     expect_converged(ordered, unordered)

@@ -7,7 +7,7 @@ import { linkJumps } from './linkJumps.js'
  *
  * @param this Projection containing the Strip.
  * @param strip Strip whose visible position is required.
- * @param gateDiff Visible edit effect used to adjust the previous gate's position.
+ * @param gateDiff Visible edit effect preceding the retained gate.
  * @returns First Projection position of the Strip.
  */
 export function findProjectionPositionOfStrip<T>(
@@ -110,7 +110,7 @@ export function findProjectionPositionOfStrip<T>(
   }
 
   // CREATE JUMPS TOWARDS OPTIMAL SPACING
-  // The resolved Strip becomes gate, so it must delimit its own spans even in a short gap.
+  // The resolved edit must delimit its own spans even in a short gap.
   if (!strip.leftJump && !strip.rightJump) {
     // Never create a self-jump; the left side must have a distinct endpoint.
     if (leftCursor !== strip) {
@@ -148,7 +148,7 @@ export function findProjectionPositionOfStrip<T>(
     }
   }
 
-  // Cache only the span containing this newly resolved gate, not an earlier remote edit.
+  // Cache the span of this resolved edit; apply restores the retained local gate's outgoing span.
   this.leftJumpToPatch = strip
   this.rightJumpToPatch = strip.rightJump
 
@@ -199,8 +199,13 @@ export function findProjectionPositionOfStrip<T>(
       let leftJumpStripCount = leftCursor.leftJumpStripCount!
 
       // REMOVE A JUMP INDEX FROM BETWEEN TO INCREASE DISTANCE TOWARDS OPTIMAL
-      // Combining short spans is allowed only away from head and tail, which are direct index references.
-      if (leftJumpStripCount < optimalJumpSpacing && leftJump !== this.head && leftJump !== this.tail) {
+      // Preserve head, tail, and the retained local gate as jump endpoints.
+      if (
+        leftJumpStripCount < optimalJumpSpacing &&
+        leftJump !== this.head &&
+        leftJump !== this.tail &&
+        leftJump !== this.gate
+      ) {
         const nextLeftJump = leftJump.leftJump
 
         if (
@@ -243,8 +248,13 @@ export function findProjectionPositionOfStrip<T>(
       let rightJumpStripCount = rightCursor.rightJumpStripCount!
 
       // REMOVE A JUMP INDEX FROM BETWEEN TO INCREASE DISTANCE TOWARDS OPTIMAL
-      // Keep the right-side visible boundaries explicit when combining adjacent short jumps.
-      if (rightJumpStripCount < optimalJumpSpacing && rightJump !== this.tail && rightJump !== this.head) {
+      // Keep the visible boundaries and the retained local gate as jump endpoints.
+      if (
+        rightJumpStripCount < optimalJumpSpacing &&
+        rightJump !== this.tail &&
+        rightJump !== this.head &&
+        rightJump !== this.gate
+      ) {
         const nextRightJump = rightJump.rightJump
 
         if (
