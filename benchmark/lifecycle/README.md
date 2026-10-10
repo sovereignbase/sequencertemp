@@ -80,7 +80,7 @@ checkpoints, Sequences, restarts, serialization, or forced garbage collection.
 ## Running
 
 ```powershell
-npm run bench
+npm run bench:lifecycle
 ```
 
 A short development run:
@@ -95,6 +95,10 @@ Useful options are documented by:
 npm run bench -- --help
 ```
 
-The default run count is three and the default maximum is 10,000 visible
+Memory usage and disk usage are reported in separate tables. Memory estimates
+describe exported state; process RSS and heap include the entire benchmark.
+Disk usage measures serialized Sequence bytes, excluding filesystem metadata.
+
+The default run count is three and the default maximum is 1,000 visible
 Strips. JSON and Markdown reports are written to
 `benchmark/results/lifecycle.{json,md}` unless `--no-output` is supplied.

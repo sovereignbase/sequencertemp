@@ -19,6 +19,10 @@ export type ManagementName = (typeof management_names)[number]
 export type MetricScope = 'scaleUp' | 'scaleDown' | 'fullLifecycle'
 
 export type BenchmarkConfig = {
+  suite: 'lifecycle' | 'throughput'
+  initialStripCount: number
+  burstMilliseconds: number
+  maximumCalls: number
   runs: number
   maximumStripCount: number
   checkpoints: Array<number>

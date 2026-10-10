@@ -163,10 +163,12 @@ const makeMarkdown = (report: BenchmarkReport): string => {
 
   lines.push(
     '',
-    '## Memory and storage efficiency',
+    '## Memory usage',
     '',
-    '| Run | direction | Replica | visible Strips | retained insertions | Frames | estimated memory bytes | memory B/Strip | memory B/Frame | sequence bytes | sequence B/Strip | sequence B/Frame | process RSS |',
-    '| ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
+    'Estimated bytes describe the exported Sequence representation. Process memory is shared by both peers, benchmark fixtures and temporary results.',
+    '',
+    '| Run | direction | Replica | visible Strips | retained insertions | Frames | estimated memory bytes | memory B/Strip | memory B/Frame | process RSS | process heap used |',
+    '| ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
   )
   for (const run of report.runs)
     for (const checkpoint of run.checkpoints)
@@ -183,10 +185,35 @@ const makeMarkdown = (report: BenchmarkReport): string => {
             observed.memory.bytes.toLocaleString('en-US'),
             decimal(observed.memory.bytesPerStrip),
             decimal(observed.memory.bytesPerFrame),
-            observed.storage.sequenceBytes.toLocaleString('en-US'),
+            checkpoint.processMemory.rssBytes.toLocaleString('en-US'),
+            checkpoint.processMemory.heapUsedBytes.toLocaleString('en-US'),
+          ])
+        )
+      }
+
+  lines.push(
+    '',
+    '## Disk usage',
+    '',
+    'Disk bytes are the size of node:v8.serialize(sequence), excluding filesystem metadata; no disk I/O is timed.',
+    '',
+    '| Run | direction | Replica | visible Strips | Frames | sequence bytes | disk B/Strip | disk B/Frame |',
+    '| ---: | --- | --- | ---: | ---: | ---: | ---: | ---: |'
+  )
+  for (const run of report.runs)
+    for (const checkpoint of run.checkpoints)
+      for (const replica of replicas) {
+        const observed = checkpoint.replicas[replica]
+        lines.push(
+          row([
+            run.run,
+            checkpoint.direction,
+            replica,
+            observed.strips.stripCount,
+            observed.strips.frameCount,
+            observed.storage.sequenceBytes,
             decimal(observed.storage.bytesPerStrip),
             decimal(observed.storage.bytesPerFrame),
-            checkpoint.processMemory.rssBytes.toLocaleString('en-US'),
           ])
         )
       }
@@ -259,7 +286,20 @@ export async function writeReports(
   report: BenchmarkReport
 ): Promise<{ jsonPath: string; markdownPath: string } | null> {
   if (report.config.outputPath === null) return null
-  const requestedPath = resolve(report.config.outputPath)
+  return writeReportFiles(
+    report.config.outputPath,
+    report,
+    makeMarkdown(report)
+  )
+}
+
+export async function writeReportFiles(
+  outputPath: string | null,
+  report: unknown,
+  markdown: string
+): Promise<{ jsonPath: string; markdownPath: string } | null> {
+  if (outputPath === null) return null
+  const requestedPath = resolve(outputPath)
   const jsonPath =
     extname(requestedPath).toLowerCase() === '.json'
       ? requestedPath
@@ -268,7 +308,7 @@ export async function writeReports(
   await mkdir(dirname(jsonPath), { recursive: true })
   await Promise.all([
     writeFile(jsonPath, JSON.stringify(report, null, 2) + '\n'),
-    writeFile(markdownPath, makeMarkdown(report)),
+    writeFile(markdownPath, markdown),
   ])
   return { jsonPath, markdownPath }
 }

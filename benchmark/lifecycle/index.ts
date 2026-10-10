@@ -1,5 +1,5 @@
-import { serialize } from 'node:v8'
 import { Projection } from '../../dist/class.js'
+import { measureProcessMemory, measureSpace } from '../space.ts'
 import type { Gossip, Result } from '../../dist/class.js'
 import {
   deriveSeed,
@@ -267,28 +267,17 @@ const observeReplica = (
   const [sequenceResult, checkpointSequence] = managementMetric(() =>
     runtime.state.sequence()
   )
-  const sequenceBytes = serialize(checkpointSequence).byteLength
-
   const [createMetric] = managementMetric(() =>
     createReplica(runtime.actorId, checkpointSequence)
   )
 
   const stripCount = runtime.strips.count
   const frameCount = runtime.strips.frameCount
-  const sequenceMetadataWordBytes =
-    (checkpointSequence[0].reduce(
-      (words, acknowledgement) => words + acknowledgement.length,
-      0
-    ) +
-      checkpointSequence[1].length * 6) *
-    4
-  const javascriptFootageSlotBytes =
-    checkpointSequence[1].reduce(
-      (slots, insertion) => slots + (insertion[6]?.length ?? 0),
-      0
-    ) * 8
-  const estimatedMemoryBytes =
-    sequenceMetadataWordBytes + javascriptFootageSlotBytes
+  const { memory, storage } = measureSpace(
+    checkpointSequence,
+    stripCount,
+    frameCount
+  )
 
   const checkpoint: ReplicaCheckpoint = {
     operations: runtime.metrics.snapshot(),
@@ -297,20 +286,8 @@ const observeReplica = (
       sequence: sequenceResult,
       create: createMetric,
     },
-    memory: {
-      bytes: estimatedMemoryBytes,
-      bytesPerStrip: ratio(estimatedMemoryBytes, stripCount),
-      bytesPerFrame: ratio(estimatedMemoryBytes, frameCount),
-      measurement: 'estimated-sequence-words-plus-js-footage-slots',
-      sequenceMetadataWordBytes,
-      javascriptFootageSlotBytes,
-    },
-    storage: {
-      serialization: 'node:v8.serialize',
-      sequenceBytes,
-      bytesPerStrip: ratio(sequenceBytes, stripCount),
-      bytesPerFrame: ratio(sequenceBytes, frameCount),
-    },
+    memory,
+    storage,
     strips: {
       stripCount,
       frameCount,
@@ -324,8 +301,8 @@ const observeReplica = (
   const scope = direction === 'up' ? 'scaleUp' : 'scaleDown'
   for (const selectedScope of [scope, 'fullLifecycle'] as const)
     runtime.space[selectedScope].add(
-      estimatedMemoryBytes,
-      sequenceBytes,
+      memory.bytes,
+      storage.sequenceBytes,
       stripCount,
       frameCount
     )
@@ -350,21 +327,13 @@ const takeCheckpoint = async (
     A: observeReplica(runtime, direction),
   }
   await collectGarbage()
-  const processMemory = process.memoryUsage()
 
   return {
     run,
     direction,
     stripCount: replicas.A.strips.stripCount,
     frameCount: replicas.A.strips.frameCount,
-    processMemory: {
-      scope: 'shared-process-not-attributable-to-one-replica',
-      rssBytes: processMemory.rss,
-      heapTotalBytes: processMemory.heapTotal,
-      heapUsedBytes: processMemory.heapUsed,
-      externalBytes: processMemory.external,
-      arrayBufferBytes: processMemory.arrayBuffers,
-    },
+    processMemory: measureProcessMemory(),
     replicas,
   }
 }
@@ -412,6 +381,7 @@ const printCheckpoint = (checkpoint: CheckpointResult): void => {
       )
     )
   )
+  console.log('Memory usage')
   console.table(
     replicaNames.map((replica) => {
       const observed = checkpoint.replicas[replica]
@@ -427,10 +397,21 @@ const printCheckpoint = (checkpoint: CheckpointResult): void => {
         'estimated memory bytes': observed.memory.bytes,
         'memory B/Strip': observed.memory.bytesPerStrip?.toFixed(3) ?? '—',
         'memory B/Frame': observed.memory.bytesPerFrame?.toFixed(3) ?? '—',
-        'sequence bytes': observed.storage.sequenceBytes,
         'process RSS bytes': checkpoint.processMemory.rssBytes,
+        'process heap used bytes': checkpoint.processMemory.heapUsedBytes,
       }
     })
+  )
+  console.log('Disk usage (serialized Sequence)')
+  console.table(
+    replicaNames.map((replica) => ({
+      replica,
+      'sequence bytes': checkpoint.replicas[replica].storage.sequenceBytes,
+      'disk B/Strip':
+        checkpoint.replicas[replica].storage.bytesPerStrip?.toFixed(3) ?? '—',
+      'disk B/Frame':
+        checkpoint.replicas[replica].storage.bytesPerFrame?.toFixed(3) ?? '—',
+    }))
   )
 }
 

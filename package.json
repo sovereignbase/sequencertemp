@@ -38,6 +38,8 @@
     "test:stress": "vitest run test/stress --coverage.enabled=false",
     "test:e2e": "playwright test",
     "bench": "npm run build:package && node benchmark/index.ts",
+    "bench:lifecycle": "npm run bench -- --suite lifecycle",
+    "bench:throughput": "npm run bench -- --suite throughput",
     "prepare": "husky",
     "prepublishOnly": "npm run test && npm run bench"
   },
