@@ -8,3 +8,7 @@ index as the source Projection.
 
 Local and remote edits inside those spans must retain usable jumps with matching
 visible and structural distances, while preserving the expected visible values.
+
+Successive anchors in one long Insertion also exercise fragment progress during
+hydration. Same-point competitors must retain their complete sibling order,
+and later indexed edits must still resolve the expected boundary.

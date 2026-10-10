@@ -1,8 +1,30 @@
 import { describe, expect, it } from 'vitest'
 import { Projection } from '../../../../src/class.ts'
-import type { Strip } from '../../../../src/types/type.ts'
+import type { Insertion, Strip } from '../../../../src/types/type.ts'
 
 describe('sequence jump preoptimization', () => {
+  it('hydrates successive fragment boundaries and their same-point competitors', () => {
+    const frames = Array.from({ length: 256 }, (_, index) => index)
+    const insertions: Array<Insertion<number>> = [
+      [0, 0, 0, 100, 0, frames.length, frames],
+    ]
+    const expected = [...frames]
+    for (let index = 0; index < 128; ++index) {
+      const at = index * 2 + 1
+      insertions.push([100, 0, at, 300, index * 2, 1, [-at]])
+      insertions.push([100, 0, at, 200, index * 2, 1, [-at - 1000]])
+      expected.splice(index * 4 + 1, 0, -at, -at - 1000)
+    }
+
+    const hydrated = new Projection<number>(1, [[], insertions])
+    expect(hydrated.values()).toEqual(expected)
+    expect(new Projection<number>(1, hydrated.sequence()).values()).toEqual(
+      expected
+    )
+    hydrated.insert([9999], 255)
+    expected.splice(255, 0, 9999)
+    expect(hydrated.values()).toEqual(expected)
+  })
   /**
    * Verifies that reconstruction from a retained Sequence prebuilds valid
    * traversal jumps at approximately square-root spacing.

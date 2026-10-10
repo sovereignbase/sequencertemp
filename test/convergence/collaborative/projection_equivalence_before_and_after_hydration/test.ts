@@ -51,9 +51,72 @@ describe('projection equivalence before and after hydration', () => {
       expect(snapshot[1].some((entry) => entry[3] === 60 && entry[5] < 0)).toBe(
         !compact
       )
+      if (compact)
+        expect(snapshot[1].some((entry) => entry[3] === 30)).toBe(false)
       expect(local.values()).toEqual(before)
       const hydrated = new Projection<string>(5, snapshot)
       expect(hydrated.values()).toEqual(before)
+      expect(new Projection<string>(5, hydrated.sequence()).values()).toEqual(
+        before
+      )
     }
   )
+
+  it('preserves children at distinct points collapsed by compaction', () => {
+    const projection = new Projection<string>(1, [
+      [],
+      [
+        [0, 0, 0, 100, 0, 4, ['a', 'b', 'c', 'tail']],
+        [100, 0, 1, 200, 0, 1, ['A']],
+        [100, 0, 2, 300, 0, 1, ['B']],
+      ],
+    ])
+    expect(projection.values()).toEqual(['a', 'A', 'b', 'B', 'c', 'tail'])
+
+    projection.remove(4, 4)
+    projection.remove(2, 2)
+    projection.remove(0, 0)
+    expect(projection.values()).toEqual(['A', 'B', 'tail'])
+
+    const snapshot = projection.sequence()
+    expect(snapshot[1].every((entry) => entry[5] > 0)).toBe(true)
+    expect(snapshot[1][0][6]).toEqual(['tail'])
+    const hydrated = new Projection<string>(1, snapshot)
+    expect(hydrated.values()).toEqual(['A', 'B', 'tail'])
+    hydrated.insert(['X'], 1)
+    expect(hydrated.values()).toEqual(['A', 'X', 'B', 'tail'])
+    expect(new Projection<string>(1, hydrated.sequence()).values()).toEqual([
+      'A',
+      'X',
+      'B',
+      'tail',
+    ])
+  })
+
+  it('compacts an acknowledged mask while retaining an overlapping unacknowledged mask', () => {
+    const projection = new Projection<string>(1, [
+      [
+        [1, 200, 2],
+        [2, 200, 2],
+      ],
+      [
+        [0, 0, 0, 100, 0, 4, ['a', 'b', 'c', 'd']],
+        [100, 0, 0, 200, 0, -2],
+        [100, 0, 1, 300, 0, -2],
+        [300, 0, 2, 400, 0, 1, ['X']],
+      ],
+    ])
+    expect(projection.values()).toEqual(['X', 'd'])
+
+    const snapshot = projection.sequence()
+    expect(snapshot[1].some((entry) => entry[3] === 200)).toBe(false)
+    expect(snapshot[1].find((entry) => entry[3] === 300)?.[5]).toBe(-1)
+    expect(snapshot[1][0][6]).toEqual([undefined, 'd'])
+    const hydrated = new Projection<string>(1, snapshot)
+    expect(hydrated.values()).toEqual(['X', 'd'])
+    expect(new Projection<string>(1, hydrated.sequence()).values()).toEqual([
+      'X',
+      'd',
+    ])
+  })
 })

@@ -4,12 +4,13 @@ import { insertFirst } from '../auxiliary/insertFirst.js'
 import type { Projection } from '../class.js'
 import type { Sequence, Strip } from '../types/type.js'
 import { findContainingFragment } from '../auxiliary/findContainingFragment.js'
+import { linkJumps } from '../auxiliary/linkJumps.js'
 
 /**
  * Initializes a Projection from optional trusted state and assigns fresh sessions.
  *
  * @param this Projection to initialize.
- * @param trustedSequence Optional dependency-ordered Sequence; not shape-validated.
+ * @param trustedSequence Optional Sequence in Structural Order; not shape-validated.
  */
 export function create<T>(
   this: Projection<T>,
@@ -30,17 +31,27 @@ export function create<T>(
   if (Array.isArray(projection)) {
     // Use at least one structural step per jump, including for an empty snapshot.
     const jumpSpacing = Math.max(1, Math.round(Math.sqrt(projection.length)))
+    // Hydration-only progress through each original Insertion's fragments.
+    // Unfragmented parents need no entry; the live containment index keeps its original Strip.
+    const fragments = new Map<NonNullable<Strip<T>>, NonNullable<Strip<T>>>()
+
+    let jumpStart: Strip<T>
+    let jumpCursor: Strip<T>
+    let jumpFrameCount = 0
+    let jumpStripCount = 0
+    let tailJumpStart: Strip<T>
+    let head: Strip<T>
+    let tail: Strip<T>
 
     for (let index = 0; index < projection.length; ++index) {
       const incoming = projection[index]
-      let incomingStrip: Strip<T>
 
       // Reserve both dependency and author Session IDs, including references not materialized here.
       void unsafeIDs.add(incoming[0])
       void unsafeIDs.add(incoming[3])
 
       // Hydrate runtime metadata without changing canonical coordinates or copying Footage.
-      incomingStrip = {
+      const incomingStrip: NonNullable<Strip<T>> = {
         anchorSession: incoming[0],
         anchorStart: incoming[1],
         anchorDiff: incoming[2],
@@ -67,10 +78,24 @@ export function create<T>(
           // Trusted hydration requires parents before children; unlike apply, this path does not queue.
           if (!origin) continue
 
+          const fragment = origin.rightFragment
+            ? (fragments.get(origin) ?? origin)
+            : origin
+          // An equal left boundary may have competitors on the preceding fragment.
+          // Older logical points still resolve from the original Strip.
           ;[anchorDiff, anchoringStrip] = findContainingFragment(
-            origin,
+            incomingStrip.anchorDiff > (fragment.fragmentStart ?? 0)
+              ? fragment
+              : origin,
             incomingStrip
           )
+          // A consumed point can resolve into a mask with a different coordinate origin.
+          if (
+            origin.rightFragment &&
+            anchoringStrip.insertionSession === origin.insertionSession &&
+            anchoringStrip.insertionStart === origin.insertionStart
+          )
+            fragments.set(origin, anchoringStrip)
         }
 
         void anchorStrip.call(this, incomingStrip, anchoringStrip, anchorDiff)
@@ -87,62 +112,54 @@ export function create<T>(
           incomingStrip.insertionStart - incomingStrip.insertionDiff,
         ])
       }
-    }
 
-    let jumpStart = this.structuralHead
-    let jumpCursor = this.structuralHead
-    let jumpFrameCount = 0
-    let jumpStripCount = 0
-    let tailJumpStart: Strip<T>
+      // Sequence tuples follow Structural Order. Later tuples may still split
+      // the new Strip, so finalize only the preceding prefix; flush on the last tuple.
+      if (!jumpCursor) jumpStart = jumpCursor = this.structuralHead
+      const stop = index + 1 < projection.length ? incomingStrip : undefined
+      while (jumpCursor && jumpCursor !== stop) {
+        const diff = jumpCursor.fragmentDiff ?? jumpCursor.insertionDiff
 
-    // Recompute visible boundaries from the completed graph, not intermediate edit order.
-    this.head = undefined
-    this.tail = undefined
+        // Only positive runtime lengths occupy visible indices; masks still count as structural nodes.
+        if (diff > 0) {
+          // The first positive Strip establishes index zero; restart jump counts to exclude hidden prefixes.
+          if (!head) {
+            head = jumpCursor
+            // Begin the next span at this destination; reset distances rather than carrying the previous span.
+            jumpStart = jumpCursor
+            jumpFrameCount = 0
+            jumpStripCount = 0
+          }
+          // Each positive Strip replaces the tail; remember its spanning jump for final boundary cleanup.
+          tail = jumpCursor
+          tailJumpStart = jumpStart
+        }
 
-    // Build jumps from the completed structure, after all splits and removals.
-    while (jumpCursor) {
-      const diff = jumpCursor.fragmentDiff ?? jumpCursor.insertionDiff
+        // Visible distance sums positive lengths only; every visited node adds one structural step.
+        jumpFrameCount += Math.max(0, diff)
+        ++jumpStripCount
 
-      // Only positive runtime lengths occupy visible indices; masks still count as structural nodes.
-      if (diff > 0) {
-        // The first positive Strip establishes index zero; restart jump counts to exclude hidden prefixes.
-        if (!this.head) {
-          this.head = jumpCursor
-          // Begin the next span at this destination; reset distances rather than carrying the previous span.
+        jumpCursor = jumpCursor.rightStep
+
+        // Install reciprocal distances only for a complete span with an existing destination.
+        if (jumpStripCount === jumpSpacing && jumpCursor) {
+          linkJumps(jumpStart!, jumpCursor, jumpFrameCount, jumpStripCount)
+
           jumpStart = jumpCursor
           jumpFrameCount = 0
           jumpStripCount = 0
         }
-        // Each positive Strip replaces the tail; remember its spanning jump for final boundary cleanup.
-        this.tail = jumpCursor
-        tailJumpStart = jumpStart
-      }
-
-      // Visible distance sums positive lengths only; every visited node adds one structural step.
-      jumpFrameCount += Math.max(0, diff)
-      ++jumpStripCount
-
-      jumpCursor = jumpCursor.rightStep
-
-      // Link only a complete span with an existing destination; no jump may end beyond the graph.
-      if (jumpStripCount === jumpSpacing && jumpCursor) {
-        jumpStart!.rightJump = jumpCursor
-        jumpStart!.rightJumpFrameCount = jumpFrameCount
-        jumpStart!.rightJumpStripCount = jumpStripCount
-
-        // Mirror the same distances in both directions of the jump.
-        jumpCursor.leftJump = jumpStart
-        jumpCursor.leftJumpFrameCount = jumpFrameCount
-        jumpCursor.leftJumpStripCount = jumpStripCount
-
-        jumpStart = jumpCursor
-        jumpFrameCount = 0
-        jumpStripCount = 0
       }
     }
+    this.head = head
+    this.tail = tail
     // Remove a jump crossing the visible tail into hidden suffix history so traversal retains
     // that known visible boundary. Clear both endpoint links.
-    if (tailJumpStart && tailJumpStart !== this.tail && tailJumpStart.rightJump) {
+    if (
+      tailJumpStart &&
+      tailJumpStart !== this.tail &&
+      tailJumpStart.rightJump
+    ) {
       tailJumpStart.rightJump.leftJump = undefined
       tailJumpStart.rightJump = undefined
     }

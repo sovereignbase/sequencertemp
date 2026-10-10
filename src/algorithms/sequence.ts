@@ -12,8 +12,10 @@ import type { Insertion, Sequence, Strip } from '../types/type.js'
  */
 export function sequence<T>(this: Projection<T>): Sequence<T> {
   const compactableIDs = new Set(this.frontierTable.getCompactableSessions())
-  // Prefix counts are needed only for Insertions affected by compactable masks.
-  const removed: Map<string, Uint32Array> = new Map()
+  // Fully removed Insertions need only their length; partial removals need Frame prefixes.
+  const removed: Map<number, Map<number, Uint32Array | number>> = new Map()
+  const removedFrames = (session: number, start: number) =>
+    removed.get(session)?.get(start)
 
   // Masks follow their targets, so collect their effects before exporting those targets.
   // Without compaction, the export below is the only structural traversal.
@@ -22,8 +24,9 @@ export function sequence<T>(this: Projection<T>): Sequence<T> {
     while (strip) {
       const diff = strip.fragmentDiff ?? strip.insertionDiff
       if (diff < 0 && compactableIDs.has(strip.insertionSession)) {
-        const id = `${strip.anchorSession}:${strip.anchorStart}`
-        let frames = removed.get(id)
+        const start = strip.anchorDiff + (strip.fragmentStart ?? 0)
+        let session = removed.get(strip.anchorSession)
+        let frames = session?.get(strip.anchorStart)
         if (!frames) {
           // Containment needs only the dependency fields; obtain the original positive length.
           const parent = this.containmentTable.get([
@@ -34,33 +37,63 @@ export function sequence<T>(this: Projection<T>): Sequence<T> {
             strip.insertionStart,
             strip.insertionDiff,
           ])!
-          frames = new Uint32Array(parent.insertionDiff)
-          removed.set(id, frames)
+          frames =
+            start === 0 && -diff === parent.insertionDiff
+              ? parent.insertionDiff
+              : new Uint32Array(parent.insertionDiff)
+          if (!session) {
+            session = new Map()
+            removed.set(strip.anchorSession, session)
+          }
+          session.set(strip.anchorStart, frames)
         }
         // Effective mask fragments consume disjoint remaining Frame intervals.
-        const start = strip.anchorDiff + (strip.fragmentStart ?? 0)
-        frames.fill(1, start, start - diff)
+        if (typeof frames !== 'number') frames.fill(1, start, start - diff)
       }
       strip = strip.rightStep
     }
   }
 
   // Counts exclude the Frame at the logical anchor point itself.
-  const removedBefore = (frames: Uint32Array | undefined, at: number) =>
-    !frames || at <= 0 ? 0 : (frames[Math.min(at, frames.length) - 1] ?? 0)
+  const removedBefore = (
+    frames: Uint32Array | number | undefined,
+    at: number
+  ) =>
+    !frames || at <= 0
+      ? 0
+      : typeof frames === 'number'
+        ? Math.min(at, frames)
+        : (frames[Math.min(at, frames.length) - 1] ?? 0)
 
   const projection: Array<Insertion<T>> = []
-  // Keep the exported tuple and the last visited original fragment boundary.
-  // Zero-effect parents stay indexed until their descendants are rewritten.
-  const included: Map<string, [Insertion<T>, number]> = new Map()
+  // Omitted identities still deduplicate their fragments without allocating export tuples.
+  const omitted: Insertion<T> = [0, 0, 0, 0, 0, 0]
+  // Fragments retain one canonical identity and emit only one tuple.
+  const included: Map<number, Map<number, Insertion<T>>> = new Map()
   let left: Insertion<T> | undefined
   let leftDiff = 0
+  let masked = removed.size !== 0
   let strip: Strip<T> = this.structuralHead
 
   while (strip) {
-    const id = `${strip.insertionSession}:${strip.insertionStart}`
-    let entry = included.get(id)
-    let insertion = entry?.[0]
+    masked ||= strip.insertionDiff < 0
+    // Omitted masks and wholly compacted parents need no export identity or tuple.
+    // Their children use the preceding retained boundary rather than the omitted parent.
+    if (strip.insertionDiff < 0 && compactableIDs.has(strip.insertionSession)) {
+      strip = strip.rightStep
+      continue
+    }
+    const frames =
+      removed.size === 0
+        ? undefined
+        : removedFrames(strip.insertionSession, strip.insertionStart)
+    if (typeof frames === 'number') {
+      strip = strip.rightStep
+      continue
+    }
+    let session = included.get(strip.insertionSession)
+    let insertion = session?.get(strip.insertionStart)
+    const first = !insertion
     if (!insertion) {
       let anchorSession = strip.anchorSession
       let anchorStart = strip.anchorStart
@@ -68,26 +101,20 @@ export function sequence<T>(this: Projection<T>): Sequence<T> {
       let insertionDiff = strip.insertionDiff
       let footage = strip.footage
 
-      const anchorID = `${anchorSession}:${anchorStart}`
-      const dependency = included.get(anchorID)
-      const preceding = removedBefore(removed.get(anchorID), anchorDiff)
-
-      if (
-        insertionDiff > 0 &&
-        dependency &&
-        (dependency[0][5] <= 0 || anchorDiff > dependency[1] || preceding > 0)
-      ) {
+      if (insertionDiff > 0 && masked) {
         // A mask or consumed point cannot be lifted without creating new competitors.
         // Anchor at the preceding retained boundary in the already resolved order.
         anchorSession = left?.[3] ?? 0
         anchorStart = left?.[4] ?? 0
         anchorDiff = leftDiff
-      } else {
+      } else if (insertionDiff < 0 && removed.size !== 0) {
         // Masks keep their positive target; translate only compacted preceding Frames.
-        anchorDiff -= preceding
+        anchorDiff -= removedBefore(
+          removedFrames(anchorSession, anchorStart),
+          anchorDiff
+        )
       }
 
-      const frames = removed.get(id)
       if (insertionDiff > 0 && frames) {
         const compacted: Array<T | undefined> = []
         let count = 0
@@ -100,46 +127,48 @@ export function sequence<T>(this: Projection<T>): Sequence<T> {
         }
         insertionDiff = compacted.length
         footage = compacted
-      } else if (insertionDiff < 0) {
-        if (compactableIDs.has(strip.insertionSession)) insertionDiff = 0
-        else {
-          // Retained masks omit the part already represented by compacted target Frames.
-          const target = removed.get(
-            `${strip.anchorSession}:${strip.anchorStart}`
-          )
-          insertionDiff +=
-            removedBefore(target, strip.anchorDiff - insertionDiff) -
-            removedBefore(target, strip.anchorDiff)
-        }
+      } else if (insertionDiff < 0 && removed.size !== 0) {
+        // Retained masks omit the part already represented by compacted target Frames.
+        const target = removedFrames(strip.anchorSession, strip.anchorStart)
+        insertionDiff +=
+          removedBefore(target, strip.anchorDiff - insertionDiff) -
+          removedBefore(target, strip.anchorDiff)
       }
 
-      insertion = [
-        anchorSession,
-        anchorStart,
-        anchorDiff,
-        strip.insertionSession,
-        strip.insertionStart,
-        insertionDiff,
-        footage,
-      ]
-      entry = [insertion, 0]
-      included.set(id, entry)
+      insertion =
+        insertionDiff === 0
+          ? omitted
+          : [
+              anchorSession,
+              anchorStart,
+              anchorDiff,
+              strip.insertionSession,
+              strip.insertionStart,
+              insertionDiff,
+              footage,
+            ]
+      if (!session) {
+        session = new Map()
+        included.set(strip.insertionSession, session)
+      }
+      session.set(strip.insertionStart, insertion)
       if (insertionDiff !== 0) projection.push(insertion)
     }
 
-    entry![1] =
-      (strip.fragmentStart ?? 0) +
-      Math.abs(strip.fragmentDiff ?? strip.insertionDiff)
-
-    if (insertion[5] !== 0) {
+    // A repeated empty fragment has no fresh boundary; its point may already
+    // contain the preceding child. Keep that child's free endpoint instead.
+    if (
+      insertion[5] !== 0 &&
+      (first || (strip.fragmentDiff ?? strip.insertionDiff) !== 0)
+    ) {
       left = insertion
-      leftDiff = entry![1]
-      if (strip.insertionDiff > 0)
-        leftDiff -= removedBefore(removed.get(id), leftDiff)
-      else {
-        const target = removed.get(
-          `${strip.anchorSession}:${strip.anchorStart}`
-        )
+      leftDiff =
+        (strip.fragmentStart ?? 0) +
+        Math.abs(strip.fragmentDiff ?? strip.insertionDiff)
+      if (removed.size !== 0 && strip.insertionDiff > 0)
+        leftDiff -= removedBefore(frames, leftDiff)
+      else if (removed.size !== 0) {
+        const target = removedFrames(strip.anchorSession, strip.anchorStart)
         leftDiff -=
           removedBefore(target, strip.anchorDiff + leftDiff) -
           removedBefore(target, strip.anchorDiff)
