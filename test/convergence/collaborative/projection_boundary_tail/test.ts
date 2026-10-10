@@ -4,6 +4,42 @@ import type { Gossip, Sequence } from '../../../../src/types/type.ts'
 import { deliver, expect_converged } from '../../../.helpers/replica.ts'
 
 describe('tail replace remove', () => {
+  it('keeps late insertions visible inside repeated tail replacement history', () => {
+    const primary = new Projection<string>(1)
+    const peer = new Projection<string>(2)
+    primary.increaseClock[0] = 1_001
+    peer.increaseClock[0] = 1_002
+    const root = primary.insert(['a', 'b'], 0)
+    peer.apply(root)
+    const mutations: Array<Gossip<string>> = []
+    let concurrent: Gossip<string> = []
+
+    for (let index = 0; index < 64; ++index) {
+      const update = primary.replace([String(index)], 1, 1)
+      mutations.push(update)
+      if (index < 2) peer.apply(update)
+      if (index === 1) concurrent = peer.insert(['concurrent'], 1)
+    }
+
+    primary.value(0)
+    primary.apply(concurrent)
+    for (const update of mutations.slice(2)) peer.apply(update)
+    expect(primary.values()).toEqual(['a', 'concurrent', '63'])
+    expect_converged(primary, peer)
+
+    const replacement = primary.replace(['final'], 2, 2)
+    peer.apply(replacement)
+    const expected = ['a', 'concurrent', 'final']
+    expect(primary.values()).toEqual(expected)
+    expect_converged(primary, peer)
+    const history = [root, ...mutations, concurrent, replacement]
+    for (const order of [history, [...history].reverse()]) {
+      const receiver = deliver([[], []], order)
+      expect(receiver.values()).toEqual(expected)
+      expect_converged(primary, receiver)
+    }
+  })
+
   /**
    * Verifies that a replacement Insert remains paired with its remove when the
    * replaced Frame sits at the tail of its local branch and reconstruction

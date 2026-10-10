@@ -52,7 +52,11 @@ export function patchJumps<T>(
       predecessor.rightJumpFrameCount! + frameDiff - leftFrames,
       predecessor.rightJumpStripCount! + stripDiff - 1
     )
-  linkJumps(predecessor, incoming, leftFrames, 1)
+  // Coalesce hidden predecessors so repeated replacements retain one zero-Frame span.
+  const leftJump = predecessor.leftJump
+  if (leftJump && leftFrames === 0 && predecessor.leftJumpFrameCount === 0)
+    linkJumps(leftJump, incoming, 0, predecessor.leftJumpStripCount! + 1)
+  else linkJumps(predecessor, incoming, leftFrames, 1)
   // A split can move the visible boundary into the adjacent right fragment.
   const boundary = incoming.rightStep
   if (

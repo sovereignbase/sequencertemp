@@ -201,7 +201,9 @@ export function anchorStrip<T>(
       this.tail.leftJump.rightJump = undefined
       this.tail.leftJump = undefined
     }
-    this.tail = this.tail.leftStep
+    // A zero-Frame jump contains only hidden predecessors; skip their retained history.
+    this.tail = this.tail.leftJump && this.tail.leftJumpFrameCount === 0
+      ? this.tail.leftJump : this.tail.leftStep
   }
 
   // A newly linked Strip starts without traversal jumps. Jumps are rebuilt
