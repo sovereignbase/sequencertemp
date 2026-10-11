@@ -4,6 +4,102 @@ import type { Gossip } from '../../../../src/types/type.ts'
 
 describe('safe local anchor selection', () => {
   it.each([
+    [1_000, 1_001],
+    [1_001, 1_000],
+  ])(
+    'replaces the first Frame of an appended insertion at the requested index (%i, %i)',
+    (authorSession, editorSession) => {
+      const author = new Projection<string>(1)
+      const editor = new Projection<string>(2)
+      author.increaseClock[0] = authorSession
+      editor.increaseClock[0] = editorSession
+      const deliver = (
+        sender: Projection<string>,
+        receiver: Projection<string>,
+        update: Gossip<string>
+      ) => {
+        const result = receiver.apply(structuredClone(update))!
+        if (result[1]) sender.apply(result[1])
+        return result[0]
+      }
+
+      deliver(author, editor, author.insert(['a'], 0))
+      const appended = editor.insert(['b', 'c', 'd', 'e'], 1)
+      deliver(editor, author, appended)
+      const update = author.replace(['x'], 1, 1)
+      expect(update.at(-1)!.slice(0, 3)).toEqual([
+        appended[0][3],
+        appended[0][4],
+        0,
+      ])
+      expect(deliver(author, editor, update)).toEqual([
+        [1, 2],
+        [1, 1, ['x']],
+      ])
+      // No reads between edits: looking up a value also moves the cached gate.
+      deliver(author, editor, author.insert(['head'], 0))
+      for (const peer of [author, editor]) {
+        expect(peer.values()).toEqual(['head', 'a', 'x', 'c', 'd', 'e'])
+        expect(peer.value(2)).toBe('x')
+      }
+    }
+  )
+
+  it('uses the preceding mask end at the visible head after leaving the cached gate', () => {
+    const projection = new Projection<string>(1)
+    projection.increaseClock[0] = 1_000
+    projection.apply([[2]])
+    projection.insert(['a'], 0)
+    projection.insert(['b', 'c', 'd', 'e', 'f', 'g'], 0)
+    const removal = projection.remove(0, 5)
+    projection.insert(['tail'], 1)
+    const update = projection.insert(['head'], 0)
+    expect(update[0].slice(0, 3)).toEqual([
+      removal[0][3],
+      removal[0][4],
+      -removal[0][5]!,
+    ])
+    const hydrated = new Projection<string>(
+      1,
+      structuredClone(projection.sequence())
+    )
+    hydrated.insert(['new'], 0)
+    expect(hydrated.values()).toEqual(['new', 'head', 'a', 'tail'])
+  })
+
+  it('uses the preceding mask end before a nonzero head fragment on a synchronized peer', () => {
+    const author = new Projection<string>(1)
+    const editor = new Projection<string>(2)
+    author.increaseClock[0] = 1_000
+    editor.increaseClock[0] = 1_001
+    for (const peer of [author, editor]) peer.apply([[1], [2], [3]])
+    const deliver = (
+      sender: Projection<string>,
+      receiver: Projection<string>,
+      update: Gossip<string>
+    ) => {
+      const result = receiver.apply(structuredClone(update))!
+      if (result[1]) sender.apply(result[1])
+    }
+    deliver(author, editor, author.insert(['a', 'b', 'c', 'd', 'e', 'f'], 0))
+    deliver(author, editor, author.insert(['p', 'q', 'r', 's'], 3))
+    const removal = author.remove(0, 6)
+    deliver(author, editor, removal)
+    const update = editor.insert(['head'], 0)
+    const mask = removal.filter((entry) => entry.length > 3).at(-1)!
+    expect(update[0].slice(0, 3)).toEqual([mask[3], mask[4], -mask[5]!])
+    deliver(editor, author, update)
+    for (const peer of [author, editor]) {
+      const hydrated = new Projection<string>(
+        peer.actorID,
+        structuredClone(peer.sequence())
+      )
+      hydrated.insert(['new'], 0)
+      expect(hydrated.values()).toEqual(['new', 'head', 'd', 'e', 'f'])
+    }
+  })
+
+  it.each([
     [1_001, 1_002],
     [1_002, 1_001],
   ])(

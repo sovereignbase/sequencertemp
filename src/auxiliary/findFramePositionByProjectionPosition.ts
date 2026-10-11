@@ -11,9 +11,9 @@ import { linkJumps } from './linkJumps.js'
  * The returned Frame position is relative to the original insertion, not the
  * current fragment. It can therefore be used directly as an index into the
  * Footage array shared by all fragments of that insertion. In insertion mode,
- * an interior Projection boundary at a fragment's start resolves to the
- * preceding mask's free end for a zero-offset fragment, or the preceding
- * visible Frame's right logical anchor point instead.
+ * a removed original prefix can use its positive zero reservation. Otherwise,
+ * a reserved fragment boundary can use the preceding mask's free end or the
+ * preceding visible Frame's right logical anchor point.
  *
  * @param this Projection containing the requested position.
  * @param index Valid visible Projection position to resolve.
@@ -95,16 +95,34 @@ export function findFramePositionByProjectionPosition<T>(
     if (cursorIndex <= index && index < cursorIndex + stripLength) {
       // A fragment-start boundary can already be occupied in its original Insertion.
       // A preceding mask supplies a free end without crossing its removed child subtree.
-      if (forInsertion && !after && index > 0 && index === cursorIndex && cursorStrip.fragmentStart !== undefined) {
+      if (forInsertion && !after && index === cursorIndex && cursorStrip.fragmentStart !== undefined) {
         const mask = cursorStrip.leftStep
-        if (cursorStrip.fragmentStart === 0 && mask && mask.insertionDiff < 0) {
+        const originalZero = mask && mask.insertionDiff < 0 && mask.anchorDiff === 0 &&
+          mask.anchorSession === cursorStrip.insertionSession &&
+          mask.anchorStart === cursorStrip.insertionStart &&
+          mask.leftStep?.insertionSession === mask.anchorSession &&
+          mask.leftStep?.insertionStart === mask.anchorStart &&
+          // A zero-offset right fragment follows an existing child; only the original Strip's zero is free.
+          mask.leftStep?.fragmentStart === undefined
+        if (
+          (originalZero || cursorStrip.fragmentStart === 0 ||
+            (index === 0 && (mask?.anchorSession !== cursorStrip.insertionSession ||
+              mask.anchorStart !== cursorStrip.insertionStart))) &&
+          mask && mask.insertionDiff < 0
+        ) {
+          if (originalZero && (mask.leftJump || mask.rightJump)) {
+            // The free original zero precedes this known endpoint by one hidden step.
+            jumpStart = mask
+            jumpStartIndex = cursorIndex
+            jumpSteps = 1
+          }
           // anchorStrip assigns every materialized mask its actual fragment effect.
-          after = Math.abs(mask.fragmentDiff!)
+          after = originalZero ? 0 : Math.abs(mask.fragmentDiff!)
           // Enter this adjacent hidden node using the distance already measured by this lookup.
-          jumpSteps = mask.leftJump || mask.rightJump ? 0 : jumpSteps - 1
-          cursorStrip = mask
-        } else {
-          // Resolve the preceding visible Frame once when no adjacent mask supplies the boundary.
+          cursorStrip = originalZero ? mask.leftStep! : mask
+          jumpSteps = cursorStrip.leftJump || cursorStrip.rightJump ? 0 : jumpSteps - (originalZero ? 2 : 1)
+        } else if (index > 0) {
+          // Resolve the preceding visible Frame once; index zero has no predecessor.
           --index
           after = 1
           continue

@@ -18,3 +18,17 @@ preserve the exact edited values. A separate case checks replacement before
 a fully removed whole successor, whose fragment offset is implicit zero.
 A head replacement followed by insertion must likewise produce `x y a b`
 on both peers, without reusing the removed child's occupied parent boundary.
+
+Replacing `b` in a peer-authored append `a b c d e` must produce `a x c d e`,
+not move `x` behind the append's surviving Frames. Removing an original prefix
+leaves that insertion's positive zero reservation available when no child has
+occupied it. Both Session orders
+and an immediate follow-up edit are checked without intervening reads.
+
+After removing a head insertion and appending elsewhere, inserting at the head
+must still use the preceding mask's free end. Hydration and the next head edit
+must preserve `new head a tail`.
+
+The same rule applies when the synchronized receiver's first visible Frame has
+a nonzero original Footage offset after a removal spanning multiple insertions.
+Its new head insertion must retain the requested position across hydration.

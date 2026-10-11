@@ -6,6 +6,7 @@ Valid local edits produce the requested visible insertion, inclusive removal, or
 
 | Scenario | Expectation | Test |
 | --- | --- | --- |
+| [array_model_equivalence](array_model_equivalence/README.md) | Sequential edits, consumer splices, indexed reads, and hydration match an independent array model. | [test.ts](array_model_equivalence/test.ts) |
 | [author_time_view_equivalence](author_time_view_equivalence/README.md) | Dependent insertions reconstruct the author's intended text under reordered delivery. | [test.ts](author_time_view_equivalence/test.ts) |
 | [editing_lifecycle](editing_lifecycle/README.md) | Head, middle, and tail edits match explicit expected values after every operation. | [test.ts](editing_lifecycle/test.ts) |
 | [gate_replace](gate_replace/README.md) | An edit immediately following replacement resolves the expected visible boundary. | [test.ts](gate_replace/test.ts) |

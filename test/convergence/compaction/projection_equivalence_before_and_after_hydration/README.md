@@ -12,3 +12,7 @@ Compaction can also collapse distinct original anchor points into one point.
 Children at those points must retain their resolved order and allow later indexed edits.
 An overlapping mask without unanimous acknowledgement retains only the removal
 not already represented by compacted Footage.
+
+Repeated head replacements `a b → x y b → z b` must hydrate with `z` at index
+zero. A subsequent head insertion must yield `head z b`, with both retained
+masks and legal compaction, without requiring reads between edits.

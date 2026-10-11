@@ -227,8 +227,24 @@ export function apply<T>(
             new Array<T | undefined>(incomingStrip.insertionDiff),
         ])
       } else if (projectionDiff < 0) {
-        // The negative effect becomes the exclusive end of the removed visible range.
-        void changes.push([startAt, startAt - projectionDiff])
+        // Surviving children separate mask fragments into distinct visible removals.
+        let mask: Strip<T> = incomingStrip
+        let position = startAt
+        while (mask) {
+          // anchorStrip assigns each mask fragment its actual consumed effect.
+          if (mask.fragmentDiff! < 0)
+            void changes.push([position, position - mask.fragmentDiff!])
+          const next: Strip<T> = mask.rightFragment
+          if (next)
+            // Count only surviving Frames in the gap; preceding removals have already shifted this index.
+            for (
+              let strip: NonNullable<Strip<T>> = mask.rightStep!;
+              strip !== next;
+              strip = strip.rightStep!
+            )
+              position += Math.max(0, strip.fragmentDiff ?? strip.insertionDiff)
+          mask = next
+        }
       }
 
       // A removed gate follows the surviving content at its visible boundary.

@@ -3,6 +3,23 @@ import { Projection } from '../../../../src/class.ts'
 
 describe('projection equivalence before and after hydration', () => {
   it.each([false, true])(
+    'preserves repeated head replacements and the next edit with compaction %s',
+    (compact) => {
+      const projection = new Projection<string>(1)
+      if (!compact) projection.apply([[2]])
+      projection.insert(['a', 'b'], 0)
+      projection.replace(['x', 'y'], 0, 0)
+      projection.replace(['z'], 0, 1)
+      const snapshot = structuredClone(projection.sequence())
+      expect(snapshot[1].some((entry) => entry[5] < 0)).toBe(!compact)
+      const hydrated = new Projection<string>(1, snapshot)
+      hydrated.insert(['head'], 0)
+      expect(hydrated.values()).toEqual(['head', 'z', 'b'])
+      expect(hydrated.value(1)).toBe('z')
+    }
+  )
+
+  it.each([false, true])(
     'preserves insertion order with compaction %s',
     (compact) => {
       const base = new Projection<string>(1)

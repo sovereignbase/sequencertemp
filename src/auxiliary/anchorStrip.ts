@@ -31,7 +31,7 @@ export function anchorStrip<T>(
 ): number {
   // Retain the original mask's exclusive end before splitting its runtime effect across fragments.
   const removalEnd = incomingStrip.anchorDiff - incomingStrip.insertionDiff
-  // Accumulate actual visible effects so a fragmented remote mask emits one total removal count.
+  // Accumulate the mask's total visible effect for Projection length and remote cursor shifts.
   let projectionDiff = 0
 
   // Each continuation targets a later positive fragment of the same original Insertion.
