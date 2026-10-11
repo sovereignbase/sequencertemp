@@ -1,4 +1,4 @@
-# Author-time view equivelance
+# Author-time view equivalence
 
 This test verifies that a replica reconstructs the author's intended text even when the same insertions arrive in a different order.
 

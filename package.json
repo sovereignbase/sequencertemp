@@ -36,6 +36,7 @@
     "test:vitest": "vitest run --coverage",
     "test:compatibility": "npm run build:package && node --test test/compatibility/index.ts",
     "test:convergence": "vitest run test/convergence --coverage.enabled=false",
+    "test:integration": "vitest run test/integration --coverage.enabled=false",
     "test:stress": "vitest run test/stress --coverage.enabled=false",
     "test:unit": "vitest run test/unit --coverage.enabled=false",
     "bench": "npm run build:package && node benchmark/index.ts",

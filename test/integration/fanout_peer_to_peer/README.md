@@ -1,5 +1,7 @@
 # Peer to peer fanout
 
+Run with `npm run test:integration`.
+
 Three browser pages communicate directly through a same-origin `BroadcastChannel`. There is no central Gossip relay or persisted server state; every page is both an editor and a peer.
 
 ## Causal pending across three peers

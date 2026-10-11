@@ -8,5 +8,5 @@ containing `base` followed by both surviving insertions.
 Actor IDs do not determine the relative order of the insertions. Competing
 insertions are ordered using their Session coordinates.
 
-Run with `npm run test:convergence`. The test bundles `src/class.ts` in memory
+Run with `npm run test:integration`. The test bundles `src/class.ts` in memory
 and uses Playwright to launch the browser from Vitest.

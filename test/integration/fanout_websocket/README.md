@@ -13,5 +13,5 @@ Every peer must send four updates, receive eight updates, report no errors,
 and expose the same final visible Projection. The test uses normal random
 Session generation and imposes no Actor-derived Session identities.
 
-Run with `npm run test:convergence`. Vitest launches the browsers through
+Run with `npm run test:integration`. Vitest launches the browsers through
 Playwright and bundles `src/class.ts` in memory.
