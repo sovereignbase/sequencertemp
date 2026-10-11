@@ -86,6 +86,24 @@ export function anchorStrip<T>(
     rightStep = this.structuralHead
   }
 
+  // An original boundary's children precede children of the mask at that point,
+  // regardless of whether they arrived before or after the removal.
+  if (
+    incomingStrip.insertionDiff > 0 &&
+    anchoringStrip && anchoringStrip.insertionDiff < 0 &&
+    incomingStrip.anchorSession === anchoringStrip.insertionSession &&
+    incomingStrip.anchorStart === anchoringStrip.insertionStart &&
+    rightStep &&
+    rightStep.anchorSession === anchoringStrip.anchorSession &&
+    rightStep.anchorStart === anchoringStrip.anchorStart &&
+    rightStep.anchorDiff === anchoringStrip.anchorDiff + incomingStrip.anchorDiff
+  ) {
+    // Skip the sibling chain, then resolve only the final sibling's subtree.
+    while (rightStep.rightCompetitor) rightStep = rightStep.rightCompetitor
+    leftStep = subtreeEnd.call(this, rightStep) as NonNullable<Strip<T>>
+    rightStep = leftStep.rightStep
+  }
+
   // Overlap handling.
   //
   // A freshly created split cannot itself already have an overlapping

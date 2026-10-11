@@ -73,11 +73,9 @@ export function sequence<T>(this: Projection<T>): Sequence<T> {
   const included: Map<number, Map<number, Insertion<T>>> = new Map()
   let left: Insertion<T> | undefined
   let leftDiff = 0
-  let masked = removed.size !== 0
   let strip: Strip<T> = this.structuralHead
 
   while (strip) {
-    masked ||= strip.insertionDiff < 0
     // Omitted masks and wholly compacted parents need no export identity or tuple.
     // Their children use the preceding retained boundary rather than the omitted parent.
     if (strip.insertionDiff < 0 && compactableIDs.has(strip.insertionSession)) {
@@ -102,7 +100,8 @@ export function sequence<T>(this: Projection<T>): Sequence<T> {
       let insertionDiff = strip.insertionDiff
       let footage = strip.footage
 
-      if (insertionDiff > 0 && masked) {
+      // Retain canonical anchors unless acknowledged masks are omitted from the snapshot.
+      if (insertionDiff > 0 && compactableIDs.size !== 0) {
         // A mask or consumed point cannot be lifted without creating new competitors.
         // Anchor at the preceding retained boundary in the already resolved order.
         anchorSession = left?.[3] ?? 0

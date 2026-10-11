@@ -51,6 +51,12 @@ export function selectAnchor<T>(
     (rightStep.fragmentStart !== undefined || rightStep.fragmentDiff === 0) &&
     removed.insertionSession === gate.anchorSession &&
     removed.insertionStart === gate.anchorStart &&
+    // An original-end child occupies this boundary; resolve its visible content instead.
+    !(
+      rightStep.anchorSession === gate.anchorSession &&
+      rightStep.anchorStart === gate.anchorStart &&
+      rightStep.anchorDiff === gate.anchorDiff - gate.insertionDiff
+    ) &&
     // A fully removed whole successor also retains its original zero boundary.
     ((rightStep.fragmentStart ?? 0) === 0 ||
       containsAnchor(

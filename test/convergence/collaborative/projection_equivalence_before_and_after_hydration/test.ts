@@ -93,6 +93,27 @@ describe('projection equivalence before and after hydration', () => {
     ])
   })
 
+  it('retains children when the only compactable mask is fully overlapped', () => {
+    const projection = new Projection<string>(1, [
+      [
+        [1, 300, 2],
+        [2, 300, 2],
+      ],
+      [
+        [0, 0, 0, 100, 0, 2, ['a', 'b']],
+        [100, 0, 0, 200, 0, -2],
+        [100, 0, 0, 300, 0, -2],
+        [300, 0, 2, 400, 0, 1, ['X']],
+      ],
+    ])
+    expect(projection.values()).toEqual(['X'])
+
+    const snapshot = projection.sequence()
+    expect(snapshot[1].some((entry) => entry[3] === 300)).toBe(false)
+    expect(snapshot[1].some((entry) => entry[3] === 200)).toBe(true)
+    expect(new Projection<string>(3, snapshot).values()).toEqual(['X'])
+  })
+
   it('compacts an acknowledged mask while retaining an overlapping unacknowledged mask', () => {
     const projection = new Projection<string>(1, [
       [
