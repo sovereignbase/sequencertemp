@@ -34,7 +34,6 @@ export function insertFirst<T>(
   this.structuralStripCount = 1
   this.projectionFrameCount += strip.fragmentDiff ?? strip.insertionDiff
   // The initialized graph begins at visible zero; no traversal is required to find that start.
-  this.projectedPosition = 0
   this.gatePosition = 0
 
   // There is no spanning jump to patch after initializing a single-node graph.

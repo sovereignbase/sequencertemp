@@ -244,7 +244,6 @@ export function apply<T>(
           Math.min(this.gatePosition, this.projectionFrameCount - 1)
         )
       }
-      this.projectedPosition = this.gatePosition
       // Keep the local gate's outgoing span available to the next local edit.
       if (this.gate?.rightJump) {
         this.leftJumpToPatch = this.gate

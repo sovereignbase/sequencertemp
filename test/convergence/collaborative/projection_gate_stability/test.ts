@@ -9,7 +9,6 @@ const expectGate = (projection: Projection<string>, position: number) => {
       expect(strip.fragmentDiff ?? strip.insertionDiff).toBeGreaterThan(0)
       expect(index).toBe(position)
       expect(projection.gatePosition).toBe(index)
-      expect(projection.projectedPosition).toBe(index)
       return
     }
     index += Math.max(0, strip.fragmentDiff ?? strip.insertionDiff)
@@ -150,7 +149,7 @@ describe('projection gate stability', () => {
     const receiver = new Projection<string>(2)
     receiver.apply(author.insert(['a'], 0))
     receiver.apply(author.remove())
-    expect(receiver.projectedPosition).toBe(0)
+    expect(receiver.gatePosition).toBe(0)
     expect(receiver.head).toBeUndefined()
     expect(receiver.gate).toBeUndefined()
     expect(receiver.tail).toBeUndefined()

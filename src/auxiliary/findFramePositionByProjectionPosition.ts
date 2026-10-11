@@ -6,7 +6,7 @@ import { linkJumps } from './linkJumps.js'
  * Finds the Frame at a Projection position.
  *
  * Moves `gate` to the Strip or fragment containing `index` and updates
- * `projectedPosition` to that Strip's first Projection position.
+ * `gatePosition` to that Strip's first Projection position.
  *
  * The returned Frame position is relative to the original insertion, not the
  * current fragment. It can therefore be used directly as an index into the
@@ -146,7 +146,6 @@ export function findFramePositionByProjectionPosition<T>(
 
       // Patch gate and projection position.
       this.gate = cursorStrip
-      this.projectedPosition = cursorIndex
       this.gatePosition = cursorIndex
 
       // Set jumps to patch at top level.

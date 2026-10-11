@@ -32,8 +32,6 @@ export class Projection<T> {
   public structuralStripCount: number = 0
   /** Amount of frames in the projection. */
   public projectionFrameCount: number = 0
-  /** Cached Projection position, following the local gate across remote updates. */
-  public projectedPosition: number = 0
   /** First Projection position of the Strip at gate. */
   public gatePosition: number = 0
   //

@@ -89,7 +89,6 @@ export function insert<T>(
     this.tail = increasingStrip
   // The caller already supplied this visible index, so cache it without traversing again.
   this.gate = increasingStrip
-  this.projectedPosition = at
   this.gatePosition = at
   // Advance by the immutable original length, independent of any surrounding fragmentation.
   this.increaseClock[1] += values.length + 1

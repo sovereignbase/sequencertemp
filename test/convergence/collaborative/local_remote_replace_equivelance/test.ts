@@ -128,7 +128,7 @@ describe('local/remote replacement equivalence', () => {
           }
           actual += strip.fragmentDiff ?? strip.insertionDiff
         }
-        return [projection.projectedPosition, actual, found]
+        return [projection.gatePosition, actual, found]
       }
       const authorCursor = cursor(author)
       const receiverCursor = cursor(receiver)

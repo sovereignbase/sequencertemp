@@ -81,7 +81,6 @@ describe('overlapping remove gate', () => {
     expect(strip).toBeDefined()
     expect(strip!.fragmentDiff ?? strip!.insertionDiff).toBeGreaterThan(0)
     expect(unordered.gatePosition).toBe(position)
-    expect(unordered.projectedPosition).toBe(position)
 
     // Delivery order must not change the visible Projection.
     expect_converged(ordered, unordered)
