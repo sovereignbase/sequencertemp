@@ -1,0 +1,166 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="./"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>@sovereignbase/sequencertemp</title><link rel="icon" href="https://sovereignbase.dev/sovereignbase_logo.png"/><meta name="description" content="Documentation for @sovereignbase/sequencertemp"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script defer src="assets/main.js"></script><script async src="assets/icons.js" id="tsd-icons-script"></script><script async src="assets/search.js" id="tsd-search-script"></script><script async src="assets/navigation.js" id="tsd-nav-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="index.html" class="title">@sovereignbase/sequencertemp</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<h1>@sovereignbase/sequencertemp</h1></div>
+<div class="tsd-panel tsd-typography"><h1 id="sequencertemp" class="tsd-anchor-link">Sequencertemp<a href="#sequencertemp" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h1>
+<div class="tsd-alert tsd-alert-note"><div class="tsd-alert-title"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><use href="assets/icons.svg#icon-alertNote"></use></svg><span>Note</span></div><p>
+This was a temporary repository used to establish and refine clear invariants for <a href="https://github.com/sovereignbase/sequencer">Sequencer</a> and is now archived.</p>
+</div>
+<p>Understanding how it works is pretty easy. There are a few key concepts.</p>
+<h2 id="sequence" class="tsd-anchor-link">Sequence<a href="#sequence" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>The <code>Sequence</code> is the structural order of insertions.</p>
+<p>Every insertion initially grows the Sequence. Insertions remain in Structural Order while they are required to preserve ordering and deletion semantics.</p>
+<p>Once a deletion has been acknowledged by all participating Actors, the corresponding structural information is no longer required for convergence and can be compacted from the Sequence.</p>
+<p>The position of each insertion is described using stable logical coordinates so the same insertion can be applied commutatively and idempotently by every replica.</p>
+<h2 id="projection" class="tsd-anchor-link">Projection<a href="#projection" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>The <code>Projection</code> is the applied presentation of a Sequence.</p>
+<p>In other words a Sequence is used to derive a Projection.</p>
+<p>Applications using Sequencer work entirely in Projection positions. The Sequencer translates those positions into commutative descriptions of points in Sequence.</p>
+<h2 id="insertion" class="tsd-anchor-link">Insertion<a href="#insertion" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>An insertion contains a commutative description of its position in Sequence, together with the logical range and Projection effect of the insertion itself.</p>
+<p>Its position is described by:</p>
+<p><code>(anchorSession, anchorStart, anchorDiff)</code></p>
+<p>which identifies the exact logical point in Sequence after which the insertion belongs.</p>
+<p>The insertion itself is identified within its Session by:</p>
+<p><code>(insertionSession, insertionStart)</code></p>
+<p>and <code>insertionDiff</code> describes its signed Frame length and effect on the Projection.</p>
+<p>An insertion therefore contains:</p>
+<ul>
+<li><code>anchorSession</code> — <code>insertionSession</code> of the anchoring insertion.</li>
+<li><code>anchorStart</code> — <code>insertionStart</code> of the anchoring insertion.</li>
+<li><code>anchorDiff</code> — Difference from the anchoring insertion's <code>insertionStart</code> towards its <code>insertionEnd</code>, identifying the exact anchor point as <code>anchorStart + anchorDiff</code>.</li>
+<li><code>insertionSession</code> — Number identifying the Session that sequenced this insertion.</li>
+<li><code>insertionStart</code> — Numerical point identifying this insertion within a Session's logical time space.</li>
+<li><code>insertionDiff</code> — Signed Frame length of this insertion and its effect on the Projection.</li>
+<li><code>footage?</code> — Optional Footage carried by a positive insertion.</li>
+</ul>
+<h2 id="choosing-an-anchor" class="tsd-anchor-link">Choosing an anchor<a href="#choosing-an-anchor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>A local insertion first converts its Projection position into a stable anchor in Sequence.</p>
+<p>The anchor is stored as:</p>
+<p><code>(anchorSession, anchorStart, anchorDiff)</code></p>
+<p>where <code>anchorDiff</code> is always expressed in the coordinate space of the <strong>original anchoring insertion</strong>, regardless of how that insertion has since been fragmented.</p>
+<p>For a non-empty Projection:</p>
+<ol>
+<li>
+<p>At the tail, the anchor is the final Frame of the tail Strip.</p>
+</li>
+<li>
+<p>Otherwise, the Frame at the requested Projection position is located and its containing Strip becomes the initial anchoring Strip.</p>
+</li>
+<li>
+<p>If the anchor falls exactly on the right boundary of that Strip and another Strip follows it, the same boundary is represented from the right:</p>
+<ul>
+<li>the right Strip becomes the anchoring Strip;</li>
+<li>its local anchor position becomes <code>0</code>.</li>
+</ul>
+</li>
+<li>
+<p><code>findFrame()</code> converts that Strip-local position into the stable <code>anchorDiff</code> of the original insertion.</p>
+</li>
+</ol>
+<p>A Strip-local position of <code>0</code> therefore represents its left boundary. For an original Strip this is <code>anchorDiff = 0</code>, the insertion's <strong>zero-reservation</strong>. For a right fragment, <code>findFrame()</code> maps that local boundary back to the corresponding logical difference within the original insertion.</p>
+<p>The first insertion into an empty Projection is anchored to the root sentinel <code>(0, 0, 0)</code>.</p>
+<h2 id="anchoring-an-insertion" class="tsd-anchor-link">Anchoring an insertion<a href="#anchoring-an-insertion" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Once the anchor has been chosen, every Strip is structurally inserted through the same <code>anchorStrip()</code> operation.</p>
+<p>The operation receives:</p>
+<ul>
+<li>the incoming Strip;</li>
+<li>the anchoring Strip;</li>
+<li>the anchor position within that Strip.</li>
+</ul>
+<p>First, the anchor boundary is materialized.</p>
+<ul>
+<li>If the anchor is already at the end of the anchoring Strip, no split is required.</li>
+<li>If the anchor lies inside the anchoring Strip, the Strip is split at the anchor position. The existing Strip becomes the left fragment ending at the anchor, while the new right fragment contains the Frames after the anchor.</li>
+<li>The incoming Strip is then inserted between these two sides of the boundary.</li>
+</ul>
+<p>If the Strip on the right is anchored to the same <code>(anchorSession, anchorStart, anchorDiff)</code>, the insertions overlap. The competitor chain is traversed according to the overlap ordering rules, and <code>subtreeEnd()</code> is used when the insertion must be placed after an existing competitor's causal subtree.</p>
+<h2 id="overlap-handling" class="tsd-anchor-link">Overlap handling<a href="#overlap-handling" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Two insertions are competitors when they resolve to the same anchor:</p>
+<p><code>(anchorSession, anchorStart, anchorDiff)</code></p>
+<p>Competitors form an ordered sibling chain. Larger competitors are placed closer to the anchor and smaller competitors further to the right.</p>
+<p>The ordering is deterministic:</p>
+<ol>
+<li>
+<p><strong>Positive insertions come before negative insertions.</strong></p>
+</li>
+<li>
+<p><strong>Between insertions with the same sign, the greater <code>insertionSession</code> comes first.</strong></p>
+</li>
+<li>
+<p><strong>Within the same Session, the greater <code>insertionStart</code> comes first.</strong></p>
+<p>This case should not occur for valid concurrent input, but is ordered deterministically nevertheless.</p>
+</li>
+<li>
+<p><strong>If <code>insertionSession</code> and <code>insertionStart</code> are also equal, the greater signed <code>insertionDiff</code> comes first.</strong></p>
+<p>This is the final deterministic tie-break and would normally already have been eliminated by deduplication.</p>
+</li>
+</ol>
+<p>Equivalently, competitors are ordered from the anchor outward by:</p>
+<p><code>sign → insertionSession → insertionStart → insertionDiff</code></p>
+<p>with positive before negative and otherwise greater values before smaller values.</p>
+<p>When an incoming Strip belongs after an existing competitor, it is not inserted directly after that Strip. Each competitor occupies its entire causal subtree in Structural Order, so the incoming competitor is inserted after the complete subtree of the preceding larger competitor, resolved by <code>subtreeEnd()</code>.</p>
+<p>The <code>rightCompetitor</code> links preserve only the sibling ordering between competitors; Structural Order preserves each sibling together with its causal subtree.</p>
+<p>So structurally the rule is:</p>
+<p><code>competitor ordering → preserve causal subtree → insert at resolved boundary</code></p>
+<p>The resulting order is independent of arrival order.</p>
+<h2 id="resolving-a-subtree-end" class="tsd-anchor-link">Resolving a subtree end<a href="#resolving-a-subtree-end" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>The traversal starts from a given <code>subtree root</code> and walks Structural Order through <code>rightStep</code>.</p>
+<p>A following Strip remains inside the subtree when either:</p>
+<ol>
+<li>
+<p><strong>It is the next fragment of an insertion already inside the subtree.</strong></p>
+<p><code>rightFragment</code> therefore remains part of its original insertion even when descendants have been structurally inserted between its fragments.</p>
+</li>
+<li>
+<p><strong>Its stable anchor belongs to a fragment already inside the subtree.</strong></p>
+<p>For a fragment covering the original insertion's logical range beginning at <code>fragmentFrame</code>, the anchor belongs to it when:</p>
+<p><code>fragmentFrame &lt;= anchorDiff &lt;= fragmentFrame + fragmentLength</code></p>
+<p>and the anchor identifies the same original insertion:</p>
+<p><code>(anchorSession, anchorStart) = (insertionSession, insertionStart)</code></p>
+</li>
+</ol>
+<p>Because descendants may themselves contain descendants, traversal maintains the currently active ancestor chain.</p>
+<p>When the next Strip does not belong to the current Strip, <code>subtreeEnd()</code> walks back through that ancestor chain until it finds an ancestor whose fragment contains the Strip's anchor, or whose <code>rightFragment</code> is the Strip.</p>
+<p>If no such ancestor exists, the next Strip lies outside the root competitor's subtree and traversal stops.</p>
+<p>For right fragments, the fragment's position within the original insertion is accumulated as traversal progresses. This allows anchors expressed in the original insertion's stable coordinate space to be tested against the correct current fragment.</p>
+<p>So the subtree rule is:</p>
+<p><code>root → descendants anchored within active fragments → right fragments → their descendants</code></p>
+<p>and the first Strip that cannot be connected back to the root through those relationships marks the end of the subtree.</p>
+<p><code>subtreeEnd()</code> returns the final Strip before that boundary.</p>
+</div></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details"><a href="#sequencertemp"><span>Sequencertemp</span></a>
+<ul>
+<li><a href="#sequence"><span>Sequence</span></a></li>
+<li><a href="#projection"><span>Projection</span></a></li>
+<li><a href="#insertion"><span>Insertion</span></a></li>
+<li><a href="#choosing-an-anchor"><span>Choosing an anchor</span></a></li>
+<li><a href="#anchoring-an-insertion"><span>Anchoring an insertion</span></a></li>
+<li><a href="#overlap-handling"><span>Overlap handling</span></a></li>
+<li><a href="#resolving-a-subtree-end"><span>Resolving a subtree end</span></a></li></ul></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="modules.html">@sovereignbase/sequencertemp</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer>
+<p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
+<div class="overlay"></div></body></html>

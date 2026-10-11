@@ -1,4 +1,4 @@
-import type { Acknowledgement, Gossip, Insertion } from '../types/type.js'
+import type { Acknowledgement, Insertion } from '../types/type.js'
 
 /**
  * Cached reference used by the runtime type guards below.
@@ -91,44 +91,4 @@ export function isAcknowledgement(data: unknown): data is Acknowledgement {
 
   // Shape validity does not prove that the claimed logical end has a complete set of mask payloads.
   return true
-}
-
-/**
- * Determines whether an unknown value represents one entry in a Gossip batch.
- *
- * Each entry is an {@link Insertion} or an {@link Acknowledgement}.
- * Because both variants are represented as Arrays,
- * their tuple shape is used to discriminate between them.
- *
- * Insertion has a uniquely constrained shape:
- *
- * - exactly 6 fields; or
- * - exactly 7 fields where the seventh field is `undefined` or an Array.
- *
- * Values matching either of those shapes are validated as Insertions.
- * Everything else is validated as an Acknowledgement.
- *
- * This ordering is significant for seven-field tuples because an
- * Acknowledgement may itself contain seven integer fields. Such a tuple is
- * interpreted as an Acknowledgement unless its seventh field has the
- * Insertion footage representation.
- *
- * @param data Value to validate.
- * @returns Whether `data` represents an Insertion or Acknowledgement entry.
- */
-export function isGossip<T>(data: unknown): data is Gossip<T> {
-  // Neither Gossip variant has an empty Array representation.
-  if (!Array.isArray(data) || data.length === 0) return false
-
-  // Six fields can represent an Insertion but cannot represent an
-  // Acknowledgement, whose encoded length is always odd.
-  if (data.length === 6) return isInsertion<T>(data)
-
-  // A seven-field Insertion is distinguished from a seven-field
-  // Acknowledgement by the optional footage field.
-  if (data.length === 7 && (data[6] === undefined || Array.isArray(data[6])))
-    return isInsertion<T>(data)
-
-  // Any remaining shape can only be Gossip if it is a valid Acknowledgement.
-  return isAcknowledgement(data)
 }

@@ -63,7 +63,7 @@ export class Projection<T> {
    * Prepares to sequence a projection, optionally hydrating from a trusted sequence stored by the application.
    *
    * @param actorID Actor identifier used in acknowledgements.
-   * @param trustedSequence Optional dependency-ordered Sequence stored by the application.
+   * @param trustedSequence Optional trusted Sequence in Structural Order, stored by the application.
    */
   constructor(
     public readonly actorID: number,
@@ -126,7 +126,8 @@ export class Projection<T> {
   replace(withValues: Array<T>, startAt?: number, endWith?: number): Gossip<T> {
     // Keep removal and insertion sequencing in one algorithm so returned Gossip preserves operation order.
     return replace.call(this, withValues, startAt, endWith) as Gossip<T>
-  } /**
+  }
+  /**
    * Retires an Actor from future compaction requirements.
    *
    * @remarks

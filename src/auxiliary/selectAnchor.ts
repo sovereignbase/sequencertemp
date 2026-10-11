@@ -64,7 +64,8 @@ export function selectAnchor<T>(
     anchoringStrip = gate
     anchorDiff =
       (anchoringStrip.fragmentStart ?? 0) -
-      (anchoringStrip.fragmentDiff ?? anchoringStrip.insertionDiff)
+      // This branch selects a materialized mask, whose actual effect is always assigned.
+      anchoringStrip.fragmentDiff!
   } else if (of === this.projectionFrameCount) {
     // The Projection end has no Frame to resolve, so use the tail fragment's
     // stable right anchor point directly.

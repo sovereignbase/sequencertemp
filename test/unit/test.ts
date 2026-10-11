@@ -47,6 +47,14 @@ describe('Projection public API', () => {
       expect(projection.values()).toEqual(['a', 'c'])
     })
 
+    it('preserves the Frame count in returned splices when Footage is omitted', () => {
+      const projection = new Projection<string>(1)
+      const result = projection.apply([[0, 0, 0, 100, 0, 2]])
+      expect(result?.[0]).toEqual([[0, 0, new Array(2)]])
+      expect(projection.length()).toBe(2)
+      expect(projection.value(0)).toBeUndefined()
+    })
+
     it('accepts empty batches, acknowledgements, and duplicate Insertions without visible changes', () => {
       const projection = seeded()
       for (const gossip of [[], [[2]], seed()[1]])
@@ -68,9 +76,15 @@ describe('Projection public API', () => {
     })
 
     it.each(
-      [undefined, null, {}, 'gossip', [[0, 0, 0, 200, 0, 0, []]]].map(
-        (input) => ({ input })
-      )
+      [
+        undefined,
+        null,
+        {},
+        'gossip',
+        [[0, 0, 0, 200, 0, 0, []]],
+        [[1, 2]],
+        [[1, NaN, 2]],
+      ].map((input) => ({ input }))
     )('returns undefined for malformed input $input', ({ input }) => {
       const projection = seeded()
       expect(projection.apply(input)).toBeUndefined()
@@ -125,6 +139,16 @@ describe('Projection public API', () => {
   })
 
   describe('merge', () => {
+    it('accepts acknowledgement frontiers in an exported Sequence', () => {
+      const source = seeded()
+      source.remove(1, 1)
+      const snapshot = source.sequence()
+      expect(snapshot[0].length).toBeGreaterThan(0)
+      const receiver = new Projection<string>(2)
+      expect(receiver.merge(snapshot)).toBeDefined()
+      expect(receiver.values()).toEqual(['a', 'c'])
+    })
+
     it('merges a Sequence and returns its visible changes', () => {
       const projection = new Projection<string>(2)
       expect(projection.merge(seed())).toEqual([[[0, 0, ['a', 'b', 'c']]]])
@@ -134,9 +158,18 @@ describe('Projection public API', () => {
     })
 
     it.each(
-      [undefined, null, {}, [], [[], [], []], [[], [...seed()[1], null]]].map(
-        (input) => ({ input })
-      )
+      [
+        undefined,
+        null,
+        {},
+        [],
+        [[], [], []],
+        [[], [...seed()[1], null]],
+        [null, []],
+        [[], {}],
+        [[null], seed()[1]],
+        [[[1, 2]], seed()[1]],
+      ].map((input) => ({ input }))
     )(
       'rejects malformed input $input before applying any part of it',
       ({ input }) => {
@@ -231,6 +264,22 @@ describe('Projection public API', () => {
       expect(projection.values()).toEqual(['a', 'c'])
       projection.insert(['X'], 1)
       expect(projection.values()).toEqual(['a', 'X', 'c'])
+    })
+
+    it('retains a removal Session until active actors acknowledge the same complete frontier', () => {
+      const author = seeded()
+      const receiver = new Projection<string>(2, seed())
+      author.apply([[receiver.actorID]])
+      const first = author.remove(0, 0)
+      const receipt = receiver.apply(first)!
+      author.apply(receipt[1])
+      const second = author.remove(0, 0)
+      const retained = author.sequence()
+      expect(retained[1].filter((entry) => entry[5] < 0)).toHaveLength(2)
+      expect(new Projection<string>(3, retained).values()).toEqual(['c'])
+      author.apply(receiver.apply(second)![1])
+      expect(author.sequence()[1].every((entry) => entry[5] > 0)).toBe(true)
+      expect(author.values()).toEqual(['c'])
     })
   })
 

@@ -1,4 +1,3 @@
-import { getRandom53bitNumber } from '../../auxiliary/getRandom53bitNumber.js'
 import type { Acknowledgement } from '../../types/type.js'
 
 /** Actor acknowledgement frontiers used to determine compaction eligibility. */

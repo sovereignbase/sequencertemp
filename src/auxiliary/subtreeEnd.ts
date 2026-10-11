@@ -90,7 +90,8 @@ export function subtreeEnd<T>(
       // stable fragment start by the length of the preceding fragment.
       previousFragmentFrame =
         ancestorFragmentFrame +
-        Math.abs(ancestorStrip.fragmentDiff ?? ancestorStrip.insertionDiff)
+        // A rightFragment exists only after splitting, which assigns the left fragment's effect.
+        Math.abs(ancestorStrip.fragmentDiff!)
     } else {
       // A descendant starts from Frame zero of its own originating insertion.
       previousFragmentFrame = 0

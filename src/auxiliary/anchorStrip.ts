@@ -55,7 +55,7 @@ export function anchorStrip<T>(
   if (incomingStrip.insertionDiff < 0 && incomingDiff === 0)
     anchorDiff = Math.max(anchoringStrip!.fragmentStart ?? 0,
       Math.min(anchorDiff, (anchoringStrip!.fragmentStart ?? 0) +
-        Math.abs(anchoringStrip!.fragmentDiff ?? anchoringStrip!.insertionDiff)))
+        Math.abs(anchoringStrip!.fragmentDiff!)))
 
   if (anchoringStrip) {
     // Structural length of the anchoring Strip or its current fragment.
@@ -147,16 +147,16 @@ export function anchorStrip<T>(
       // Preserve whatever structurally followed that sibling subtree.
       // This may be another competitor or undefined at the tail.
       rightStep = leftStep.rightStep
-    } else if (smallerCompetitor) {
+    } else {
       // No larger competitor exists, so incoming becomes the first sibling
       // in this competition and is placed directly before the current
       // smallest anchor-facing competitor.
-      rightStep = smallerCompetitor
+      rightStep = smallerCompetitor!
 
       // The smaller competitor's current predecessor is exactly where the
       // incoming Strip must attach. This may be the anchor itself or the end
       // of another sibling subtree.
-      leftStep = smallerCompetitor.leftStep!
+      leftStep = smallerCompetitor!.leftStep!
     }
 
   }
@@ -232,10 +232,10 @@ export function anchorStrip<T>(
     // fragment, or when that fragment starts at or beyond the original exclusive removal end.
     incomingStrip.insertionDiff >= 0 ||
     !nextFragment ||
-    (nextFragment.fragmentStart ?? 0) >= removalEnd
+    nextFragment.fragmentStart! >= removalEnd
   ) return projectionDiff
 
-  const fragmentStart = nextFragment.fragmentStart ?? 0
+  const fragmentStart = nextFragment.fragmentStart!
   // Continue the same canonical mask identity; allocate runtime metadata, not new Footage.
   const nextMask: NonNullable<Strip<T>> = {
     anchorSession: incomingStrip.anchorSession,
@@ -248,7 +248,7 @@ export function anchorStrip<T>(
     fragmentStart: fragmentStart - incomingStrip.anchorDiff,
     // Clip to the next fragment's positive length and the remaining original removal interval.
     fragmentDiff: -Math.min(
-      Math.max(0, nextFragment.fragmentDiff ?? nextFragment.insertionDiff),
+      Math.max(0, nextFragment.fragmentDiff!),
       removalEnd - fragmentStart
     ),
   }

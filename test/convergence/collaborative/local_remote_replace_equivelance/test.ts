@@ -134,7 +134,7 @@ describe('local/remote replacement equivalence', () => {
       const receiverCursor = cursor(receiver)
 
       const jumps = (projection: Projection<number>) => {
-        const strips = []
+        const strips: Array<NonNullable<Projection<number>['head']>> = []
         for (let strip = projection.head; strip; strip = strip.rightStep)
           strips.push(strip)
         return strips.map((strip) => {

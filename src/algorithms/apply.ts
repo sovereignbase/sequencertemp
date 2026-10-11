@@ -174,7 +174,8 @@ export function apply<T>(
               mask = mask.rightFragment
             )
               gateDiff -= Math.min(
-                -(mask.fragmentDiff ?? mask.insertionDiff),
+                // anchorStrip assigns each mask fragment its actual consumed effect.
+                -mask.fragmentDiff!,
                 Math.max(
                   0,
                   boundary - mask.anchorDiff - (mask.fragmentStart ?? 0)

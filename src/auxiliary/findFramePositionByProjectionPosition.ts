@@ -28,7 +28,8 @@ export function findFramePositionByProjectionPosition<T>(
   // Insertion mode offsets the resolved Frame to a free logical boundary.
   let after = 0
   // Use gate as the default traverse start node.
-  let cursorStrip: NonNullable<Strip<T>> = (this.gate ?? this.head)!
+  // Every nonempty Projection maintains a gate, including across remote edits.
+  let cursorStrip: NonNullable<Strip<T>> = this.gate!
   // Track the Strip's visible start separately from its original Footage offset.
   let cursorIndex: number = this.gatePosition
 
@@ -97,7 +98,8 @@ export function findFramePositionByProjectionPosition<T>(
       if (forInsertion && !after && index > 0 && index === cursorIndex && cursorStrip.fragmentStart !== undefined) {
         const mask = cursorStrip.leftStep
         if (cursorStrip.fragmentStart === 0 && mask && mask.insertionDiff < 0) {
-          after = Math.abs(mask.fragmentDiff ?? mask.insertionDiff)
+          // anchorStrip assigns every materialized mask its actual fragment effect.
+          after = Math.abs(mask.fragmentDiff!)
           // Enter this adjacent hidden node using the distance already measured by this lookup.
           jumpSteps = mask.leftJump || mask.rightJump ? 0 : jumpSteps - 1
           cursorStrip = mask

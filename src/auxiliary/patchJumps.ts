@@ -20,23 +20,8 @@ export function patchJumps<T>(
   stripDiff: number,
   incoming: NonNullable<Strip<T>>
 ): void {
-  // Without a predecessor there is no left span to patch.
-  const predecessor = incoming.leftStep
-  if (!predecessor) return
-  // Competition can place the edit inside the selected span, beyond its left endpoint.
-  // Only that span loses its shortcut; ordinary edits retain and divide their distances.
-  const left = this.leftJumpToPatch
-  const right = this.rightJumpToPatch
-  if (
-    !predecessor.leftJump &&
-    !predecessor.rightJump &&
-    left &&
-    right &&
-    left.rightJump === right
-  ) {
-    left.rightJump = undefined
-    right.leftJump = undefined
-  }
+  // Local edits resolve a free boundary in a nonempty Projection; the anchor supplies its predecessor endpoint.
+  const predecessor = incoming.leftStep!
   const rightJump = predecessor.rightJump
   const leftFrames = Math.max(
     0,

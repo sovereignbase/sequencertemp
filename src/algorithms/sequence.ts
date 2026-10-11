@@ -63,7 +63,8 @@ export function sequence<T>(this: Projection<T>): Sequence<T> {
       ? 0
       : typeof frames === 'number'
         ? Math.min(at, frames)
-        : (frames[Math.min(at, frames.length) - 1] ?? 0)
+        : // A positive point indexes the dense prefix array within its length.
+          frames[Math.min(at, frames.length) - 1]
 
   const projection: Array<Insertion<T>> = []
   // Omitted identities still deduplicate their fragments without allocating export tuples.
@@ -159,7 +160,8 @@ export function sequence<T>(this: Projection<T>): Sequence<T> {
     // contain the preceding child. Keep that child's free endpoint instead.
     if (
       insertion[5] !== 0 &&
-      (first || (strip.fragmentDiff ?? strip.insertionDiff) !== 0)
+      // Repeated identities are runtime fragments, whose fragmentDiff is assigned at creation.
+      (first || strip.fragmentDiff !== 0)
     ) {
       left = insertion
       leftDiff =

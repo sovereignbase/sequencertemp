@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, expect, test } from 'vitest'
-import { browserRuntime, loadProjection } from '../../../.helpers/browser.ts'
+import { browserRuntime, loadProjection } from '../../.helpers/browser.ts'
 
 let runtime: Awaited<ReturnType<typeof browserRuntime>>
 beforeAll(async () => { runtime = await browserRuntime() })

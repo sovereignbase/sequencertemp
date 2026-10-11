@@ -3,7 +3,7 @@ import type { Strip } from '../types/type.js'
 import { linkJumps } from './linkJumps.js'
 
 /**
- * Resolves a materialized Strip's first Projection position and updates jumps.
+ * Resolves a newly anchored Strip's first Projection position and builds jumps.
  *
  * @param this Projection containing the Strip.
  * @param strip Strip whose visible position is required.
@@ -35,20 +35,16 @@ export function findProjectionPositionOfStrip<T>(
   let leftJumpedDistance = 0
   let rightJumpedDistance = 0
 
-  // Reuse gatePosition directly only for the unchanged gate with no visible edit effect.
-  let knownIndex =
-    gateDiff === 0 && strip === this.gate ? this.gatePosition : undefined
+  // The new Strip differs from the retained gate; discover its index from neighbouring references.
+  let knownIndex: number | undefined
 
   const optimalJumpSpacing = Math.round(Math.sqrt(this.structuralStripCount))
 
   // FIND NEAREST LEFT AND RIGHT JUMPS
-  // An existing jump makes strip a ready traversal anchor; no neighbor search is needed on that side.
-  const jumpAnchor = !!(strip.leftJump || strip.rightJump)
+  // anchorStrip initializes the new Strip without jumps; only structural edges end either search immediately.
+  let leftJumpFound = !leftCursor.leftStep
 
-  // A structural edge also ends the initial search because there is no farther neighbor.
-  let leftJumpFound = jumpAnchor || !leftCursor.leftStep
-
-  let rightJumpFound = jumpAnchor || !rightCursor.rightStep
+  let rightJumpFound = !rightCursor.rightStep
 
   // Each unfinished side advances one step; a side with a reference stays put while the other catches up.
   while (!leftJumpFound || !rightJumpFound) {
@@ -75,7 +71,8 @@ export function findProjectionPositionOfStrip<T>(
       leftJumpFound =
         // Visible boundaries supply known indices even beside hidden history; structural edges
         // and existing jump endpoints also bound the initial local gap.
-        leftCursor === this.head || leftCursor === this.tail ||
+        leftCursor === this.head ||
+        leftCursor === this.tail ||
         !leftCursor.leftStep ||
         !!leftCursor.rightJump ||
         !!leftCursor.leftJump
@@ -102,7 +99,8 @@ export function findProjectionPositionOfStrip<T>(
 
       rightJumpFound =
         // Stop at a known visible boundary, structural end, or existing jump anchor.
-        rightCursor === this.head || rightCursor === this.tail ||
+        rightCursor === this.head ||
+        rightCursor === this.tail ||
         !rightCursor.rightStep ||
         !!rightCursor.leftJump ||
         !!rightCursor.rightJump
@@ -111,43 +109,40 @@ export function findProjectionPositionOfStrip<T>(
 
   // CREATE JUMPS TOWARDS OPTIMAL SPACING
   // The resolved edit must delimit its own spans even in a short gap.
-  if (!strip.leftJump && !strip.rightJump) {
-    // Never create a self-jump; the left side must have a distinct endpoint.
-    if (leftCursor !== strip) {
-      // At least two target spacings justify using the recorded intermediate anchor;
-      // subtract its measured distance to obtain the remaining span without another walk.
-      if (leftStripDistance >= optimalJumpSpacing * 2) {
-        linkJumps(
-          leftCursor,
-          leftJump!,
-          leftFrameDistance - leftJumpedDistance,
-          leftStripDistance - optimalJumpSpacing
-        )
+  // Never create a self-jump; the left side must have a distinct endpoint.
+  if (leftCursor !== strip) {
+    // At least two target spacings justify using the recorded intermediate anchor;
+    // subtract its measured distance to obtain the remaining span without another walk.
+    if (leftStripDistance >= optimalJumpSpacing * 2) {
+      linkJumps(
+        leftCursor,
+        leftJump!,
+        leftFrameDistance - leftJumpedDistance,
+        leftStripDistance - optimalJumpSpacing
+      )
 
-        linkJumps(leftJump!, strip, leftJumpedDistance, optimalJumpSpacing)
-      } else {
-        linkJumps(leftCursor, strip, leftFrameDistance, leftStripDistance)
-      }
-    }
-
-    // The same non-self constraint applies on the right side.
-    if (rightCursor !== strip) {
-      // Split a sufficiently long right gap into the recorded spacing and the remaining distance.
-      if (rightStripDistance >= optimalJumpSpacing * 2) {
-        linkJumps(strip, rightJump!, rightJumpedDistance, optimalJumpSpacing)
-
-        linkJumps(
-          rightJump!,
-          rightCursor,
-          rightFrameDistance - rightJumpedDistance,
-          rightStripDistance - optimalJumpSpacing
-        )
-      } else {
-        linkJumps(strip, rightCursor, rightFrameDistance, rightStripDistance)
-      }
+      linkJumps(leftJump!, strip, leftJumpedDistance, optimalJumpSpacing)
+    } else {
+      linkJumps(leftCursor, strip, leftFrameDistance, leftStripDistance)
     }
   }
 
+  // The same non-self constraint applies on the right side.
+  if (rightCursor !== strip) {
+    // Split a sufficiently long right gap into the recorded spacing and the remaining distance.
+    if (rightStripDistance >= optimalJumpSpacing * 2) {
+      linkJumps(strip, rightJump!, rightJumpedDistance, optimalJumpSpacing)
+
+      linkJumps(
+        rightJump!,
+        rightCursor,
+        rightFrameDistance - rightJumpedDistance,
+        rightStripDistance - optimalJumpSpacing
+      )
+    } else {
+      linkJumps(strip, rightCursor, rightFrameDistance, rightStripDistance)
+    }
+  }
   // Cache the span of this resolved edit; apply restores the retained local gate's outgoing span.
   this.leftJumpToPatch = strip
   this.rightJumpToPatch = strip.rightJump
@@ -156,7 +151,10 @@ export function findProjectionPositionOfStrip<T>(
   if (rightCursor === this.head && strip !== this.head) return 0
   // A Strip following the previous visible tail starts at updated length minus its own positive effect.
   if (leftCursor === this.tail && strip !== this.tail)
-    return this.projectionFrameCount - Math.max(0, strip.fragmentDiff ?? strip.insertionDiff)
+    return (
+      this.projectionFrameCount -
+      Math.max(0, strip.fragmentDiff ?? strip.insertionDiff)
+    )
 
   // A cached index of zero is valid; test against undefined rather than truthiness.
   if (knownIndex !== undefined) {
@@ -170,11 +168,18 @@ export function findProjectionPositionOfStrip<T>(
     if (rightCursor === this.head) return 0
     // Once the left search reaches tail, strip's positive effect is the only visible suffix to subtract.
     if (leftCursor === this.tail)
-      return this.projectionFrameCount - Math.max(0, strip.fragmentDiff ?? strip.insertionDiff)
+      return (
+        this.projectionFrameCount -
+        Math.max(0, strip.fragmentDiff ?? strip.insertionDiff)
+      )
     // Tail's first index is length minus its own positive length; subtract the measured
     // right span to recover strip's first index.
     if (rightCursor === this.tail)
-      return this.projectionFrameCount - Math.max(0, rightCursor.fragmentDiff ?? rightCursor.insertionDiff) - rightFrameDistance
+      return (
+        this.projectionFrameCount -
+        Math.max(0, rightCursor.fragmentDiff ?? rightCursor.insertionDiff) -
+        rightFrameDistance
+      )
     // CHECK IF LEFT IS AT STRUCTURAL START
     // A structural start also has visible index zero, even when hidden nodes precede head.
     if (!leftCursor.leftStep) {
@@ -184,7 +189,8 @@ export function findProjectionPositionOfStrip<T>(
     // CHECK IF RIGHT IS AT STRUCTURAL END
     // At structural end, exclude the endpoint's positive length and all Frames counted to its left.
     if (!rightCursor.rightStep) {
-      const rightDiff = rightCursor.fragmentDiff ?? rightCursor.insertionDiff
+      // A positive endpoint was already handled as tail; hidden endpoints have a materialized effect.
+      const rightDiff = rightCursor.fragmentDiff!
       return (
         this.projectionFrameCount - Math.max(0, rightDiff) - rightFrameDistance
       )
@@ -219,7 +225,12 @@ export function findProjectionPositionOfStrip<T>(
           leftJumpStripCount += leftJump.leftJumpStripCount!
 
           // Reconnect both ends with summed distances before detaching the intermediate anchor.
-          linkJumps(nextLeftJump, leftCursor, leftJumpFrameCount, leftJumpStripCount)
+          linkJumps(
+            nextLeftJump,
+            leftCursor,
+            leftJumpFrameCount,
+            leftJumpStripCount
+          )
 
           leftCursor = nextLeftJump
         } else {
@@ -268,7 +279,12 @@ export function findProjectionPositionOfStrip<T>(
           rightJumpStripCount += rightJump.rightJumpStripCount!
 
           // Install matching forward and reverse counts before clearing both links of the bypassed anchor.
-          linkJumps(rightCursor, nextRightJump, rightJumpFrameCount, rightJumpStripCount)
+          linkJumps(
+            rightCursor,
+            nextRightJump,
+            rightJumpFrameCount,
+            rightJumpStripCount
+          )
 
           rightCursor = nextRightJump
         } else {

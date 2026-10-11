@@ -74,9 +74,8 @@ export function create<T>(
         let anchorDiff = 0
 
         if (!birth) {
-          const origin = this.containmentTable.get(incoming)
-          // Trusted hydration requires parents before children; unlike apply, this path does not queue.
-          if (!origin) continue
+          // Trusted Structural Order supplies the parent before its children; apply handles pending dependencies.
+          const origin = this.containmentTable.get(incoming)!
 
           const fragment = origin.rightFragment
             ? (fragments.get(origin) ?? origin)
