@@ -2,8 +2,12 @@ import { afterAll, beforeAll, expect, test } from 'vitest'
 import { browserRuntime, loadProjection } from '../../.helpers/browser.ts'
 
 let runtime: Awaited<ReturnType<typeof browserRuntime>>
-beforeAll(async () => { runtime = await browserRuntime() })
-afterAll(async () => { await runtime?.browser.close() })
+beforeAll(async () => {
+  runtime = await browserRuntime()
+})
+afterAll(async () => {
+  await runtime?.browser.close()
+})
 
 /**
  * Verifies causal staging across three real browser peers.
@@ -32,12 +36,16 @@ test('peer gossip resolves B child at C after delayed A parent', async () => {
     // Create three independent browser peers.
     await Promise.all(
       [a, b, c].map(async (page, peer) => {
-        await page.route('http://sequencer.test/**', route => route.fulfill({ body: '<!doctype html>' }))
+        await page.route('http://sequencer.test/**', (route) =>
+          route.fulfill({ body: '<!doctype html>' })
+        )
         await page.goto('http://sequencer.test/')
         await loadProjection(page, runtime.source)
 
         await page.evaluate((actor) => {
-          ;(window as any).causalPeer = { state: new window.Projection<string>(actor) }
+          ;(window as any).causalPeer = {
+            state: new window.Projection<string>(actor),
+          }
         }, 300 + peer)
       })
     )
@@ -144,7 +152,9 @@ test('peer browsers converge with independent reordering and editor timers', asy
     // Initialize three independent live peers sharing one BroadcastChannel.
     await Promise.all(
       pages.map(async (page, editor) => {
-        await page.route('http://sequencer.test/**', route => route.fulfill({ body: '<!doctype html>' }))
+        await page.route('http://sequencer.test/**', (route) =>
+          route.fulfill({ body: '<!doctype html>' })
+        )
         await page.goto('http://sequencer.test/')
         await loadProjection(page, runtime.source)
 
@@ -172,8 +182,7 @@ test('peer browsers converge with independent reordering and editor timers', asy
               const delay = (editor * 11 + source * 7 + ordinal * 3) % 19
 
               setTimeout(() => {
-                if (runtime.state.apply(delta) === undefined)
-                  ++runtime.rejected
+                if (runtime.state.apply(delta) === undefined) ++runtime.rejected
 
                 ++runtime.received
               }, delay)
@@ -198,9 +207,7 @@ test('peer browsers converge with independent reordering and editor timers', asy
               setTimeout(() => {
                 const runtime = (window as any).peerRuntime
 
-                const delta = runtime.state.insert([
-                  `root:${editor}`,
-                ], 0)
+                const delta = runtime.state.insert([`root:${editor}`], 0)
 
                 if (delta === false) ++runtime.localRejected
                 else
@@ -249,7 +256,11 @@ test('peer browsers converge with independent reordering and editor timers', asy
                       edit % 3 === 0
                         ? state.insert([`insert:${edit}`], size)
                         : edit % 3 === 1
-                          ? state.replace([`replace:${edit}`], edit % size, edit % size)
+                          ? state.replace(
+                              [`replace:${edit}`],
+                              edit % size,
+                              edit % size
+                            )
                           : state.remove(edit % size, edit % size)
 
                     if (delta === false) ++runtime.localRejected

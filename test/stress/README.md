@@ -11,12 +11,12 @@ npm run build:package
 npm run test:stress
 ```
 
-| Environment variable | Purpose | Default |
-| --- | --- | --- |
-| `SEQUENCER_STRESS_RUNS` | Generated scenarios. | `64` |
-| `SEQUENCER_STRESS_TIMEOUT` | Per-scenario Worker timeout in milliseconds. | `1500` |
-| `SEQUENCER_STRESS_SEED` | Positive integer seed for reproducible generation. | `0x5e0eace` |
-| `SEQUENCER_STRESS_PATH` | Fast-check path printed for a failing scenario. | Unset |
-| `SEQUENCER_STRESS_SHRINK` | Set to `true` to minimize a failure. | Stop on the first failure |
+| Environment variable       | Purpose                                            | Default                   |
+| -------------------------- | -------------------------------------------------- | ------------------------- |
+| `SEQUENCER_STRESS_RUNS`    | Generated scenarios.                               | `64`                      |
+| `SEQUENCER_STRESS_TIMEOUT` | Per-scenario Worker timeout in milliseconds.       | `1500`                    |
+| `SEQUENCER_STRESS_SEED`    | Positive integer seed for reproducible generation. | `0x5e0eace`               |
+| `SEQUENCER_STRESS_PATH`    | Fast-check path printed for a failing scenario.    | Unset                     |
+| `SEQUENCER_STRESS_SHRINK`  | Set to `true` to minimize a failure.               | Stop on the first failure |
 
 Failures print replay instructions. Preserve an exact expected editing result in the relevant [convergence group](../convergence/README.md) when promoting a discovered scenario into a regression.

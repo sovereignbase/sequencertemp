@@ -4,17 +4,17 @@
 
 Tests are grouped by the primary semantic contract they exercise. Each group indexes its scenarios and links to related checks in other groups. Existing regressions retain their complete test bodies and accompanying examples.
 
-| Group | Contract | Entry points |
-| --- | --- | --- |
-| [Anchoring](anchoring/README.md) | Stable original coordinates and safe local boundaries. | `selectAnchor`, fragment resolution, `insert` |
-| [Causality](causality/README.md) | Missing dependencies remain pending; released operations retain order. | `apply`, containment and pending tables |
-| [Compaction](compaction/README.md) | Eligible mask omission preserves visible order and retained children. | `sequence`, frontiers, hydration |
-| [Delivery](delivery/README.md) | Fixed histories converge across packet permutations and independent replicas. | `apply`, `merge`, Session identity |
-| [Editing](editing/README.md) | Requested local changes and published Gossip have equivalent effects. | `insert`, `remove`, `replace` |
-| [Masking](masking/README.md) | Original removal scope, overlap, and concurrent insertion survival. | Fragment resolution and mask application |
-| [Ordering](ordering/README.md) | Deterministic same-anchor competition and intact sibling subtrees. | `anchorStrip`, competition, `subtreeEnd` |
-| [Persistence](persistence/README.md) | Export, hydration, restart, and continuation preserve retained semantics. | `sequence`, constructor, redelivery |
-| [Projection](projection/README.md) | Visible boundaries, indexed reads, and cursor/jump correctness. | `value`, `values`, lookup and jump maintenance |
+| Group                                | Contract                                                                      | Entry points                                   |
+| ------------------------------------ | ----------------------------------------------------------------------------- | ---------------------------------------------- |
+| [Anchoring](anchoring/README.md)     | Stable original coordinates and safe local boundaries.                        | `selectAnchor`, fragment resolution, `insert`  |
+| [Causality](causality/README.md)     | Missing dependencies remain pending; released operations retain order.        | `apply`, containment and pending tables        |
+| [Compaction](compaction/README.md)   | Eligible mask omission preserves visible order and retained children.         | `sequence`, frontiers, hydration               |
+| [Delivery](delivery/README.md)       | Fixed histories converge across packet permutations and independent replicas. | `apply`, `merge`, Session identity             |
+| [Editing](editing/README.md)         | Requested local changes and published Gossip have equivalent effects.         | `insert`, `remove`, `replace`                  |
+| [Masking](masking/README.md)         | Original removal scope, overlap, and concurrent insertion survival.           | Fragment resolution and mask application       |
+| [Ordering](ordering/README.md)       | Deterministic same-anchor competition and intact sibling subtrees.            | `anchorStrip`, competition, `subtreeEnd`       |
+| [Persistence](persistence/README.md) | Export, hydration, restart, and continuation preserve retained semantics.     | `sequence`, constructor, redelivery            |
+| [Projection](projection/README.md)   | Visible boundaries, indexed reads, and cursor/jump correctness.               | `value`, `values`, lookup and jump maintenance |
 
 ## Running a subset
 

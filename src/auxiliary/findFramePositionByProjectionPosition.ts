@@ -95,9 +95,17 @@ export function findFramePositionByProjectionPosition<T>(
     if (cursorIndex <= index && index < cursorIndex + stripLength) {
       // A fragment-start boundary can already be occupied in its original Insertion.
       // A preceding mask supplies a free end without crossing its removed child subtree.
-      if (forInsertion && !after && index === cursorIndex && cursorStrip.fragmentStart !== undefined) {
+      if (
+        forInsertion &&
+        !after &&
+        index === cursorIndex &&
+        cursorStrip.fragmentStart !== undefined
+      ) {
         const mask = cursorStrip.leftStep
-        const originalZero = mask && mask.insertionDiff < 0 && mask.anchorDiff === 0 &&
+        const originalZero =
+          mask &&
+          mask.insertionDiff < 0 &&
+          mask.anchorDiff === 0 &&
           mask.anchorSession === cursorStrip.insertionSession &&
           mask.anchorStart === cursorStrip.insertionStart &&
           mask.leftStep?.insertionSession === mask.anchorSession &&
@@ -105,10 +113,13 @@ export function findFramePositionByProjectionPosition<T>(
           // A zero-offset right fragment follows an existing child; only the original Strip's zero is free.
           mask.leftStep?.fragmentStart === undefined
         if (
-          (originalZero || cursorStrip.fragmentStart === 0 ||
-            (index === 0 && (mask?.anchorSession !== cursorStrip.insertionSession ||
-              mask.anchorStart !== cursorStrip.insertionStart))) &&
-          mask && mask.insertionDiff < 0
+          (originalZero ||
+            cursorStrip.fragmentStart === 0 ||
+            (index === 0 &&
+              (mask?.anchorSession !== cursorStrip.insertionSession ||
+                mask.anchorStart !== cursorStrip.insertionStart))) &&
+          mask &&
+          mask.insertionDiff < 0
         ) {
           if (originalZero && (mask.leftJump || mask.rightJump)) {
             // The free original zero precedes this known endpoint by one hidden step.
@@ -120,7 +131,10 @@ export function findFramePositionByProjectionPosition<T>(
           after = originalZero ? 0 : Math.abs(mask.fragmentDiff!)
           // Enter this adjacent hidden node using the distance already measured by this lookup.
           cursorStrip = originalZero ? mask.leftStep! : mask
-          jumpSteps = cursorStrip.leftJump || cursorStrip.rightJump ? 0 : jumpSteps - (originalZero ? 2 : 1)
+          jumpSteps =
+            cursorStrip.leftJump || cursorStrip.rightJump
+              ? 0
+              : jumpSteps - (originalZero ? 2 : 1)
         } else if (index > 0) {
           // Resolve the preceding visible Frame once; index zero has no predecessor.
           --index
@@ -209,7 +223,12 @@ export function findFramePositionByProjectionPosition<T>(
             rightJumpStripCount += rightJump.rightJumpStripCount!
 
             // Bypass the intermediate jump anchor and give both surviving endpoints identical summed distances.
-            linkJumps(cursorStrip, nextRightJump, rightJumpFrameCount, rightJumpStripCount)
+            linkJumps(
+              cursorStrip,
+              nextRightJump,
+              rightJumpFrameCount,
+              rightJumpStripCount
+            )
 
             rightJump = nextRightJump
           }
@@ -268,7 +287,11 @@ export function findFramePositionByProjectionPosition<T>(
         let leftJumpStripCount = cursorStrip.leftJumpStripCount!
 
         // As on the right, merge only short spans and preserve the visible head and tail anchors.
-        if (leftJumpStripCount < optimalJumpSpacing && leftJump !== this.head && leftJump !== this.tail) {
+        if (
+          leftJumpStripCount < optimalJumpSpacing &&
+          leftJump !== this.head &&
+          leftJump !== this.tail
+        ) {
           const nextLeftJump = leftJump.leftJump
 
           if (
@@ -281,7 +304,12 @@ export function findFramePositionByProjectionPosition<T>(
             leftJumpStripCount += leftJump.leftJumpStripCount!
 
             // The summed left jump and its reverse must describe the same Frame and Strip distances.
-            linkJumps(nextLeftJump, cursorStrip, leftJumpFrameCount, leftJumpStripCount)
+            linkJumps(
+              nextLeftJump,
+              cursorStrip,
+              leftJumpFrameCount,
+              leftJumpStripCount
+            )
 
             leftJump = nextLeftJump
           }

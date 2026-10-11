@@ -15,7 +15,10 @@ const fixture = () => {
   return { author, receiver }
 }
 
-const applySplices = (view: Array<string | undefined>, changes: Change<string>) => {
+const applySplices = (
+  view: Array<string | undefined>,
+  changes: Change<string>
+) => {
   for (const [from, to, values] of changes)
     view.splice(from, to - from, ...(values ?? []))
   return view

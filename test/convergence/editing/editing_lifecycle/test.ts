@@ -25,17 +25,7 @@ describe('local editing lifecycle', () => {
     expect_projection(projection, ['a', 'b', 'c', 'd', 'e', 'f'])
 
     projection.insert(['g', 'h', 'i'], 0)
-    expect_projection(projection, [
-      'g',
-      'h',
-      'i',
-      'a',
-      'b',
-      'c',
-      'd',
-      'e',
-      'f',
-    ])
+    expect_projection(projection, ['g', 'h', 'i', 'a', 'b', 'c', 'd', 'e', 'f'])
 
     projection.insert(['j', 'k', 'l'], 3)
     expect_projection(projection, [

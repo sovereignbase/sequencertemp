@@ -2,13 +2,13 @@
 
 Choose a suite by the behavior being changed. Convergence cases are grouped by their primary contract; each group links to scenarios that also exercise that contract elsewhere.
 
-| Suite | Scope | Run from the repository root |
-| --- | --- | --- |
-| [Unit](unit/README.md) | Consumer-facing public API, wire results, validation, and Footage identity. | `npm run test:unit` |
-| [Convergence](convergence/README.md) | Editing semantics, canonical anchors, causality, ordering, masks, traversal, and persistence. | `npm run test:convergence` |
-| [Integration](integration/README.md) | Browser execution, peer-to-peer fanout, and WebSocket delivery. | `npm run test:integration` |
-| [Stress](stress/README.md) | Replayable generated concurrent editing histories. | `npm run test:stress` after a package build |
-| [Compatibility](compatibility/README.md) | One shared public-API suite across runtimes and browsers. | `npm run test:compatibility` |
+| Suite                                    | Scope                                                                                         | Run from the repository root                |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| [Unit](unit/README.md)                   | Consumer-facing public API, wire results, validation, and Footage identity.                   | `npm run test:unit`                         |
+| [Convergence](convergence/README.md)     | Editing semantics, canonical anchors, causality, ordering, masks, traversal, and persistence. | `npm run test:convergence`                  |
+| [Integration](integration/README.md)     | Browser execution, peer-to-peer fanout, and WebSocket delivery.                               | `npm run test:integration`                  |
+| [Stress](stress/README.md)               | Replayable generated concurrent editing histories.                                            | `npm run test:stress` after a package build |
+| [Compatibility](compatibility/README.md) | One shared public-API suite across runtimes and browsers.                                     | `npm run test:compatibility`                |
 
 ## Full verification
 
@@ -16,17 +16,17 @@ Choose a suite by the behavior being changed. Convergence cases are grouped by t
 
 ## Convergence contracts
 
-| Contract | Fundamental expectation |
-| --- | --- |
-| [Anchoring](convergence/anchoring/README.md) | Canonical anchors retain their original coordinate space; local boundaries reproduce remotely. |
-| [Causality](convergence/causality/README.md) | Dependants remain invisible until their canonical parent can be resolved. |
-| [Compaction](convergence/compaction/README.md) | Acknowledged removal history can be omitted while retained visible content stays equivalent. |
-| [Delivery](convergence/delivery/README.md) | The same valid operation set resolves to the same visible content across delivery orders. |
-| [Editing](convergence/editing/README.md) | Local insert/remove/replace results match intended edits and remotely applied Gossip. |
-| [Masking](convergence/masking/README.md) | Removals affect their original targets once and preserve concurrent insertions. |
-| [Ordering](convergence/ordering/README.md) | Same-anchor competitors have deterministic order and keep complete causal subtrees. |
-| [Persistence](convergence/persistence/README.md) | Sequence export, hydration, restart, and retained-identity redelivery preserve visible order. |
-| [Projection](convergence/projection/README.md) | Head, tail, gates, and jumps resolve the correct visible Frames. |
+| Contract                                         | Fundamental expectation                                                                        |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| [Anchoring](convergence/anchoring/README.md)     | Canonical anchors retain their original coordinate space; local boundaries reproduce remotely. |
+| [Causality](convergence/causality/README.md)     | Dependants remain invisible until their canonical parent can be resolved.                      |
+| [Compaction](convergence/compaction/README.md)   | Acknowledged removal history can be omitted while retained visible content stays equivalent.   |
+| [Delivery](convergence/delivery/README.md)       | The same valid operation set resolves to the same visible content across delivery orders.      |
+| [Editing](convergence/editing/README.md)         | Local insert/remove/replace results match intended edits and remotely applied Gossip.          |
+| [Masking](convergence/masking/README.md)         | Removals affect their original targets once and preserve concurrent insertions.                |
+| [Ordering](convergence/ordering/README.md)       | Same-anchor competitors have deterministic order and keep complete causal subtrees.            |
+| [Persistence](convergence/persistence/README.md) | Sequence export, hydration, restart, and retained-identity redelivery preserve visible order.  |
+| [Projection](convergence/projection/README.md)   | Head, tail, gates, and jumps resolve the correct visible Frames.                               |
 
 ## Test conventions
 

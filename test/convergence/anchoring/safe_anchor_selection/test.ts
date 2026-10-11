@@ -258,7 +258,9 @@ describe('safe local anchor selection', () => {
     const update = editor.replace(['y'], 1, 1)
     const removal = update[0]
     expect(update.at(-1)!.slice(0, 3)).toEqual([
-      removal[3], removal[4], -removal[5]!,
+      removal[3],
+      removal[4],
+      -removal[5]!,
     ])
     expect(editor.values()).toEqual(['b', 'y', 'a'])
     deliver(editor, author, update)
@@ -289,13 +291,18 @@ describe('safe local anchor selection', () => {
 
     const removal = update[0]
     expect(update.at(-1)!.slice(0, 3)).toEqual([
-      removal[3], removal[4], -removal[5]!,
+      removal[3],
+      removal[4],
+      -removal[5]!,
     ])
     expect(projection.value(1)).toBe('y')
     expect(projection.values()).toEqual(['a', 'y', 'c'])
   })
 
-  it.each([[1_001, 1_002], [1_002, 1_001]])(
+  it.each([
+    [1_001, 1_002],
+    [1_002, 1_001],
+  ])(
     'preserves a replacement boundary across authors (%i, %i)',
     (authorSession, editorSession) => {
       const author = new Projection<string>(1)
@@ -321,7 +328,9 @@ describe('safe local anchor selection', () => {
 
       const update = editor.replace(['y'], 1, 1)
       expect(update.at(-1)!.slice(0, 3)).toEqual([
-        update[0][3], update[0][4], -update[0][5]!,
+        update[0][3],
+        update[0][4],
+        -update[0][5]!,
       ])
       expect(editor.value(1)).toBe('y')
       deliver(editor, author, update)
