@@ -2,11 +2,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    include: [
-      'test/convergence/**/*.test.ts',
-      'test/convergence/**/test.ts',
-      'test/stress/**/*.test.ts',
-    ],
+    include: ['test/**/test.ts'],
     environment: 'node',
     fileParallelism: false,
     coverage: {

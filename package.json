@@ -36,6 +36,7 @@
     "test:vitest": "vitest run --coverage",
     "test:convergence": "vitest run test/convergence --coverage.enabled=false",
     "test:stress": "vitest run test/stress --coverage.enabled=false",
+    "test:compatibility": "npm run build:package && node --test test/compatibility/index.ts",
     "test:e2e": "playwright test",
     "bench": "npm run build:package && node benchmark/index.ts",
     "bench:lifecycle": "npm run bench -- --suite lifecycle",
